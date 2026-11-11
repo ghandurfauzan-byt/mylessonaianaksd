@@ -8,6 +8,7 @@ const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
   agentRules: false,
   webpack: (config) => {
     config.resolve.alias = {

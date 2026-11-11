@@ -27,10 +27,10 @@
     "institution": "SD Negeri 1 Madiun",
     "kelas": "Kelas 4",
     "noAbsen": "01",
-    "points": 430,
+    "points": 450,
     "materialScore": 0,
     "quizScore": 100,
-    "gamePoints": 430,
+    "gamePoints": 450,
     "weakness": {
       "chapterId": "pkn-sila3",
       "chapterName": "Pendidikan Pancasila (Makna Sila Ke-3)",
@@ -42,8 +42,8 @@
     },
     "chapterScores": {
       "pkn-sila3": {
-        "points": 420,
-        "gamePoints": 420,
+        "points": 440,
+        "gamePoints": 440,
         "quizScore": 100,
         "status": "tuntas"
       },

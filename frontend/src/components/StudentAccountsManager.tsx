@@ -16,6 +16,7 @@ export interface StudentAccount {
   materialScore?: number;
   quizScore?: number;
   gamePoints?: number;
+  status?: "tuntas" | "remedial" | string;
   weakness?: {
     chapterId: string;
     chapterName: string;

@@ -2153,12 +2153,18 @@ export default function AdaptiveEduGameModal({
     camera.position.set(0, 4.5, 26);
     camera.lookAt(0, 1.8, 18);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: false,
+      powerPreference: "high-performance",
+      precision: "mediump",
+      depth: true,
+      stencil: false,
+    });
     renderer.setClearColor("#7dd3fc", 1);
     renderer.setSize(initW, initH);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(typeof window !== "undefined" ? window.devicePixelRatio : 1, 1.25));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = THREE.BasicShadowMap;
 
     renderer.domElement.style.position = "absolute";
     renderer.domElement.style.top = "0";
@@ -2357,73 +2363,74 @@ export default function AdaptiveEduGameModal({
 
     scene.add(gapuraGroup);
 
-        // ------------------------------------------------------------------------
-    // PAPAN SKOR KELAS 3D DINAMIS (DI KANAN GAPURA: X = +4.5, Z = +16)
-    // OTOMATIS BERUBAH SECARA REAL-TIME SESUAI SKOR SISWA & TEMAN KELAS ONLINE
+    // ------------------------------------------------------------------------
+    // PAPAN SKOR KELAS 3D DINAMIS (DI KANAN GAPURA: X = +4.0, Z = +16.5)
+    // UKURAN PAS & PROPORSIONAL (TIDAK BESAR-BESAR)
     // ------------------------------------------------------------------------
     const lbGroup = new THREE.Group();
-    const lbPole1 = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 5.2, 8), new THREE.MeshLambertMaterial({ color: "#78350f" }));
-    lbPole1.position.set(-2.5, 2.6, 0);
+    const lbPole1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.8, 8), new THREE.MeshLambertMaterial({ color: "#78350f" }));
+    lbPole1.position.set(-1.7, 1.9, 0);
     lbGroup.add(lbPole1);
     const lbPole2 = lbPole1.clone();
-    lbPole2.position.set(2.5, 2.6, 0);
+    lbPole2.position.set(1.7, 1.9, 0);
     lbGroup.add(lbPole2);
 
     const lbCanvas = document.createElement("canvas");
-    lbCanvas.width = 640;
-    lbCanvas.height = 440;
+    lbCanvas.width = 512;
+    lbCanvas.height = 360;
     const lbCtx = lbCanvas.getContext("2d")!;
     const lbTexture = new THREE.CanvasTexture(lbCanvas);
-    lbTexture.anisotropy = 8;
+    lbTexture.generateMipmaps = false;
+    lbTexture.minFilter = THREE.LinearFilter;
 
     const redraw3DLeaderboard = (data: Array<{ rank: number; name: string; points: number; avatar: string; isPlayer?: boolean }>) => {
       lbCtx.fillStyle = "#0f172a";
-      lbCtx.fillRect(0, 0, 640, 440);
+      lbCtx.fillRect(0, 0, 512, 360);
       lbCtx.strokeStyle = "#facc15";
-      lbCtx.lineWidth = 10;
-      lbCtx.strokeRect(5, 5, 630, 430);
+      lbCtx.lineWidth = 6;
+      lbCtx.strokeRect(4, 4, 504, 352);
       lbCtx.strokeStyle = "#38bdf8";
       lbCtx.lineWidth = 2;
-      lbCtx.strokeRect(14, 14, 612, 412);
+      lbCtx.strokeRect(10, 10, 492, 340);
 
       // Header Papan Skor Kelas
-      drawFittedText(lbCtx, "🏆 PAPAN SKOR KELAS ONLINE", 320, 44, 590, 32, {
+      drawFittedText(lbCtx, "🏆 SKOR KELAS ONLINE", 256, 36, 470, 24, {
         color: "#facc15",
         shadowColor: "#ca8a04",
-        shadowBlur: 8,
+        shadowBlur: 6,
       });
-      drawFittedText(lbCtx, `${(resolvedTitle || "Desa Edukasi").slice(0, 25)} • Peringkat Live 🟢`, 320, 80, 580, 20, {
+      drawFittedText(lbCtx, `${(resolvedTitle || "Desa Edukasi").slice(0, 24)} • Live 🟢`, 256, 64, 460, 15, {
         color: "#38bdf8",
       });
 
       // 5 Baris Siswa Teratas
       const sorted = [...data].sort((a, b) => b.points - a.points).slice(0, 5);
       sorted.forEach((item, idx) => {
-        const y = 126 + idx * 58;
+        const y = 98 + idx * 48;
         const isPlayer = item.isPlayer;
 
         if (isPlayer) {
           lbCtx.fillStyle = "rgba(234, 179, 8, 0.28)";
-          lbCtx.fillRect(24, y - 22, 592, 50);
+          lbCtx.fillRect(16, y - 18, 480, 42);
           lbCtx.strokeStyle = "#facc15";
-          lbCtx.lineWidth = 3;
-          lbCtx.strokeRect(24, y - 22, 592, 50);
+          lbCtx.lineWidth = 2;
+          lbCtx.strokeRect(16, y - 18, 480, 42);
         } else {
           lbCtx.fillStyle = idx % 2 === 0 ? "rgba(30, 41, 59, 0.75)" : "rgba(15, 23, 42, 0.75)";
-          lbCtx.fillRect(24, y - 22, 592, 50);
+          lbCtx.fillRect(16, y - 18, 480, 42);
         }
 
         const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
         const textColor = isPlayer ? "#fef08a" : "#ffffff";
         const label = `${medal} ${item.name}`;
 
-        drawFittedText(lbCtx, label, 42, y + 3, 420, 24, {
+        drawFittedText(lbCtx, label, 30, y + 2, 330, 18, {
           align: "left",
           color: textColor,
           fontWeight: isPlayer ? "900" : "bold",
         });
 
-        drawFittedText(lbCtx, `${item.points} Poin`, 596, y + 3, 140, 24, {
+        drawFittedText(lbCtx, `${item.points} Poin`, 480, y + 2, 110, 18, {
           align: "right",
           color: isPlayer ? "#facc15" : "#38bdf8",
           fontWeight: "bold",
@@ -2437,13 +2444,13 @@ export default function AdaptiveEduGameModal({
     redraw3DLeaderboard(classLeaderboard);
 
     const lbBoard = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.2, 3.6),
+      new THREE.PlaneGeometry(3.4, 2.4),
       new THREE.MeshBasicMaterial({ map: lbTexture, side: THREE.DoubleSide })
     );
-    lbBoard.position.set(0, 3.6, 0.05);
+    lbBoard.position.set(0, 2.6, 0.05);
     lbGroup.add(lbBoard);
 
-    lbGroup.position.set(4.5, 0, 16);
+    lbGroup.position.set(4.0, 0, 16.5);
     scene.add(lbGroup);
 
     // ------------------------------------------------------------------------
@@ -3557,38 +3564,38 @@ export default function AdaptiveEduGameModal({
           {/* ============================================================ */}
           {gameMode === "adventure" && (
             <>
-              {/* PETUNJUK LAYAR AWAL MENGARAHKAN KE PAK GURU */}
+              {/* PETUNJUK LAYAR AWAL MENGARAHKAN KE PAK GURU (RINGKAS & RAMPING) */}
               {!hasTalkedToGuru && gameStarted && (
-                <div className="absolute top-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-30 max-w-lg bg-yellow-400 text-slate-950 p-3 rounded-2xl shadow-2xl text-center animate-bounce font-black text-xs sm:text-sm border-2 border-white flex items-center justify-center gap-2">
+                <div className="absolute top-3 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-30 max-w-sm bg-yellow-400 text-slate-950 py-1.5 px-3 rounded-xl shadow-lg text-center animate-bounce font-black text-xs border border-white flex items-center justify-center gap-1.5">
                   <span>👉</span>
                   <span>
-                    PETUNJUK: Temui <b>Pak Guru Virtual</b> (di kiri gapura) lalu tekan <b>'E'</b> untuk panduan materi lewat suara!
+                    Temui <b>Pak Guru</b> (kiri gapura) lalu tekan <b>'E'</b> untuk panduan suara!
                   </span>
                 </div>
               )}
 
-              {/* OVERLAY AWAL MULAI MAIN: BRIEFING & ARAHAN LANGSUNG PAK GURU SESUAI MATERI AKTIF */}
+              {/* OVERLAY AWAL MULAI MAIN: BRIEFING & ARAHAN LANGSUNG PAK GURU SESUAI MATERI AKTIF (UKURAN RAMPING & PAS) */}
               {!gameStarted && (
-                <div className="absolute inset-0 z-40 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 text-center animate-in fade-in overflow-y-auto">
-                  <div className="max-w-2xl w-full bg-slate-900/95 border-3 border-yellow-400/80 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-white my-auto">
+                <div className="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-3 sm:p-4 text-center animate-in fade-in overflow-y-auto">
+                  <div className="max-w-lg w-full bg-slate-900/95 border-2 border-yellow-400/90 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3 text-white my-auto">
                     {/* Header Arahan Pak Guru */}
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 border-b border-slate-700/80 pb-4 text-center sm:text-left">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-amber-400 via-orange-500 to-yellow-400 flex items-center justify-center text-3xl sm:text-4xl shadow-xl shrink-0 ring-4 ring-yellow-400/40">
+                    <div className="flex items-center gap-3 border-b border-slate-700/80 pb-3 text-left">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-400 via-orange-500 to-yellow-400 flex items-center justify-center text-2xl shadow-lg shrink-0 ring-2 ring-yellow-400/40">
                         👨‍🏫
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-                          <span className="text-[10px] font-black uppercase tracking-wider bg-yellow-400 text-slate-950 px-2.5 py-0.5 rounded-md shadow-xs">
+                        <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-yellow-400 text-slate-950 px-2 py-0.5 rounded shadow-xs">
                             {guruBriefing.subject}
                           </span>
-                          <span className="text-[10px] font-extrabold uppercase bg-sky-500/30 text-sky-300 border border-sky-400/40 px-2.5 py-0.5 rounded-md">
-                            Materi Aktif Sedang Dimainkan 🎮
+                          <span className="text-[10px] font-bold uppercase bg-sky-500/30 text-sky-300 border border-sky-400/40 px-2 py-0.5 rounded">
+                            Materi Aktif 🎮
                           </span>
                         </div>
-                        <h3 className="font-black text-lg sm:text-2xl text-yellow-300 leading-tight">
-                          Arahan Awal Pak Guru: {guruBriefing.submateri}
+                        <h3 className="font-black text-sm sm:text-base text-yellow-300 leading-tight truncate">
+                          Arahan Pak Guru: {guruBriefing.submateri}
                         </h3>
-                        <p className="text-xs text-slate-300 font-semibold mt-1">
+                        <p className="text-[11px] text-slate-300 font-medium truncate">
                           {guruBriefing.salam}
                         </p>
                       </div>
@@ -3603,64 +3610,59 @@ export default function AdaptiveEduGameModal({
                             speakGuruVoice(guruBriefing.speech);
                           }
                         }}
-                        className={`px-3.5 py-2 rounded-2xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0 ${
+                        className={`px-2.5 py-1.5 rounded-xl text-[11px] font-black transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shrink-0 ${
                           isGuruSpeaking
                             ? "bg-rose-600 text-white animate-pulse"
                             : "bg-sky-500 hover:bg-sky-600 active:scale-95 text-white"
                         }`}
                       >
-                        <span>{isGuruSpeaking ? "⏹️ Hentikan Suara" : "🔊 Dengarkan Arahan"}</span>
+                        <span>{isGuruSpeaking ? "⏹️ Stop" : "🔊 Suara"}</span>
                       </button>
                     </div>
 
-                    {/* Isi Arahan Materi & Misi Petualangan */}
-                    <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 text-left space-y-2.5 text-xs sm:text-sm">
+                    {/* Isi Arahan Singkat & Misi Petualangan */}
+                    <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 text-left space-y-2 text-xs">
                       <div>
-                        <span className="text-yellow-300 font-black text-xs block mb-1">
-                          📖 Penjelasan Materi dari Pak Guru:
+                        <span className="text-yellow-300 font-black text-[11px] block mb-0.5">
+                          📖 Intisari Penjelasan Pak Guru:
                         </span>
-                        <p className="text-slate-200 leading-relaxed font-medium">
+                        <p className="text-slate-200 leading-relaxed font-normal line-clamp-3 text-[11px] sm:text-xs">
                           {guruBriefing.arahan}
                         </p>
                       </div>
 
-                      <div className="pt-2 border-t border-slate-700/60">
-                        <span className="text-emerald-300 font-black text-xs block mb-1.5">
-                          📍 5 Pos Belajar yang Harus Kamu Kunjungi di Desa:
+                      <div className="pt-1.5 border-t border-slate-700/60">
+                        <span className="text-emerald-300 font-black text-[11px] block mb-1">
+                          📍 5 Pos Belajar di Desa (Tekan 'E' di Setiap Pos):
                         </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[10px]">
                           {sukuList.slice(0, 5).map((pos, idx) => (
-                            <div key={`pos-intro-${pos.id}`} className="p-2 rounded-xl bg-slate-900/60 border border-slate-700/60 flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-lg bg-yellow-400/20 text-yellow-300 font-black flex items-center justify-center text-xs shrink-0">
+                            <div key={`pos-intro-${pos.id}`} className="p-1.5 rounded-lg bg-slate-900/60 border border-slate-700/60 flex items-center gap-1.5">
+                              <span className="w-4 h-4 rounded bg-yellow-400/20 text-yellow-300 font-black flex items-center justify-center text-[10px] shrink-0">
                                 {idx + 1}
                               </span>
-                              <div className="min-w-0">
-                                <span className="font-bold text-slate-200 block truncate">
-                                  {pos.subMateri || pos.namaPos}
-                                </span>
-                                <span className="text-[10px] text-slate-400 block truncate">
-                                  {pos.namaPos}
-                                </span>
-                              </div>
+                              <span className="font-bold text-slate-200 truncate">
+                                {pos.subMateri || pos.namaPos}
+                              </span>
                             </div>
                           ))}
                         </div>
                       </div>
                     </div>
 
-                    {/* Panduan Tombol Kontrol Permainan */}
-                    <div className="bg-slate-950/60 p-3 rounded-2xl border border-slate-800 text-xs text-yellow-200 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                      <span>🎮 <b>WASD / Panah</b>: Jalan</span>
+                    {/* Panduan Tombol Kontrol Permainan Ringkas */}
+                    <div className="bg-slate-950/60 py-2 px-3 rounded-xl border border-slate-800 text-[11px] text-yellow-200 flex flex-wrap items-center justify-center gap-2">
+                      <span>🎮 <b>WASD/Panah</b>: Jalan</span>
                       <span>•</span>
                       <span>🟡 <b>Spasi</b>: Lompat</span>
                       <span>•</span>
-                      <span>⚡ <b>Shift</b>: Sprint Lari</span>
+                      <span>⚡ <b>Shift</b>: Lari</span>
                       <span>•</span>
-                      <span>🎯 <b>E</b>: Kuis Pos (+25 Poin)</span>
+                      <span>🎯 <b>E</b>: Kuis (+25)</span>
                       <span>•</span>
-                      <span>🪙 <b>Koin Emas</b> (+5 Poin)</span>
+                      <span>🪙 <b>Koin</b> (+5)</span>
                       <span>•</span>
-                      <span>👋 <b>Q</b>: Sapa Teman</span>
+                      <span>👋 <b>Q</b>: Sapa</span>
                     </div>
 
                     {/* Tombol Mulai Petualangan */}
@@ -3672,10 +3674,10 @@ export default function AdaptiveEduGameModal({
                         setGameStarted(true);
                         startAdventureBgm();
                       }}
-                      className="w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-sm sm:text-base py-3.5 px-6 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition border-2 border-white/60 flex items-center justify-center gap-2.5 cursor-pointer"
+                      className="w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow-xl hover:scale-[1.01] active:scale-95 transition border border-white/60 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <span>🚀</span>
-                      <span>SIAP PAK GURU, MULAI PETUALANGAN (DENGAN MUSIK 🎵)</span>
+                      <span>MULAI PETUALANGAN (DENGAN MUSIK 🎵)</span>
                     </button>
                   </div>
                 </div>
@@ -3993,32 +3995,32 @@ export default function AdaptiveEduGameModal({
                 </div>
               )}
 
-              {/* PAPAN SKOR POPUP */}
+              {/* PAPAN SKOR POPUP (UKURAN RAMPING & PAS) */}
               {showLeaderboard && (
-                <div className="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-                  <div className="bg-slate-900 border-3 border-indigo-400 rounded-3xl max-w-md w-full p-6 text-white space-y-4 shadow-2xl">
-                    <div className="flex items-center justify-between border-b border-slate-700 pb-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-3xl">🏆</span>
+                <div className="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in">
+                  <div className="bg-slate-900 border-2 border-indigo-400 rounded-2xl max-w-sm w-full p-4 text-white space-y-3 shadow-2xl">
+                    <div className="flex items-center justify-between border-b border-slate-700 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">🏆</span>
                         <div>
-                          <h3 className="font-black text-base text-yellow-300">
+                          <h3 className="font-black text-sm text-yellow-300">
                             Papan Skor Kelas Online
                           </h3>
-                          <p className="text-xs text-slate-300">
-                            Peringkat petualang terhebat di kelasmu
+                          <p className="text-[11px] text-slate-300">
+                            Peringkat petualang live di kelasmu
                           </p>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => setShowLeaderboard(false)}
-                        className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer"
+                        className="text-slate-400 hover:text-white text-base font-bold cursor-pointer"
                       >
                         ✕
                       </button>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {[
                         { rank: 1, name: studentName + " (Kamu)", score: adventureScore, me: true, avatar: "🎒" },
                         { rank: 2, name: "Siti Rahmawati", score: peerScores.siti, avatar: "👧" },
@@ -4030,20 +4032,20 @@ export default function AdaptiveEduGameModal({
                         .map((item, idx) => (
                           <div
                             key={item.name}
-                            className={`flex items-center justify-between p-2.5 rounded-2xl border text-xs ${
+                            className={`flex items-center justify-between p-2 rounded-xl border text-xs ${
                               item.me
                                 ? "bg-amber-500/20 border-yellow-400 text-yellow-200 font-bold"
                                 : "bg-slate-800/80 border-slate-700 text-slate-300"
                             }`}
                           >
                             <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-full bg-slate-900 flex items-center justify-center font-black text-yellow-400">
+                              <span className="w-5 h-5 rounded-full bg-slate-900 flex items-center justify-center font-black text-yellow-400 text-[10px]">
                                 #{idx + 1}
                               </span>
                               <span>{item.avatar}</span>
-                              <span className="truncate max-w-[150px]">{item.name}</span>
+                              <span className="truncate max-w-[130px]">{item.name}</span>
                             </div>
-                            <span className="font-black text-yellow-300">
+                            <span className="font-black text-yellow-300 text-xs">
                               🪙 {item.score} Poin
                             </span>
                           </div>
@@ -4053,7 +4055,7 @@ export default function AdaptiveEduGameModal({
                     <button
                       type="button"
                       onClick={() => setShowLeaderboard(false)}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-2xl text-xs transition cursor-pointer"
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer"
                     >
                       Tutup Papan Skor
                     </button>

@@ -15,6 +15,7 @@ export default function PengajarDashboardPage() {
   useDocumentTitle("Dashboard Guru — Validasi Materi & Evaluasi Siswa");
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
