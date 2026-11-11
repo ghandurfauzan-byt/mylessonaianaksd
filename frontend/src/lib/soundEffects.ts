@@ -562,7 +562,7 @@ export function startAdventureBgm() {
 
   bgmStep = 0;
 
-  bgmInterval = setInterval(() => {
+  const playStep = () => {
     if (!ctx) return;
     if (ctx.state === "suspended") {
       ctx.resume().catch(() => {});
@@ -574,7 +574,7 @@ export function startAdventureBgm() {
       const idx = bgmStep % melody.length;
       bgmStep++;
 
-      // 1. Lead Melody (Suara Segar Chiptune)
+      // 1. Lead Melody (Suara Segar Chiptune Ceria Upbeat)
       const leadFreq = melody[idx] ?? 523.25;
       const leadOsc = ctx.createOscillator();
       const leadGain = ctx.createGain();
@@ -583,12 +583,12 @@ export function startAdventureBgm() {
       leadOsc.frequency.setValueAtTime(leadFreq, t);
 
       leadGain.gain.setValueAtTime(0.045, t);
-      leadGain.gain.exponentialRampToValueAtTime(0.002, t + 0.16);
+      leadGain.gain.exponentialRampToValueAtTime(0.002, t + 0.11);
 
       leadOsc.connect(leadGain);
       leadGain.connect(ctx.destination);
       leadOsc.start(t);
-      leadOsc.stop(t + 0.18);
+      leadOsc.stop(t + 0.12);
 
       // 2. Bassline Harmonis (Empuk & Berenergi)
       const bassFreq = bass[idx] ?? 130.81;
@@ -599,12 +599,12 @@ export function startAdventureBgm() {
       bassOsc.frequency.setValueAtTime(bassFreq, t);
 
       bassGain.gain.setValueAtTime(0.06, t);
-      bassGain.gain.exponentialRampToValueAtTime(0.003, t + 0.19);
+      bassGain.gain.exponentialRampToValueAtTime(0.003, t + 0.12);
 
       bassOsc.connect(bassGain);
       bassGain.connect(ctx.destination);
       bassOsc.start(t);
-      bassOsc.stop(t + 0.2);
+      bassOsc.stop(t + 0.13);
 
       // 3. Ritme Snare/Hi-Hat (tiap ketukan ganjil)
       if (idx % 2 === 1) {
@@ -612,18 +612,24 @@ export function startAdventureBgm() {
         const snareGain = ctx.createGain();
         snareOsc.type = "sawtooth";
         snareOsc.frequency.setValueAtTime(240, t);
-        snareOsc.frequency.exponentialRampToValueAtTime(60, t + 0.05);
+        snareOsc.frequency.exponentialRampToValueAtTime(60, t + 0.04);
 
         snareGain.gain.setValueAtTime(0.025, t);
-        snareGain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+        snareGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
 
         snareOsc.connect(snareGain);
         snareGain.connect(ctx.destination);
         snareOsc.start(t);
-        snareOsc.stop(t + 0.07);
+        snareOsc.stop(t + 0.06);
       }
     } catch {}
-  }, 190);
+  };
+
+  // Mainkan ketukan pertama SEKETIKA saat tombol ditekan (0 delay)
+  playStep();
+
+  // Tempo dipercepat dari 190ms menjadi 135ms (upbeat, enerjik, dan seru)
+  bgmInterval = setInterval(playStep, 135);
 }
 
 export function stopAdventureBgm() {
