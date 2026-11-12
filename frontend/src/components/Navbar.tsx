@@ -29,8 +29,7 @@ export default function Navbar({ role }: { role: "pelajar" | "pengajar" }) {
   const { data: profile } = useQuery({
     queryKey: ["profile", role],
     queryFn: fetchProfile,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 1000 * 60,
   });
 
   const themeMode = useUIStore((s) => s.themeMode);

@@ -1,6 +1,5 @@
 // src/views/PelajarDashboardPage.tsx — Ruang Belajar Siswa SD (PKn & Bahasa Jawa)
 
-import AdaptiveEduGameModal from "@/components/AdaptiveEduGameModal";
 import AiContentPanel from "@/components/AiContentPanel";
 import ChapterModeSelector from "@/components/ChapterModeSelector";
 import ModalPortal from "@/components/ModalPortal";
@@ -16,8 +15,10 @@ import {
 import { useUIStore, resolveGameTypeForModule } from "@/lib/store/useUIStore";
 import { type AiMode, availableChapters } from "@shared/catalog";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+
+const AdaptiveEduGameModal = lazy(() => import("@/components/AdaptiveEduGameModal"));
 
 interface BadgeDetail {
   id: string;
@@ -1597,16 +1598,26 @@ export default function PelajarDashboardPage() {
         </ModalPortal>
       )}
 
-      {/* Modal Game Edukasi Adaptif (1 Materi = 1 Model Game Eksklusif Sesuai Materi yang Diambil) */}
-      <AdaptiveEduGameModal
-        isOpen={isGameModalOpen}
-        onClose={() => setIsGameModalOpen(false)}
-        chapter={chapter}
-        chapterTitle={currentChapterInfo.title}
-        studentName={currentStudentName}
-        forcedGameMode={activeGameInfo.type as any}
-        activeModule={currentChapterInfo.moduleToPass}
-      />
+      {/* Modal Game Edukasi Adaptif (Lazy-loaded agar perpindahan halaman super cepat) */}
+      {isGameModalOpen && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center text-white text-sm font-black">
+              Memuat Arena Game Edukasi... 🎮
+            </div>
+          }
+        >
+          <AdaptiveEduGameModal
+            isOpen={isGameModalOpen}
+            onClose={() => setIsGameModalOpen(false)}
+            chapter={chapter}
+            chapterTitle={currentChapterInfo.title}
+            studentName={currentStudentName}
+            forcedGameMode={activeGameInfo.type as any}
+            activeModule={currentChapterInfo.moduleToPass}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

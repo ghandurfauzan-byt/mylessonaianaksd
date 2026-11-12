@@ -23,32 +23,41 @@
 // yang dilakukan Next.js secara otomatis per segment di app/.
 
 import ProtectedRoute from "@/router/ProtectedRoute";
-import LandingPage from "@/views/LandingPage";
-import LoginPage from "@/views/LoginPage";
-import { Route, Routes } from "react-router-dom";
-
 import DashboardIndex from "@/views/DashboardIndex";
 import DashboardLayout from "@/views/DashboardLayout";
-import KuisAdaptifPage from "@/views/KuisAdaptifPage";
-import PelajarDashboardPage from "@/views/PelajarDashboardPage";
-import PengajarDashboardPage from "@/views/PengajarDashboardPage";
+import LandingPage from "@/views/LandingPage";
+import LoginPage from "@/views/LoginPage";
+import { Suspense, lazy } from "react";
+import { Route, Routes } from "react-router-dom";
+
+const KuisAdaptifPage = lazy(() => import("@/views/KuisAdaptifPage"));
+const PelajarDashboardPage = lazy(() => import("@/views/PelajarDashboardPage"));
+const PengajarDashboardPage = lazy(() => import("@/views/PengajarDashboardPage"));
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-500">
+          Memuat halaman...
+        </div>
+      }
+    >
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
-      <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<DashboardIndex />} />
-          <Route path="pelajar" element={<PelajarDashboardPage />} />
-          <Route path="pelajar/kuis" element={<KuisAdaptifPage />} />
-          <Route path="pengajar" element={<PengajarDashboardPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardIndex />} />
+            <Route path="pelajar" element={<PelajarDashboardPage />} />
+            <Route path="pelajar/kuis" element={<KuisAdaptifPage />} />
+            <Route path="pengajar" element={<PengajarDashboardPage />} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route path="*" element={<LandingPage />} />
-    </Routes>
+        <Route path="*" element={<LandingPage />} />
+      </Routes>
+    </Suspense>
   );
 }
