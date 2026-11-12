@@ -27,9 +27,10 @@ export default function Navbar({ role }: { role: "pelajar" | "pengajar" }) {
   const isTeacher = role === "pengajar";
 
   const { data: profile } = useQuery({
-    queryKey: ["profile"],
+    queryKey: ["profile", role],
     queryFn: fetchProfile,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const themeMode = useUIStore((s) => s.themeMode);
@@ -52,6 +53,10 @@ export default function Navbar({ role }: { role: "pelajar" | "pengajar" }) {
 
   async function handleLogout() {
     await logout();
+    try {
+      localStorage.removeItem("user_profile");
+    } catch {}
+    queryClient.removeQueries({ queryKey: ["profile"] });
     await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
     navigate("/login");
   }

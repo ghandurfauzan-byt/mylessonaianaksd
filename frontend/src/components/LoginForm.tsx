@@ -59,6 +59,13 @@ export default function LoginForm({ redirectTo }: { redirectTo: string | null })
 
     try {
       const res = await login({ role: targetRole });
+      try {
+        localStorage.removeItem("user_profile");
+      } catch {}
+      queryClient.removeQueries({ queryKey: ["profile"] });
+      if (res.user) {
+        queryClient.setQueryData(["profile", targetRole], res.user);
+      }
       queryClient.setQueryData(SESSION_QUERY_KEY, {
         authenticated: true,
         role: targetRole,
@@ -104,6 +111,13 @@ export default function LoginForm({ redirectTo }: { redirectTo: string | null })
       }
       try {
         const regRes = await register({ name, email, password, role: "pelajar" });
+        try {
+          localStorage.removeItem("user_profile");
+        } catch {}
+        queryClient.removeQueries({ queryKey: ["profile"] });
+        if (regRes.user) {
+          queryClient.setQueryData(["profile", "pelajar"], regRes.user);
+        }
         queryClient.setQueryData(SESSION_QUERY_KEY, {
           authenticated: true,
           role: "pelajar",
@@ -119,6 +133,13 @@ export default function LoginForm({ redirectTo }: { redirectTo: string | null })
       try {
         const res = await login({ email, password, role: activeRole });
         const userRole = res.role || activeRole;
+        try {
+          localStorage.removeItem("user_profile");
+        } catch {}
+        queryClient.removeQueries({ queryKey: ["profile"] });
+        if (res.user) {
+          queryClient.setQueryData(["profile", userRole], res.user);
+        }
         queryClient.setQueryData(SESSION_QUERY_KEY, {
           authenticated: true,
           role: userRole,
