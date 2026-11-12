@@ -646,9 +646,9 @@ export default function CurriculumValidationManager() {
   const [modalStage, setModalStage] = useState<"form" | "fetching" | "validated_preview">("form");
   const [fetchProgressStep, setFetchProgressStep] = useState(0);
 
-  // Form input
+  // Form input (default Kelas 4 agar sinkron langsung dengan kelas siswa aktif saat demo)
   const [selectedSubject, setSelectedSubject] = useState<"pkn" | "bjawa">("pkn");
-  const [selectedGrade, setSelectedGrade] = useState<string>("Kelas 1");
+  const [selectedGrade, setSelectedGrade] = useState<string>("Kelas 4");
   const [chapterCode, setChapterCode] = useState("Bab 1");
   const [topicTitle, setTopicTitle] = useState("");
   const [learningGoal, setLearningGoal] = useState("");
@@ -657,7 +657,7 @@ export default function CurriculumValidationManager() {
   // Penampung data hasil respon API yang siap divalidasi
   const [generatedModule, setGeneratedModule] = useState<CurriculumModule | null>(null);
 
-  const [filterGrade, setFilterGrade] = useState<string>("Kelas 1");
+  const [filterGrade, setFilterGrade] = useState<string>("Kelas 4");
 
   const filteredModules = modules.filter((m) => {
     if (m.subject !== filterSubject) return false;
@@ -851,6 +851,9 @@ export default function CurriculumValidationManager() {
 
     try {
       await validateCurriculumModule(validatedMod);
+      try {
+        sessionStorage.removeItem("student_last_server_module_id");
+      } catch {}
       queryClient.invalidateQueries({ queryKey: ["ai-content"] });
       queryClient.invalidateQueries({ queryKey: ["quiz"] });
       queryClient.invalidateQueries({ queryKey: ["class-summary"] });
@@ -924,6 +927,9 @@ export default function CurriculumValidationManager() {
 
     try {
       await validateCurriculumModule(targetModule);
+      try {
+        sessionStorage.removeItem("student_last_server_module_id");
+      } catch {}
       queryClient.invalidateQueries({ queryKey: ["ai-content"] });
       queryClient.invalidateQueries({ queryKey: ["quiz"] });
     } catch {}

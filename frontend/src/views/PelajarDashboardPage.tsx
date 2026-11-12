@@ -15,6 +15,7 @@ import {
 } from "@/lib/soundEffects";
 import { useUIStore, resolveGameTypeForModule } from "@/lib/store/useUIStore";
 import { type AiMode, availableChapters } from "@shared/catalog";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
@@ -35,6 +36,7 @@ interface BadgeDetail {
 
 export default function PelajarDashboardPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const totalPoints = useUIStore((s) => s.totalPoints);
   const addPoints = useUIStore((s) => s.addPoints);
@@ -195,23 +197,46 @@ export default function PelajarDashboardPage() {
       fetch(`/api/v1/curriculum/active?kelas=${encodeURIComponent(studentKelas)}`)
         .then((r) => r.json())
         .then((res) => {
-          if (res.success && res.data && res.data.id !== lastActiveId) {
-            lastActiveId = res.data.id;
-            setActiveValidatedModule(res.data);
+          if (!res.success || !res.data) return;
+          const serverMod = res.data;
+          let lastServerId: string | null = null;
+          try {
+            lastServerId = sessionStorage.getItem("student_last_server_module_id");
+          } catch {}
+
+          const isChangedFromLastActive = serverMod.id !== lastActiveId;
+          const isChangedFromServerSync = Boolean(lastServerId !== serverMod.id);
+
+          if (isChangedFromLastActive || isChangedFromServerSync) {
+            lastActiveId = serverMod.id;
+            try {
+              sessionStorage.setItem("student_last_server_module_id", serverMod.id);
+            } catch {}
+
+            setActiveValidatedModule(serverMod);
+            queryClient.invalidateQueries({ queryKey: ["ai-content"] });
+            queryClient.invalidateQueries({ queryKey: ["quiz"] });
+
+            // Jika URL masih terkunci ke parameter ?chapter= materi lama, otomatis arahkan ke materi baru
+            if (paramChapter && paramChapter !== serverMod.id) {
+              navigate(`/dashboard/pelajar?chapter=${encodeURIComponent(serverMod.id)}&mode=${mode}`, {
+                replace: true,
+              });
+            }
           }
         })
         .catch(() => {});
     };
 
     syncActiveModule();
-    const interval = setInterval(syncActiveModule, 8000);
+    const interval = setInterval(syncActiveModule, 3000);
     window.addEventListener("focus", syncActiveModule);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", syncActiveModule);
     };
-  }, [setActiveValidatedModule, activeValidatedModule?.id, currentStudent?.kelas]);
+  }, [setActiveValidatedModule, activeValidatedModule?.id, currentStudent?.kelas, paramChapter, mode, navigate, queryClient]);
 
   useEffect(() => {
     setBadgeSubject(isJawaCurrent ? "bjawa" : "pkn");
