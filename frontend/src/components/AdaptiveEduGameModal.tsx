@@ -1665,7 +1665,7 @@ export default function AdaptiveEduGameModal({
     ];
   }
 
-  // 8. GENERATOR DINAMIS UNTUK MATERI LAINNYA (MENYESUAIKAN TOPIK AKTIF SECARA OTOMATIS)
+  // 8. GENERATOR DINAMIS UNTUK MATERI LAINNYA (OTOMATIS MEMBACA HASIL API SIBI & GEMINI AI)
   const topicColors = ["#38bdf8", "#fb923c", "#4ade80", "#f87171", "#facc15"];
   const topicZ = [-45, -105, -165, -225, -285];
   const topicX = [14, -14, 14, -14, 14];
@@ -1722,24 +1722,69 @@ export default function AdaptiveEduGameModal({
     },
   ];
 
-  return defaultStations.map((st, idx) => ({
-    id: `topic_dyn_pos_${idx + 1}`,
-    namaPos: `Pos ${idx + 1}: ${st.subMateri}`,
-    namaSuku: `Pos Belajar Mandiri ${idx + 1}`,
-    rumahAdat: `Bale Belajar ${idx + 1}`,
-    tokohNama: `Duta Pelajar Pos ${idx + 1}`,
-    tokohAvatar: ["👨‍🏫", "👩‍🏫", "👴", "🧑", "🌟"][idx] || "👨‍🏫",
-    guruNama: ["Pak Guru Subroto", "Pak Guru Darmawan", "Ibu Guru Rahayu", "Pak Guru Bambang", "Pak Guru Wijaya"][idx] || "Pak Guru",
-    subMateri: st.subMateri,
-    penjelasanGuru: st.penjelasan,
-    silaKe: idx + 1,
-    simbolSila: ["🌟", "📘", "🤝", "🏛️", "🏆"][idx] || "⭐",
-    zPos: topicZ[idx] || -45,
-    xPos: topicX[idx] || 0,
-    warnaKhas: topicColors[idx] || "#38bdf8",
-    pertanyaan: st.pertanyaan,
-    opsi: st.opsi,
-  }));
+  // Kumpulkan bank soal dinamis dari modul API SIBI / Gemini AI jika tersedia
+  const apiQuizPool: Array<{
+    pertanyaan: string;
+    opsi: Array<{ id: string; teks: string; benar: boolean; penjelasan: string }>;
+  }> = [];
+  if (mod?.quizQuestions) {
+    for (const lvl of [1, 2, 3]) {
+      const qList = (mod.quizQuestions as Record<number, any[]>)[lvl];
+      if (Array.isArray(qList)) {
+        for (const q of qList) {
+          if (q?.question && Array.isArray(q.options) && q.options.length >= 2) {
+            const optLetters = ["A", "B", "C", "D"];
+            apiQuizPool.push({
+              pertanyaan: q.question,
+              opsi: q.options.slice(0, 3).map((optText: string, oIdx: number) => ({
+                id: optLetters[oIdx] || String(oIdx + 1),
+                teks: String(optText),
+                benar: oIdx === q.correctOption,
+                penjelasan:
+                  oIdx === q.correctOption
+                    ? q.explanation || "Tepat sekali! Jawabanmu sesuai dengan materi API SIBI."
+                    : "Belum tepat, yuk pelajari lagi intisari materi di pos ini!",
+              })),
+            });
+          }
+        }
+      }
+    }
+  }
+
+  const apiSummaries = Array.isArray(mod?.ragSummary) ? mod.ragSummary : [];
+
+  return defaultStations.map((st, idx) => {
+    const rawSummary = apiSummaries[idx];
+    const colonIdx = rawSummary ? rawSummary.indexOf(":") : -1;
+    const dynSubMateri =
+      rawSummary && colonIdx > 0 && colonIdx < 45
+        ? rawSummary.slice(0, colonIdx).trim()
+        : st.subMateri;
+    const dynPenjelasan = rawSummary
+      ? (colonIdx > 0 && colonIdx < 45 ? rawSummary.slice(colonIdx + 1).trim() : rawSummary)
+      : st.penjelasan;
+    const dynQuiz = apiQuizPool[idx];
+
+    return {
+      id: `topic_dyn_pos_${idx + 1}`,
+      namaPos: `Pos ${idx + 1}: ${dynSubMateri}`,
+      namaSuku: `Pos Belajar Mandiri ${idx + 1}`,
+      rumahAdat: `Bale Belajar ${idx + 1}`,
+      tokohNama: `Duta Pelajar Pos ${idx + 1}`,
+      tokohAvatar: ["👨‍🏫", "👩‍🏫", "👴", "🧑", "🌟"][idx] || "👨‍🏫",
+      guruNama: ["Pak Guru Subroto", "Pak Guru Darmawan", "Ibu Guru Rahayu", "Pak Guru Bambang", "Pak Guru Wijaya"][idx] || "Pak Guru",
+      subMateri: dynSubMateri,
+      penjelasanGuru: dynPenjelasan,
+      silaKe: idx + 1,
+      simbolSila: ["🌟", "📘", "🤝", "🏛️", "🏆"][idx] || "⭐",
+      zPos: topicZ[idx] || -45,
+      xPos: topicX[idx] || 0,
+      warnaKhas: topicColors[idx] || "#38bdf8",
+      pertanyaan: dynQuiz?.pertanyaan || st.pertanyaan,
+      opsi: dynQuiz?.opsi || st.opsi,
+    };
+  });
 }, [chapter, activeValidatedModule, chapterTitle, resolvedTitle, currentModule]);
 
   // --------------------------------------------------------------------------

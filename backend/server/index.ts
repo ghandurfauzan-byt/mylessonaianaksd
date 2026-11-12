@@ -2024,7 +2024,7 @@ function generateRichEducationalContent(
 
 // 7. POST /api/v1/curriculum/request (Tarik & Generate Modul Adaptif dari AI / Kemdikbud)
 v1Router.post("/curriculum/request", async (req: Request, res: Response) => {
-  const { subject, chapterCode, topicTitle, learningGoal, apiSource } = req.body || {};
+  const { subject, chapterCode, topicTitle, learningGoal, apiSource, grade } = req.body || {};
 
   if (!topicTitle) {
     return res.status(400).json({
@@ -2048,7 +2048,7 @@ v1Router.post("/curriculum/request", async (req: Request, res: Response) => {
     id: `mod-${subject || "pkn"}-${Date.now()}`,
     subject: (isPkn ? "pkn" : "bjawa") as "pkn" | "bjawa",
     subjectLabel: isPkn ? "Pendidikan Pancasila & PKn" : "Basa Jawa (Muatan Lokal)",
-    grade: "Kelas 4",
+    grade: String(grade || "Kelas 4"),
     title: titleStr,
     chapterCode: chapterStr,
     source:
@@ -2292,8 +2292,9 @@ v1Router.get("/ai/status", (_req: Request, res: Response) => {
 });
 
 // 7c. GET /api/v1/curriculum/active (Ambil Modul Aktif Tervalidasi Guru)
-v1Router.get("/curriculum/active", (_req: Request, res: Response) => {
-  const active = getActiveCurriculumState();
+v1Router.get("/curriculum/active", (req: Request, res: Response) => {
+  const targetKelas = typeof req.query.kelas === "string" ? req.query.kelas : undefined;
+  const active = getActiveCurriculumState(targetKelas);
   return res.json({
     success: true,
     data: active,
@@ -2307,14 +2308,18 @@ v1Router.post("/curriculum/validate", async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, message: "Data modul tidak valid." });
   }
 
-  // Daftarkan ke state modul aktif di server
+  // Daftarkan ke state modul aktif di server (termasuk modul baru dari API SIBI)
   setActiveCurriculumState({
     id: moduleData.id,
     title: moduleData.title,
     chapterCode: moduleData.chapterCode || "Bab Pelajaran",
     subject: moduleData.subject || "pkn",
+    subjectLabel: moduleData.subjectLabel,
+    source: moduleData.source,
+    grade: moduleData.grade || "Kelas 4",
     ragSummary: moduleData.ragSummary,
     quizQuestions: moduleData.quizQuestions,
+    gameType: moduleData.gameType,
   });
 
   return res.json({

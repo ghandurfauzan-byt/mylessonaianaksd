@@ -519,9 +519,12 @@ export interface ActiveCurriculumState {
   title: string;
   chapterCode: string;
   subject: string;
+  subjectLabel?: string;
+  source?: string;
   grade?: string;
   ragSummary?: string[];
   quizQuestions?: Record<number, Question[]>;
+  gameType?: "matching" | "adventure" | "ulartangga" | "susunkata" | "wheel";
 }
 
 export interface CurriculumModuleRecord {
@@ -1129,14 +1132,19 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
     ragSummary: sanitizedSummary,
   };
 
-  // Sinkronkan status isActiveToday di database list modul
+  // Sinkronkan status isActiveToday di database list modul (dan simpan modul baru hasil tarik API SIBI jika belum ada)
+  const targetGrade = (mod.grade || "Kelas 4").toLowerCase().trim();
+  let foundInDb = false;
   curriculumModulesDb = curriculumModulesDb.map((item) => {
-    if (
+    const sameModule =
       item.id === mod.id ||
-      item.id.replace("mod-", "") === mod.id.replace("mod-", "")
-    ) {
+      item.id.replace("mod-", "") === mod.id.replace("mod-", "");
+    if (sameModule) {
+      foundInDb = true;
       return {
         ...item,
+        grade: mod.grade || item.grade,
+        gameType: mod.gameType || item.gameType,
         isValidated: true,
         isActiveToday: true,
         validatedAt: "Baru saja divalidasi oleh Guru",
@@ -1144,11 +1152,39 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
         quizQuestions: mod.quizQuestions || item.quizQuestions,
       };
     }
-    return {
-      ...item,
-      isActiveToday: false,
-    };
+    const itemGrade = (item.grade || "").toLowerCase().trim();
+    if (itemGrade === targetGrade || !mod.grade) {
+      return {
+        ...item,
+        isActiveToday: false,
+      };
+    }
+    return item;
   });
+
+  if (!foundInDb) {
+    const subj = mod.subject === "bjawa" ? "bjawa" : "pkn";
+    curriculumModulesDb.unshift({
+      id: mod.id,
+      subject: subj,
+      subjectLabel:
+        mod.subjectLabel ||
+        (subj === "bjawa" ? "Basa Jawa (Muatan Lokal)" : "Pendidikan Pancasila & PKn"),
+      grade: mod.grade || "Kelas 4",
+      title: mod.title,
+      chapterCode: mod.chapterCode || "Bab Baru",
+      source: mod.source || "API SIBI Kemdikbudristek RI (Buku Teks Kurikulum Merdeka)",
+      sourceType: "kemdikbud",
+      pageCount: 24,
+      learningGoal: `Peserta didik memahami intisari materi ${mod.title} dan menerapkannya dalam kehidupan sehari-hari.`,
+      isValidated: true,
+      isActiveToday: true,
+      validatedAt: "Baru saja divalidasi oleh Guru",
+      ragSummary: sanitizedSummary,
+      quizQuestions: mod.quizQuestions,
+      gameType: mod.gameType,
+    });
+  }
 
   if (sanitizedSummary && sanitizedSummary.length > 0) {
     const contentObj = {
@@ -1186,9 +1222,12 @@ export function getActiveCurriculumState(targetKelas?: string): ActiveCurriculum
         title: matchActive.title,
         chapterCode: matchActive.chapterCode,
         subject: matchActive.subject,
+        subjectLabel: matchActive.subjectLabel,
+        source: matchActive.source,
         grade: matchActive.grade,
         ragSummary: matchActive.ragSummary,
         quizQuestions: matchActive.quizQuestions,
+        gameType: matchActive.gameType,
       };
     }
     // Jika belum ada yang aktif untuk kelas itu, cari modul pertama kelas itu
@@ -1202,9 +1241,12 @@ export function getActiveCurriculumState(targetKelas?: string): ActiveCurriculum
         title: matchAny.title,
         chapterCode: matchAny.chapterCode,
         subject: matchAny.subject,
+        subjectLabel: matchAny.subjectLabel,
+        source: matchAny.source,
         grade: matchAny.grade,
         ragSummary: matchAny.ragSummary,
         quizQuestions: matchAny.quizQuestions,
+        gameType: matchAny.gameType,
       };
     }
   }
