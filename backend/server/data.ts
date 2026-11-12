@@ -1133,7 +1133,6 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
   };
 
   // Sinkronkan status isActiveToday di database list modul (dan simpan modul baru hasil tarik API SIBI jika belum ada)
-  const targetGrade = (mod.grade || "Kelas 4").toLowerCase().trim();
   let foundInDb = false;
   curriculumModulesDb = curriculumModulesDb.map((item) => {
     const sameModule =
@@ -1152,14 +1151,10 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
         quizQuestions: mod.quizQuestions || item.quizQuestions,
       };
     }
-    const itemGrade = (item.grade || "").toLowerCase().trim();
-    if (itemGrade === targetGrade || !mod.grade) {
-      return {
-        ...item,
-        isActiveToday: false,
-      };
-    }
-    return item;
+    return {
+      ...item,
+      isActiveToday: false,
+    };
   });
 
   if (!foundInDb) {
@@ -1208,49 +1203,26 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
   }
 }
 
-export function getActiveCurriculumState(targetKelas?: string): ActiveCurriculumState | null {
-  if (targetKelas && curriculumModulesDb && curriculumModulesDb.length > 0) {
-    const norm = targetKelas.toLowerCase().trim();
-    // Cari modul aktif yang cocok dengan kelas siswa
-    const matchActive = curriculumModulesDb.find((m) => {
-      const g = (m.grade || "").toLowerCase();
-      return (g.includes(norm) || g.includes("semua")) && m.isActiveToday;
-    });
-    if (matchActive) {
-      return {
-        id: matchActive.id,
-        title: matchActive.title,
-        chapterCode: matchActive.chapterCode,
-        subject: matchActive.subject,
-        subjectLabel: matchActive.subjectLabel,
-        source: matchActive.source,
-        grade: matchActive.grade,
-        ragSummary: matchActive.ragSummary,
-        quizQuestions: matchActive.quizQuestions,
-        gameType: matchActive.gameType,
-      };
-    }
-    // Jika belum ada yang aktif untuk kelas itu, cari modul pertama kelas itu
-    const matchAny = curriculumModulesDb.find((m) => {
-      const g = (m.grade || "").toLowerCase();
-      return g.includes(norm) || g.includes("semua");
-    });
-    if (matchAny) {
-      return {
-        id: matchAny.id,
-        title: matchAny.title,
-        chapterCode: matchAny.chapterCode,
-        subject: matchAny.subject,
-        subjectLabel: matchAny.subjectLabel,
-        source: matchAny.source,
-        grade: matchAny.grade,
-        ragSummary: matchAny.ragSummary,
-        quizQuestions: matchAny.quizQuestions,
-        gameType: matchAny.gameType,
-      };
-    }
+export function getActiveCurriculumState(_targetKelas?: string): ActiveCurriculumState | null {
+  if (activeCurriculumState) {
+    return activeCurriculumState;
   }
-  return activeCurriculumState;
+  const activeFromDb = curriculumModulesDb.find((m) => m.isActiveToday);
+  if (activeFromDb) {
+    return {
+      id: activeFromDb.id,
+      title: activeFromDb.title,
+      chapterCode: activeFromDb.chapterCode,
+      subject: activeFromDb.subject,
+      subjectLabel: activeFromDb.subjectLabel,
+      source: activeFromDb.source,
+      grade: activeFromDb.grade,
+      ragSummary: activeFromDb.ragSummary,
+      quizQuestions: activeFromDb.quizQuestions,
+      gameType: activeFromDb.gameType,
+    };
+  }
+  return null;
 }
 
 export async function getAiContent(chapterId: string, mode: AiMode) {
