@@ -2288,9 +2288,9 @@ return rawStations.map((st) => {
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
 
-    // Jalan Paving Kampus Sekolah Digital (Bersih & Elegan Serasi dengan Web)
+    // Jalan Aspal Kampus Sekolah Digital (Hitam Elegan Kontras dengan Garis Emas)
     const pathGeo = new THREE.PlaneGeometry(12, 400);
-    const pathMat = new THREE.MeshLambertMaterial({ color: "#f8fafc" });
+    const pathMat = new THREE.MeshLambertMaterial({ color: "#1e293b" });
     const pathMesh = new THREE.Mesh(pathGeo, pathMat);
     pathMesh.rotation.x = -Math.PI / 2;
     pathMesh.position.set(0, 0.02, -150);
@@ -2469,7 +2469,7 @@ return rawStations.map((st) => {
 
     scene.add(gapuraGroup);
 
-    // Tiang Bendera Merah Putih di Halaman Sekolah Depan (Z = +18.5, X = 0)
+    // Tiang Bendera Merah Putih di Halaman Sekolah Samping Gerbang (Z = +16.5, X = -6.8)
     const flagGroup = new THREE.Group();
     const flagPole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.08, 0.1, 8.5, 12),
@@ -2499,7 +2499,8 @@ return rawStations.map((st) => {
     flagBase.position.y = 0.17;
     flagGroup.add(flagBase);
 
-    flagGroup.position.set(0, 0, 18.5);
+    // Diletakkan di taman samping gerbang (tidak di tengah jalan)
+    flagGroup.position.set(-6.8, 0, 16.5);
     scene.add(flagGroup);
 
     // ------------------------------------------------------------------------
@@ -2813,6 +2814,10 @@ return rawStations.map((st) => {
     const leafMat = new THREE.MeshLambertMaterial({ color: "#15803d" });
 
     for (let tz = 12; tz > -320; tz -= 18) {
+      // Jangan spawn pohon tepat di area 5 Pos Paviliun agar gedung & plang terlihat jelas tanpa terhalang
+      const nearPos = sukuList.some((s) => Math.abs(tz - s.zPos) < 14);
+      if (nearPos) continue;
+
       const tL = new THREE.Group();
       const trL = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 5, 8), trunkMat);
       trL.position.y = 2.5;
@@ -2901,12 +2906,12 @@ return rawStations.map((st) => {
       wallMesh.castShadow = true;
       hGroup.add(wallMesh);
 
-      // 3. Portal Aksen Warna Identitas Materi Suku/Sila
+      // 3. Portal Aksen Warna Identitas Materi Suku/Sila (DI DEPAN MENGHADAP +Z)
       const portalAccent = new THREE.Mesh(
         new THREE.BoxGeometry(11.4, 7.0, 1.2),
         new THREE.MeshLambertMaterial({ color: suku.warnaKhas })
       );
-      portalAccent.position.set(0, 4.2, suku.xPos > 0 ? -4.1 : 4.1);
+      portalAccent.position.set(0, 4.2, 4.1);
       hGroup.add(portalAccent);
 
       // 4. Kanopi Modern Kampus Cerdas Mengambang
@@ -2914,7 +2919,7 @@ return rawStations.map((st) => {
         new THREE.BoxGeometry(12.8, 0.8, 10.8),
         new THREE.MeshLambertMaterial({ color: "#0284c7" })
       );
-      canopyRoof.position.y = 7.9;
+      canopyRoof.position.set(0, 7.9, 0.4);
       canopyRoof.castShadow = true;
       hGroup.add(canopyRoof);
 
@@ -2922,35 +2927,35 @@ return rawStations.map((st) => {
         new THREE.BoxGeometry(11.8, 0.4, 9.8),
         new THREE.MeshLambertMaterial({ color: "#0f172a" })
       );
-      roofTopDeck.position.y = 8.5;
+      roofTopDeck.position.set(0, 8.5, 0.4);
       hGroup.add(roofTopDeck);
 
-      // 5. Lambang Mahkota Bintang Emas SD Cerdas di Atas Paviliun
+      // 5. Lambang Mahkota Bintang Emas SD Cerdas di Depan Atap
       const starCrest = new THREE.Mesh(
         new THREE.CylinderGeometry(0.85, 0.85, 0.28, 5),
         new THREE.MeshLambertMaterial({ color: "#facc15", emissive: "#ca8a04" })
       );
       starCrest.rotation.x = Math.PI / 2;
-      starCrest.position.set(0, 9.4, suku.xPos > 0 ? -4.6 : 4.6);
+      starCrest.position.set(0, 9.4, 4.6);
       hGroup.add(starCrest);
 
-      // 6. Pintu Kaca Digital Transparan
+      // 6. Pintu Kaca Digital Transparan (DI DEPAN MENGHADAP +Z)
       const doorMesh = new THREE.Mesh(
         new THREE.BoxGeometry(2.6, 4.4, 0.25),
         new THREE.MeshLambertMaterial({ color: "#0369a1", transparent: true, opacity: 0.85 })
       );
-      doorMesh.position.set(0, 2.9, suku.xPos > 0 ? -4.62 : 4.62);
+      doorMesh.position.set(0, 2.9, 4.62);
       hGroup.add(doorMesh);
 
-      // 7. Jendela Kaca Smart Classroom Berpijar Biru Lembut
+      // 7. Jendela Kaca Smart Classroom Berpijar Biru Lembut (Kiri & Kanan Pintu di Depan)
       const winGeo = new THREE.BoxGeometry(2.4, 2.0, 0.2);
       const winMat = new THREE.MeshBasicMaterial({ color: "#bae6fd" });
       const winLeft = new THREE.Mesh(winGeo, winMat);
-      winLeft.position.set(-3.2, 4.2, suku.xPos > 0 ? -4.62 : 4.62);
+      winLeft.position.set(-3.2, 4.2, 4.62);
       hGroup.add(winLeft);
 
       const winRight = new THREE.Mesh(winGeo, winMat);
-      winRight.position.set(3.2, 4.2, suku.xPos > 0 ? -4.62 : 4.62);
+      winRight.position.set(3.2, 4.2, 4.62);
       hGroup.add(winRight);
 
       // 8. Anak Tangga Menuju Teras Depan
@@ -2958,7 +2963,7 @@ return rawStations.map((st) => {
         new THREE.BoxGeometry(3.6, 0.4, 1.4),
         new THREE.MeshLambertMaterial({ color: "#334155" })
       );
-      stepMesh.position.set(0, 0.2, suku.xPos > 0 ? -5.3 : 5.3);
+      stepMesh.position.set(0, 0.2, 5.3);
       hGroup.add(stepMesh);
 
       // 9. Mini AI Companion Robot Maskot Mengambang di Depan Paviliun
@@ -2970,13 +2975,13 @@ return rawStations.map((st) => {
       botBody.position.y = 2.4;
       botGroup.add(botBody);
 
-      // Layar Visor Robot Berpijar Biru Ramah
+      // Layar Visor Robot Berpijar Biru Ramah Menghadap +Z
       const botVisor = new THREE.Mesh(
         new THREE.CylinderGeometry(0.38, 0.38, 0.2, 16),
         new THREE.MeshBasicMaterial({ color: "#38bdf8" })
       );
       botVisor.rotation.x = Math.PI / 2;
-      botVisor.position.set(0, 2.45, suku.xPos > 0 ? -0.52 : 0.52);
+      botVisor.position.set(0, 2.45, 0.52);
       botGroup.add(botVisor);
 
       // Antena Robot AI dengan Ujung Emas
@@ -3003,81 +3008,84 @@ return rawStations.map((st) => {
       botRing.position.y = 1.45;
       botGroup.add(botRing);
 
-      botGroup.position.set(suku.xPos > 0 ? -4.6 : 4.6, 0, suku.xPos > 0 ? -5.0 : 5.0);
+      // Tempatkan robot di sisi depan teras menghadap jalan
+      botGroup.position.set(suku.xPos > 0 ? -4.5 : 4.5, 0, 4.8);
       hGroup.add(botGroup);
 
-      // 10. Taman Bunga & Tanaman Asri Kampus di Kiri-Kanan Paviliun
+      // 10. Taman Bunga & Tanaman Asri Kampus di Kiri-Kanan Depan Paviliun
       const planterGeo = new THREE.BoxGeometry(2.4, 0.45, 1.2);
       const planterMat = new THREE.MeshLambertMaterial({ color: "#0f172a" });
-      const planterFlowerMat = new THREE.MeshLambertMaterial({ color: "#f59e0b" });
 
       const planterL = new THREE.Mesh(planterGeo, planterMat);
-      planterL.position.set(-4.5, 0.22, suku.xPos > 0 ? -3.0 : 3.0);
-      const flwL = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55), planterFlowerMat);
-      flwL.position.set(-4.5, 0.7, suku.xPos > 0 ? -3.0 : 3.0);
+      planterL.position.set(-4.5, 0.22, 4.0);
+      const flwL = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55), new THREE.MeshLambertMaterial({ color: "#f59e0b" }));
+      flwL.position.set(-4.5, 0.7, 4.0);
       hGroup.add(planterL);
       hGroup.add(flwL);
 
       const planterR = new THREE.Mesh(planterGeo, planterMat);
-      planterR.position.set(4.5, 0.22, suku.xPos > 0 ? -3.0 : 3.0);
+      planterR.position.set(4.5, 0.22, 4.0);
       const flwR = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55), new THREE.MeshLambertMaterial({ color: "#ec4899" }));
-      flwR.position.set(4.5, 0.7, suku.xPos > 0 ? -3.0 : 3.0);
+      flwR.position.set(4.5, 0.7, 4.0);
       hGroup.add(planterR);
       hGroup.add(flwR);
 
-      // Letakkan Paviliun di samping jalan agar halaman luas dan leluasa
-      const houseX = suku.xPos > 0 ? 17.5 : -17.5;
-      hGroup.position.set(houseX, 0, suku.zPos);
+      // POSISI BANGUNAN DEKAT JALAN (X = ±11.2) & MENGHADAP KE DEPAN SISWA (+Z)
+      const houseX = suku.xPos > 0 ? 11.2 : -11.2;
+      hGroup.position.set(houseX, 0, suku.zPos - 1.2);
+      // Miringkan sedikit (14 derajat) ke arah jalan agar sudut 3D gedung terlihat jelas & ramah menyambut siswa
+      hGroup.rotation.y = suku.xPos > 0 ? -0.24 : 0.24;
       scene.add(hGroup);
 
       // ----------------------------------------------------------------------
       // PLANG PAPAN NAMA DIGITAL POS DI DEPAN PAVILIUN
-      // DIMAJUKAN KE DEKAT JALAN DENGAN DESAIN MODERN ELEGAN
+      // DITEMPATKAN DI TEPI JALUR SEBELUM POS (Z = zPos + 4.2)
+      // TINGGI PROPORSIONAL SEHINGGA TIDAK MENUTUPI PAK GURU
       // ----------------------------------------------------------------------
-      const signX = suku.xPos > 0 ? 7.2 : -7.2;
-      const signZ = suku.zPos - (suku.xPos > 0 ? 2.6 : -2.6);
+      const signX = suku.xPos > 0 ? 7.6 : -7.6;
+      const signZ = suku.zPos + 4.2;
       const signGroup = new THREE.Group();
 
-      const signPole1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.2, 8), new THREE.MeshLambertMaterial({ color: "#0f172a" }));
-      signPole1.position.set(-1.2, 1.6, 0);
+      const signPole1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.4, 8), new THREE.MeshLambertMaterial({ color: "#0f172a" }));
+      signPole1.position.set(-1.0, 1.2, 0);
       signGroup.add(signPole1);
 
       const signPole2 = signPole1.clone();
-      signPole2.position.set(1.2, 1.6, 0);
+      signPole2.position.set(1.0, 1.2, 0);
       signGroup.add(signPole2);
 
       const signCanvas = document.createElement("canvas");
-      signCanvas.width = 720;
-      signCanvas.height = 360;
+      signCanvas.width = 640;
+      signCanvas.height = 300;
       const sCtx = signCanvas.getContext("2d")!;
       sCtx.fillStyle = "#0f172a";
-      sCtx.fillRect(0, 0, 720, 360);
-      sCtx.strokeStyle = "#0284c7";
-      sCtx.lineWidth = 14;
-      sCtx.strokeRect(7, 7, 706, 346);
+      sCtx.fillRect(0, 0, 640, 300);
+      sCtx.strokeStyle = suku.warnaKhas || "#0284c7";
+      sCtx.lineWidth = 12;
+      sCtx.strokeRect(6, 6, 628, 288);
       sCtx.strokeStyle = "#facc15";
-      sCtx.lineWidth = 4;
-      sCtx.strokeRect(18, 18, 684, 324);
+      sCtx.lineWidth = 3;
+      sCtx.strokeRect(16, 16, 608, 268);
 
-      drawFittedText(sCtx, `🏫 SD CERDAS AI: ${suku.namaPos.toUpperCase()}`, 360, 55, 660, 32, { color: "#facc15" });
-      drawFittedText(sCtx, `📚 Materi: ${suku.subMateri}`, 360, 130, 660, 28, { color: "#ffffff" });
-      drawFittedText(sCtx, `👨‍🏫 Pengampu: ${suku.guruNama}`, 360, 205, 660, 26, { color: "#38bdf8" });
-      drawFittedText(sCtx, "✨ Masuk Titik Belajar untuk Dialog & Kuis", 360, 280, 660, 24, { color: "#4ade80" });
+      drawFittedText(sCtx, `🏫 ${suku.namaPos.toUpperCase()}`, 320, 48, 580, 28, { color: "#facc15" });
+      drawFittedText(sCtx, `📚 Materi: ${suku.subMateri}`, 320, 115, 580, 24, { color: "#ffffff" });
+      drawFittedText(sCtx, `👨‍🏫 Pengampu: ${suku.guruNama}`, 320, 180, 580, 22, { color: "#38bdf8" });
+      drawFittedText(sCtx, "✨ Dekati Pak Guru untuk Belajar", 320, 240, 580, 20, { color: "#4ade80" });
 
       const signBoard = new THREE.Mesh(
-        new THREE.PlaneGeometry(4.0, 2.0),
+        new THREE.PlaneGeometry(3.2, 1.5),
         new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(signCanvas), side: THREE.DoubleSide })
       );
-      signBoard.position.set(0, 2.2, 0.05);
+      signBoard.position.set(0, 1.7, 0.04);
       signGroup.add(signBoard);
 
       signGroup.position.set(signX, 0, signZ);
-      // Diputar miring menghadap jalan agar terbaca jelas oleh pemain
-      signGroup.rotation.y = suku.xPos > 0 ? -Math.PI * 0.42 : Math.PI * 0.42;
+      signGroup.rotation.y = suku.xPos > 0 ? -0.32 : 0.32;
       scene.add(signGroup);
 
       // ----------------------------------------------------------------------
-      // PENUNGGU PAK GURU 3D HUMANOID (DIMAJUKAN KE HALAMAN DEPAN, TIDAK NEMPEL TEMBOK)
+      // PENUNGGU PAK GURU 3D HUMANOID & TITIK BELAJAR BERCAHAYA
+      // BERDIRI TEGAK DI SAMPING JALAN (Z = zPos) MENGHADAP SISWA
       // ----------------------------------------------------------------------
       const guruTeacherColors = [
         { shirt: "#0284c7", tie: "#1e3a8a" },
@@ -3098,116 +3106,59 @@ return rawStations.map((st) => {
       });
       const guruPosGroup = guruPosData.group;
 
-      // Lingkaran Emas Penanda di Bawah Kaki Pak Guru Penunggu Pos
-      const gRingGeo = new THREE.RingGeometry(0.9, 1.25, 32);
+      // Lingkaran Emas Penanda & Pendaran di Lantai (Tanpa Silinder Vertikal Penghalang)
+      const gRingGeo = new THREE.RingGeometry(1.4, 1.8, 32);
       const gRingMat = new THREE.MeshBasicMaterial({ color: "#facc15", side: THREE.DoubleSide });
       const gRingMesh = new THREE.Mesh(gRingGeo, gRingMat);
       gRingMesh.rotation.x = -Math.PI / 2;
       gRingMesh.position.y = 0.05;
       guruPosGroup.add(gRingMesh);
 
-      // 3D Floating Sprite Label Overhead Pak Guru Penunggu Pos
+      const gDiscGeo = new THREE.CircleGeometry(1.35, 32);
+      const gDiscMat = new THREE.MeshLambertMaterial({ color: suku.warnaKhas, transparent: true, opacity: 0.75 });
+      const gDiscMesh = new THREE.Mesh(gDiscGeo, gDiscMat);
+      gDiscMesh.rotation.x = -Math.PI / 2;
+      gDiscMesh.position.y = 0.04;
+      guruPosGroup.add(gDiscMesh);
+
+      // 3D Floating Sprite Label Tunggal yang Elegan & Jelas di Atas Pak Guru (Y = 5.2)
+      // TIDAK ADA SPRITE GANDA SEHINGGA TIDAK AKAN PERNAH BERTUMPUK / TERTAMPAREK
       const gpCanvas = document.createElement("canvas");
-      gpCanvas.width = 420;
-      gpCanvas.height = 96;
+      gpCanvas.width = 460;
+      gpCanvas.height = 110;
       const gpCtx = gpCanvas.getContext("2d")!;
       gpCtx.fillStyle = "#0f172a";
-      gpCtx.fillRect(0, 0, 420, 96);
-      gpCtx.strokeStyle = "#0284c7";
+      gpCtx.fillRect(0, 0, 460, 110);
+      gpCtx.strokeStyle = suku.warnaKhas || "#0284c7";
       gpCtx.lineWidth = 6;
-      gpCtx.strokeRect(3, 3, 414, 90);
-      gpCtx.fillStyle = "#ffffff";
-      gpCtx.font = "bold 24px sans-serif";
-      gpCtx.textAlign = "center";
-      gpCtx.fillText(`👨‍🏫 ${suku.guruNama}`, 210, 36);
-      gpCtx.fillStyle = "#38bdf8";
-      gpCtx.font = "bold 18px sans-serif";
-      gpCtx.fillText(`Paviliun: ${suku.namaPos}`, 210, 62);
-      gpCtx.fillStyle = "#4ade80";
-      gpCtx.font = "bold 16px sans-serif";
-      gpCtx.fillText("[ Dekati untuk Dialog & Kuis ]", 210, 85);
+      gpCtx.strokeRect(3, 3, 454, 104);
+      gpCtx.strokeStyle = "#facc15";
+      gpCtx.lineWidth = 2;
+      gpCtx.strokeRect(9, 9, 442, 92);
+
+      drawFittedText(gpCtx, `🏫 ${suku.namaPos.toUpperCase()}`, 230, 30, 420, 22, { color: "#facc15" });
+      drawFittedText(gpCtx, `👨‍🏫 ${suku.guruNama}`, 230, 62, 420, 20, { color: "#ffffff" });
+      drawFittedText(gpCtx, "⭐ [ Dekati untuk Belajar & Kuis ]", 230, 92, 420, 16, { color: "#4ade80" });
 
       const gpSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gpCanvas) }));
-      gpSprite.position.set(0, 5.0, 0);
-      gpSprite.scale.set(4.0, 0.95, 1);
+      gpSprite.position.set(0, 5.2, 0);
+      gpSprite.scale.set(4.2, 1.0, 1);
       guruPosGroup.add(gpSprite);
 
-      // Dimajukan ke samping jalan (X = ±7.2), jauh dari dinding rumah (X = ±17.5)
-      const guruPosHostX = suku.xPos > 0 ? 7.2 : -7.2;
-      const guruPosHostZ = suku.zPos + (suku.xPos > 0 ? 2.2 : -2.2);
+      const guruPosHostX = suku.xPos > 0 ? 7.6 : -7.6;
+      const guruPosHostZ = suku.zPos;
       guruPosGroup.position.set(guruPosHostX, 0, guruPosHostZ);
-      guruPosGroup.rotation.y = suku.xPos > 0 ? -Math.PI * 0.42 : Math.PI * 0.42;
+      guruPosGroup.rotation.y = suku.xPos > 0 ? -0.35 : 0.35;
       scene.add(guruPosGroup);
-
-      // ----------------------------------------------------------------------
-      // TITIK MISI BERCAHAYA (CHECKPOINT PAD DI HALAMAN DEPAN)
-      // ----------------------------------------------------------------------
-      const hotspotX = suku.xPos > 0 ? 6.2 : -6.2;
-      const hotspotZ = suku.zPos;
-      const spotGroup = new THREE.Group();
-
-      // Cincin Emas Luar
-      const spotRingGeo = new THREE.RingGeometry(1.8, 2.2, 32);
-      const spotRingMat = new THREE.MeshBasicMaterial({ color: "#facc15", side: THREE.DoubleSide });
-      const spotRing = new THREE.Mesh(spotRingGeo, spotRingMat);
-      spotRing.rotation.x = -Math.PI / 2;
-      spotRing.position.y = 0.05;
-      spotGroup.add(spotRing);
-
-      // Lingkaran Dalam Warna Sila
-      const spotDiscGeo = new THREE.CircleGeometry(1.75, 32);
-      const spotDiscMat = new THREE.MeshLambertMaterial({ color: suku.warnaKhas, transparent: true, opacity: 0.85 });
-      const spotDisc = new THREE.Mesh(spotDiscGeo, spotDiscMat);
-      spotDisc.rotation.x = -Math.PI / 2;
-      spotDisc.position.y = 0.04;
-      spotGroup.add(spotDisc);
-
-      // Sorotan Cahaya Vertikal (Light Beacon)
-      const beaconGeo = new THREE.CylinderGeometry(1.5, 1.5, 5, 24, 1, true);
-      const beaconMat = new THREE.MeshBasicMaterial({
-        color: suku.warnaKhas,
-        transparent: true,
-        opacity: 0.35,
-        side: THREE.DoubleSide,
-      });
-      const beaconMesh = new THREE.Mesh(beaconGeo, beaconMat);
-      beaconMesh.position.y = 2.5;
-      spotGroup.add(beaconMesh);
-
-      // Label Petunjuk Melayang di Atas Titik
-      const padCanvas = document.createElement("canvas");
-      padCanvas.width = 400;
-      padCanvas.height = 92;
-      const pdCtx = padCanvas.getContext("2d")!;
-      pdCtx.fillStyle = "#0f172a";
-      pdCtx.fillRect(0, 0, 400, 92);
-      pdCtx.strokeStyle = "#38bdf8";
-      pdCtx.lineWidth = 5;
-      pdCtx.strokeRect(3, 3, 394, 86);
-      pdCtx.fillStyle = "#ffffff";
-      pdCtx.font = "bold 24px sans-serif";
-      pdCtx.textAlign = "center";
-      pdCtx.fillText(`🎯 ${suku.namaPos.toUpperCase()}`, 200, 36);
-      pdCtx.fillStyle = "#facc15";
-      pdCtx.font = "bold 20px sans-serif";
-      pdCtx.fillText(`👨‍🏫 Bersama ${suku.guruNama} [Dekati]`, 200, 72);
-
-      const padSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(padCanvas) }));
-      padSprite.position.set(0, 4.2, 0);
-      padSprite.scale.set(4.2, 1.0, 1);
-      spotGroup.add(padSprite);
-
-      spotGroup.position.set(hotspotX, 0, hotspotZ);
-      scene.add(spotGroup);
 
       hotspotList.push({
         suku,
-        x: hotspotX,
-        z: hotspotZ,
+        x: guruPosHostX,
+        z: guruPosHostZ,
         guruX: guruPosHostX,
         guruZ: guruPosHostZ,
-        ringMesh: spotRing,
-        beaconMesh,
+        ringMesh: gRingMesh,
+        beaconMesh: gDiscMesh,
       });
     });
 
@@ -3266,21 +3217,21 @@ return rawStations.map((st) => {
     const playerGroup = playerData.group;
     const { torso, head, leftArm, rightArm, leftLeg, rightLeg } = playerData;
 
-        // Label Pemain Auto-Fitted (Menampilkan Nama Siswa Asli)
+    // Label Pemain Auto-Fitted (Menampilkan Nama Siswa Asli - Tingkat Rendah agar Tidak Menimpa Label Pos)
     const playerNameCanvas = document.createElement("canvas");
     playerNameCanvas.width = 380;
     playerNameCanvas.height = 70;
     const pCtx = playerNameCanvas.getContext("2d")!;
-    pCtx.fillStyle = "#1e1b4b";
+    pCtx.fillStyle = "#0f172a";
     pCtx.fillRect(0, 0, 380, 70);
-    pCtx.strokeStyle = "#facc15";
+    pCtx.strokeStyle = "#38bdf8";
     pCtx.lineWidth = 5;
     pCtx.strokeRect(2, 2, 376, 66);
     drawFittedText(pCtx, `🎒 ${studentName} (Kamu)`, 190, 25, 360, 24, { color: "#ffffff" });
     drawFittedText(pCtx, "Siswa SD Online 🟢", 190, 52, 360, 18, { color: "#4ade80" });
     const pNameSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(playerNameCanvas) }));
-    pNameSprite.position.set(0, 4.6, 0);
-    pNameSprite.scale.set(3.8, 0.8, 1);
+    pNameSprite.position.set(0, 3.8, 0);
+    pNameSprite.scale.set(3.4, 0.7, 1);
     playerGroup.add(pNameSprite);
 
     playerGroup.position.set(0, 0, 18);
@@ -3466,10 +3417,11 @@ return rawStations.map((st) => {
       // Animasi Denyut Cincin Emas Pak Guru
       ringMesh.rotation.z += delta * 2;
 
-      // Animasi Denyut Titik Misi Checkpoint Rumah Adat
+      // Animasi Denyut Titik Belajar & Cincin Emas Paviliun
       hotspotList.forEach((hp) => {
         hp.ringMesh.rotation.z += delta * 1.5;
-        hp.beaconMesh.scale.y = 1 + Math.sin(Date.now() * 0.003 + hp.suku.silaKe) * 0.15;
+        const pulse = 1 + Math.sin(Date.now() * 0.003 + hp.suku.silaKe) * 0.08;
+        hp.beaconMesh.scale.set(pulse, pulse, 1);
       });
 
       // ----------------------------------------------------------------------
