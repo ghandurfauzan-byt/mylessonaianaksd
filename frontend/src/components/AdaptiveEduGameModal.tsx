@@ -2288,9 +2288,9 @@ return rawStations.map((st) => {
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
 
-    // Jalan Paving Kampus Sekolah Digital (Bersih & Elegan Serasi dengan Web)
+    // Jalan Aspal Kampus Sekolah Digital (Hitam Elegan Kontras dengan Garis Emas)
     const pathGeo = new THREE.PlaneGeometry(12, 400);
-    const pathMat = new THREE.MeshLambertMaterial({ color: "#f8fafc" });
+    const pathMat = new THREE.MeshLambertMaterial({ color: "#1e293b" });
     const pathMesh = new THREE.Mesh(pathGeo, pathMat);
     pathMesh.rotation.x = -Math.PI / 2;
     pathMesh.position.set(0, 0.02, -150);
@@ -2469,7 +2469,7 @@ return rawStations.map((st) => {
 
     scene.add(gapuraGroup);
 
-    // Tiang Bendera Merah Putih di Halaman Sekolah Depan (Z = +18.5, X = 0)
+    // Tiang Bendera Merah Putih di Pinggir Samping Gerbang (Z = +16.5, X = -6.8)
     const flagGroup = new THREE.Group();
     const flagPole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.08, 0.1, 8.5, 12),
@@ -2499,7 +2499,8 @@ return rawStations.map((st) => {
     flagBase.position.y = 0.17;
     flagGroup.add(flagBase);
 
-    flagGroup.position.set(0, 0, 18.5);
+    // Diletakkan di pinggir samping jalan (tidak di tengah jalan)
+    flagGroup.position.set(-6.8, 0, 16.5);
     scene.add(flagGroup);
 
     // ------------------------------------------------------------------------
