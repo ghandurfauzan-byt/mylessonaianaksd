@@ -7,12 +7,17 @@ import { fetchQuestionsByLevel } from "@/lib/api/quizApi";
 import type { Question } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 
-export const quizQuestionsQueryKey = (level: number) => ["quiz", level] as const;
+export const quizQuestionsQueryKey = (level: number, chapter?: string) =>
+  ["quiz", level, chapter ?? "all"] as const;
 
-export function useQuizQuestionsQuery(level: number, initialData?: Question[]) {
+export function useQuizQuestionsQuery(
+  level: number,
+  chapter?: string,
+  initialData?: Question[]
+) {
   return useQuery({
-    queryKey: quizQuestionsQueryKey(level),
-    queryFn: () => fetchQuestionsByLevel(level),
+    queryKey: quizQuestionsQueryKey(level, chapter),
+    queryFn: () => fetchQuestionsByLevel(level, chapter),
     initialData,
     staleTime: 1000 * 60 * 15,
     gcTime: 1000 * 60 * 30,

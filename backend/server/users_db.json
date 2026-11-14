@@ -27,10 +27,10 @@
     "institution": "SD Negeri 1 Madiun",
     "kelas": "Kelas 4",
     "noAbsen": "01",
-    "points": 460,
+    "points": 1970,
     "materialScore": 0,
     "quizScore": 100,
-    "gamePoints": 460,
+    "gamePoints": 1970,
     "weakness": {
       "chapterId": "pkn-sila3",
       "chapterName": "Pendidikan Pancasila (Makna Sila Ke-3)",
@@ -42,14 +42,14 @@
     },
     "chapterScores": {
       "pkn-sila3": {
-        "points": 450,
-        "gamePoints": 450,
+        "points": 1405,
+        "gamePoints": 1405,
         "quizScore": 100,
         "status": "tuntas"
       },
       "pkn-gotongroyong": {
-        "points": 0,
-        "gamePoints": 0,
+        "points": 170,
+        "gamePoints": 170,
         "quizScore": 0,
         "status": "tuntas",
         "weaknessNote": "Kerja sama sukarela membersihkan lingkungan."
@@ -60,6 +60,12 @@
         "quizScore": 0,
         "status": "tuntas",
         "weaknessNote": "Beda ragam basa ngoko lugu lan krama alus marang guru."
+      },
+      "pkn-kls1-simbol": {
+        "points": 345,
+        "gamePoints": 345,
+        "quizScore": 0,
+        "status": "tuntas"
       }
     }
   },
@@ -265,14 +271,14 @@
   },
   {
     "id": "usr_ridho",
-    "name": "Ridho Asykuri",
-    "email": "ridho@gmail.com",
+    "name": "Ghandur Fauzan Ngauf Hisam",
+    "email": "ghandur@gmail.com",
     "passwordHash": "/vrRkGucfX.NhNjP9yLWO6FZsSowZO0F1lTTKm",
     "role": "pelajar",
-    "nimNip": "V3925015",
+    "nimNip": "SD-Kelas4-01",
     "institution": "SD Negeri 1 Madiun",
     "kelas": "Kelas 4",
-    "noAbsen": "15",
+    "noAbsen": "01",
     "points": 380,
     "gamePoints": 380,
     "quizScore": 90,
@@ -352,5 +358,53 @@
         "weaknessNote": "Beda ragam basa ngoko lugu lan krama alus marang guru."
       }
     }
+  },
+  {
+    "id": "usr_1794660062401",
+    "name": "Guru Uji 1794660062401",
+    "email": "guru_uji_1794660062401@gmail.com",
+    "passwordHash": "$2b$10$tK7rMpjagfLqtJ5cx9yZme2r3ZdrjbV3wCrDuwXnh0YbA5EESfvQS",
+    "role": "pengajar",
+    "nimNip": "199xxxxxxxxx",
+    "institution": "SD Negeri 1 Madiun"
+  },
+  {
+    "id": "usr_1794660096489",
+    "name": "Guru Uji 1794660096489",
+    "email": "guru_uji_1794660096489@gmail.com",
+    "passwordHash": "$2b$10$JQPzH9rQcqfV6YncAGj0eOnspcmsZwZrKAh//.zGT8hH/g1wkrhye",
+    "role": "pengajar",
+    "nimNip": "199xxxxxxxxx",
+    "institution": "SD Negeri 1 Madiun"
+  },
+  {
+    "id": "usr_1794663471050",
+    "name": "Ghandur Fauzan Ngauf Hisam",
+    "email": "ghandur@gmail.com",
+    "passwordHash": "$2b$10$2zwo8pfdEoyZSIWN4/d/VOh3lc38DRYsER7izXpw5PNzxq4UIgx6m",
+    "role": "pelajar",
+    "nimNip": "SD-Kelas6-01",
+    "institution": "SD Negeri 1 Madiun",
+    "points": 200,
+    "weakness": {
+      "chapterId": "pkn-sila3",
+      "chapterName": "Pelajaran PKn (Makna Sila Ke-3)",
+      "subject": "pkn",
+      "score": 8,
+      "outOf": 10,
+      "status": "tuntas",
+      "message": "Selamat belajar! Belum ada catatan remedial pada akunmu. Mulai eksplorasi belajarmu dari modul utama Makna Lambang Sila Ke-3 bersama Robot Pintar!"
+    },
+    "kelas": "Kelas 6",
+    "noAbsen": "01"
+  },
+  {
+    "id": "usr_1794684167526",
+    "name": "Guru Uji 1794684167526",
+    "email": "guru_uji_1794684167526@gmail.com",
+    "passwordHash": "$2b$10$B1Kg.uVkPtpBq76ejaNb6OsAcy2y99.ofsI37tCZ3cqMTv4gbqKvK",
+    "role": "pengajar",
+    "nimNip": "199xxxxxxxxx",
+    "institution": "SD Negeri 1 Madiun"
   }
 ]

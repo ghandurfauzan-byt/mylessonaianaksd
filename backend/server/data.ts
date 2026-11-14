@@ -1303,20 +1303,1656 @@ export async function getAiContent(chapterId: string, mode: AiMode) {
   };
 }
 
-export async function getQuestionsByLevel(level: number): Promise<Question[]> {
+// ============================================================================
+// BANK SOAL KUIS ADAPTIF TEMATIK PER-BAB (PKN & BAHASA JAWA LEVEL 1, 2, 3)
+// ============================================================================
+export const chapterQuizBank: Record<string, Record<number, Question[]>> = {
+  "pkn-sila3": {
+    1: [
+      {
+        id: "q_s3_1_1",
+        question: "Apakah lambang dari Sila Ke-3 Pancasila 'Persatuan Indonesia'?",
+        options: ["Bintang Tunggal", "Rantai Emas", "Pohon Beringin", "Padi dan Kapas"],
+        correctOption: 2,
+        hint: "Pohon yang besar dan rindang, melambangkan naungan persatuan bangsa!",
+      },
+      {
+        id: "q_s3_1_2",
+        question: "Apakah bunyi dari Sila Ke-3 Pancasila?",
+        options: ["Ketuhanan Yang Maha Esa", "Kemanusiaan yang adil dan beradab", "Persatuan Indonesia", "Keadilan sosial bagi seluruh rakyat Indonesia"],
+        correctOption: 2,
+        hint: "Sila ketiga menegaskan pentingnya persatuan dan kerukunan seluruh rakyat.",
+      },
+      {
+        id: "q_s3_1_3",
+        question: "Di jam istirahat, kamu melihat teman baru yang duduk sendirian. Sikap yang mencerminkan persatuan adalah...",
+        options: ["Membiarkannya saja", "Mengajaknya berkenalan dan bermain bersama", "Menertawakan dari kejauhan", "Menyuruhnya pulang"],
+        correctOption: 1,
+        hint: "Persatuan dimulai dari sikap ramah dan merangkul semua teman tanpa membeda-bedakan.",
+      },
+      {
+        id: "q_s3_1_4",
+        question: "Pohon beringin memiliki daun yang lebat dan rindang, yang melambangkan...",
+        options: ["Tempat berteduh dan bernaung seluruh rakyat Indonesia", "Pohon yang menghasilkan buah manis", "Tempat bermain petak umpet", "Pohon paling tinggi di hutan"],
+        correctOption: 0,
+        hint: "Negara Indonesia diibaratkan rumah pohon besar tempat seluruh rakyat bernaung damai.",
+      },
+      {
+        id: "q_s3_1_5",
+        question: "Sikap manakah yang dapat merusak persatuan dan harus dihindari di sekolah?",
+        options: ["Membantu teman terjatuh", "Mengejek perbedaan suku atau bahasa teman", "Belajar kelompok bersama", "Menghormati guru"],
+        correctOption: 1,
+        hint: "Saling mengejek atau membeda-bedakan suku memicu pertengkaran dan merusak persatuan.",
+      },
+    ],
+    2: [
+      {
+        id: "q_s3_2_1",
+        question: "Mengapa akar gantung dan sulur pohon beringin menjadi lambang persatuan yang sangat bermakna?",
+        options: [
+          "Karena daunnya berwarna hijau",
+          "Karena melambangkan suku bangsa yang beragam tetapi tetap bersatu kuat",
+          "Karena bisa digunakan untuk ayunan",
+          "Karena pohonnya paling mahal",
+        ],
+        correctOption: 1,
+        hint: "Akar pohon beringin menjalar ke segala arah mencerminkan beragamnya suku dan budaya bangsa kita.",
+      },
+      {
+        id: "q_s3_2_2",
+        question: "Dalam pemilihan ketua kelas, kamu dan teman-teman memiliki pilihan berbeda. Sikap Sila Ke-3 adalah...",
+        options: [
+          "Memusuhi kawan yang berbeda pilihan",
+          "Menerima hasil keputusan bersama dengan rukun dan saling menghormati",
+          "Keluar dari kelas dan mogok belajar",
+          "Menolak berbicara dengan ketua kelas terpilih",
+        ],
+        correctOption: 1,
+        hint: "Persatuan terwujud saat kita lapang dada menghargai perbedaan pendapat demi kebaikan bersama.",
+      },
+      {
+        id: "q_s3_2_3",
+        question: "Bangga memakai pakaian batik dan sepatu buatan anak bangsa merupakan contoh pengamalan Sila Ke-3 dalam hal...",
+        options: ["Pamer kekayaan", "Cinta tanah air dan produk bangsa sendiri", "Mengikuti tren luar negeri", "Mencari pujian dari orang lain"],
+        correctOption: 1,
+        hint: "Cinta tanah air diwujudkan dengan bangga dan mencintai karya seni dan produk negeri sendiri.",
+      },
+      {
+        id: "q_s3_2_4",
+        question: "Saat upacara bendera hari Senin, seluruh murid berbaris dengan tertib dan khidmat. Hal ini mencerminkan...",
+        options: ["Rasa takut dimarahi guru", "Disiplin dan rasa hormat kepada lambang persatuan bangsa", "Keinginan cepat pulang", "Kewajiban tanpa makna"],
+        correctOption: 1,
+        hint: "Upacara bendera menumbuhkan rasa nasionalisme dan kekompakan sebagai sesama tunas bangsa.",
+      },
+      {
+        id: "q_s3_2_5",
+        question: "Mengapa semboyan 'bersatu kita teguh, bercerai kita runtuh' sangat penting bagi bangsa Indonesia?",
+        options: [
+          "Agar kita bisa menang tawuran",
+          "Karena persatuan membuat bangsa menjadi kokoh dan tidak mudah dipecah belah",
+          "Supaya murid tidak perlu belajar",
+          "Hanya sekadar hiasan dinding sekolah",
+        ],
+        correctOption: 1,
+        hint: "Kekuatan terbesar bangsa Indonesia yang majemuk terletak pada persatuan seluruh warganya.",
+      },
+    ],
+    3: [
+      {
+        id: "q_s3_3_1",
+        question: "Hari Lahir Pancasila diperingati setiap tanggal 1 Juni untuk mengenang pidato bersejarah dari tokoh bangsa...",
+        options: ["Mr. Mohammad Yamin", "Prof. Dr. Soepomo", "Ir. Soekarno dalam sidang BPUPKI 1945", "Drs. Mohammad Hatta"],
+        correctOption: 2,
+        hint: "Pada 1 Juni 1945, Bung Karno menyampaikan lima asas dasar negara yang dinamakan Pancasila.",
+      },
+      {
+        id: "q_s3_3_2",
+        question: "Di kelompok belajar kelasmu, anggota kelompok berasal dari suku Jawa, Sunda, Batak, dan Papua. Cara terbaik menyelesaikan tugas adalah...",
+        options: [
+          "Membuat kelompok baru yang sesuku saja",
+          "Menghargai setiap pendapat dan bekerja sama kompak tanpa membeda-bedakan",
+          "Menyerahkan seluruh tugas kepada satu orang saja",
+          "Memperdebatkan suku mana yang paling hebat",
+        ],
+        correctOption: 1,
+        hint: "Keberagaman latar belakang memperkaya ide dan mempererat ikatan persahabatan kelompok.",
+      },
+      {
+        id: "q_s3_3_3",
+        question: "Apa dampak buruk jika di lingkungan sekolah tidak ada penerapan nilai persatuan dan toleransi?",
+        options: [
+          "Nilai ujian semua siswa menjadi 100",
+          "Terjadi permusuhan, saling ejek (bullying), dan suasana belajar menjadi tidak aman",
+          "Sekolah menjadi semakin terkenal",
+          "Jam istirahat menjadi lebih lama",
+        ],
+        correctOption: 1,
+        hint: "Tanpa persatuan, lingkungan sekolah akan diwarnai perselisihan yang merugikan semua pihak.",
+      },
+      {
+        id: "q_s3_3_4",
+        question: "Panitia Sembilan berhasil menyepakati naskah rancangan pembukaan dasar negara pada tanggal 22 Juni 1945 yang dikenal sebagai...",
+        options: ["Dekrit Presiden", "Piagam Jakarta (Jakarta Charter)", "Teks Proklamasi", "Sumpah Palapa"],
+        correctOption: 1,
+        hint: "Piagam Jakarta memuat rumusan lima sila Pancasila yang kemudian disahkan PPKI pada 18 Agustus 1945.",
+      },
+      {
+        id: "q_s3_3_5",
+        question: "Bagaimana tindakan nyata siswa SD dalam menjaga keutuhan persatuan di era media sosial saat ini?",
+        options: [
+          "Ikut menyebarkan berita yang belum tentu benar (hoaks)",
+          "Menolak menyebarkan kabar bohong dan selalu bertutur kata santun menyejukkan",
+          "Mengomentari kekurangan fisik orang lain",
+          "Membuat grup online untuk mengejek kawan sekelas",
+        ],
+        correctOption: 1,
+        hint: "Literasi digital yang santun dan bijak merupakan cerminan karakter luhur Pelajar Pancasila.",
+      },
+    ],
+  },
+  "pkn-gotongroyong": {
+    1: [
+      {
+        id: "q_gr_1_1",
+        question: "Gotong royong berasal dari kata 'gotong' dan 'royong' yang mengandung arti...",
+        options: [
+          "Bekerja keras mencari keuntungan pribadi",
+          "Bekerja bersama-sama secara sukarela untuk mencapai tujuan bersama",
+          "Menyuruh orang lain mengerjakan tugas kita",
+          "Bermain bersama di taman rekreasi",
+        ],
+        correctOption: 1,
+        hint: "Gotong royong adalah kerja bersama tanpa pamrih demi kepentingan dan kebaikan bersama.",
+      },
+      {
+        id: "q_gr_1_2",
+        question: "Falsafah luhur bangsa Indonesia tentang gotong royong terangkum dalam semboyan...",
+        options: [
+          "Maju tak gentar membela yang bayar",
+          "Berat sama dipikul, ringan sama dijinjing",
+          "Siapa cepat dia yang dapat",
+          "Biar lambat asal selamat",
+        ],
+        correctOption: 1,
+        hint: "Semboyan ini mengajarkan bahwa suka dan duka dalam pekerjaan dihadapi bersama-sama.",
+      },
+      {
+        id: "q_gr_1_3",
+        question: "Contoh kegiatan gotong royong yang paling sering dilakukan siswa di dalam kelas adalah...",
+        options: [
+          "Mencontek jawaban tugas rumah",
+          "Melaksanakan piket kebersihan kelas bersama kelompok regu",
+          "Bermain game di jam pelajaran",
+          "Menyembunyikan buku milik kawan",
+        ],
+        correctOption: 1,
+        hint: "Regu piket membersihkan papan tulis, menyapu lantai, dan merapikan meja guru secara bersama.",
+      },
+      {
+        id: "q_gr_1_4",
+        question: "Manfaat utama yang dirasakan ketika melakukan pekerjaan secara gotong royong adalah...",
+        options: [
+          "Pekerjaan menjadi lebih lambat selesai",
+          "Pekerjaan terasa lebih ringan, cepat tuntas, dan tercipta kebersamaan",
+          "Mendapatkan bayaran uang yang banyak",
+          "Bisa menyuruh teman yang rajin saja",
+        ],
+        correctOption: 1,
+        hint: "Beban kerja terbagi rata sehingga pekerjaan berat terasa ringan dan menyenangkan.",
+      },
+      {
+        id: "q_gr_1_5",
+        question: "Sikap yang harus dihindari saat diajak gotong royong membersihkan lingkungan adalah...",
+        options: [
+          "Hadir tepat waktu dan membawa alat kebersihan",
+          "Malas-malasan, berpangku tangan, dan mencari alasan untuk kabur",
+          "Membantu kawan yang kelelahan",
+          "Bekerja dengan penuh semangat dan senyum",
+        ],
+        correctOption: 1,
+        hint: "Sikap malas membebankan pekerjaan kepada orang lain dan merusak semangat kekeluargaan.",
+      },
+    ],
+    2: [
+      {
+        id: "q_gr_2_1",
+        question: "Manakah bentuk kerja sama antarsiswa yang TIDAK BOLEH dilakukan di lingkungan sekolah?",
+        options: [
+          "Bekerja sama membersihkan halaman sekolah",
+          "Bekerja sama saling memberikan sontekan jawaban saat ujian/ulangan",
+          "Bekerja sama menyusun majalah dinding kelas",
+          "Bekerja sama latihan paduan suara",
+        ],
+        correctOption: 1,
+        hint: "Kerja sama saat ulangan melanggar norma kejujuran dan merusak integritas moral siswa.",
+      },
+      {
+        id: "q_gr_2_2",
+        question: "Mengapa gotong royong dapat mempererat tali persaudaraan antarwarga masyarakat?",
+        options: [
+          "Karena warga bisa saling memamerkan harta bendanya",
+          "Karena menumbuhkan rasa saling peduli, saling kenal, dan empati sosial",
+          "Karena ada sanksi denda jika tidak ikut",
+          "Agar lingkungan menjadi tempat berdagang",
+        ],
+        correctOption: 1,
+        hint: "Saat bekerja bersama, warga berinteraksi hangat dan saling tolong-menolong tanpa sekat.",
+      },
+      {
+        id: "q_gr_2_3",
+        question: "Di kelasmu ada teman yang kesulitan menata buku perpustakaan. Tindakan gotong royong yang tepat adalah...",
+        options: [
+          "Menontonnya dari jauh sambil mengobrol",
+          "Membantu menyusun dan merapikan buku bersama tanpa diminta",
+          "Menyuruhnya bekerja lebih cepat",
+          "Menambah tumpukan buku agar lebih repot",
+        ],
+        correctOption: 1,
+        hint: "Peka terhadap kesulitan kawan dan langsung menawarkan bantuan adalah esensi gotong royong.",
+      },
+      {
+        id: "q_gr_2_4",
+        question: "Apa perbedaan mendasar antara gotong royong dengan bekerja mencari upah (buruh)?",
+        options: [
+          "Gotong royong dilakukan dengan pamrih materi uang",
+          "Gotong royong dilandasi keikhlasan sukarela tanpa mengharapkan upah bayaran",
+          "Gotong royong hanya boleh diikuti oleh orang dewasa",
+          "Bekerja mencari upah tidak ada manfaatnya",
+        ],
+        correctOption: 1,
+        hint: "Nilai luhur gotong royong terletak pada ketulusan hati demi kemaslahatan bersama.",
+      },
+      {
+        id: "q_gr_2_5",
+        question: "Nilai Profil Pelajar Pancasila yang paling tercermin dari kegiatan gotong royong adalah...",
+        options: [
+          "Mandiri secara egois",
+          "Kolaborasi, kepedulian sosial, dan berbagi peran secara adil",
+          "Ketergantungan pada orang lain",
+          "Mementingkan keuntungan sendiri",
+        ],
+        correctOption: 1,
+        hint: "Dimensi gotong royong memuat elemen kolaborasi, kepedulian, dan keikhlasan berbagi.",
+      },
+    ],
+    3: [
+      {
+        id: "q_gr_3_1",
+        question: "Mengapa para pendiri bangsa menyebut gotong royong sebagai intisari dan kepribadian asli bangsa Indonesia?",
+        options: [
+          "Karena bangsa Indonesia tidak memiliki sumber daya alam",
+          "Karena sejak era nenek moyang, masyarakat Nusantara hidup guyub rukun tolong-menolong",
+          "Karena negara lain memaksa Indonesia bergotong royong",
+          "Hanya tradisi baru yang dibuat setelah tahun 2000",
+        ],
+        correctOption: 1,
+        hint: "Bung Karno menegaskan bahwa jika kelima sila Pancasila diperas, intisarinya adalah gotong royong.",
+      },
+      {
+        id: "q_gr_3_2",
+        question: "Di era digital modern saat ini, bagaimana cara melestarikan semangat gotong royong agar tidak luntur?",
+        options: [
+          "Menghabiskan seluruh waktu sendirian di kamar bermain ponsel",
+          "Aktif mengikuti kerja bakti lingkungan dan menggalang bantuan sosial untuk korban bencana",
+          "Menghindari komunikasi dengan tetangga sekitar",
+          "Menutup pintu rumah rapat-rapat setiap hari",
+        ],
+        correctOption: 1,
+        hint: "Gotong royong di era modern dapat berupa bakti sosial, kerja bakti, maupun penggalangan donasi kemanusiaan.",
+      },
+      {
+        id: "q_gr_3_3",
+        question: "Ketika warga desa mengadakan perbaikan jembatan desa, Budi yang masih SD dapat berpartisipasi dengan cara...",
+        options: [
+          "Mengangkat batu semen yang sangat berat",
+          "Membantu membawakan air minum dan menyapu serpihan kayu kecil di jalan",
+          "Bermain kejar-kejaran di dekat alat berat yang berbahaya",
+          "Menyuruh para orang tua berhenti bekerja",
+        ],
+        correctOption: 1,
+        hint: "Gotong royong disesuaikan dengan kemampuan usia; anak-anak dapat membantu pekerjaan ringan yang aman.",
+      },
+      {
+        id: "q_gr_3_4",
+        question: "Analisislah mengapa gotong royong sangat efektif mencegah terjadinya perselisihan dan tawuran antarkelompok!",
+        options: [
+          "Karena orang-orang terlalu lelah untuk berbicara",
+          "Karena kebersamaan menumbuhkan rasa saling memiliki, empati, dan persaudaraan erat",
+          "Karena ada polisi yang menjaga",
+          "Karena gotong royong selalu ada hadiahnya",
+        ],
+        correctOption: 1,
+        hint: "Ketika warga terbiasa bekerja bersama, sekat prasangka akan runtuh dan digantikan rasa kasih sayang.",
+      },
+      {
+        id: "q_gr_3_5",
+        question: "Bagaimana cara sekolah menanamkan pembiasaan gotong royong sejak kelas rendah di sekolah dasar?",
+        options: [
+          "Memberikan tugas ulangan individu yang sangat banyak",
+          "Membentuk regu piket kelas, proyek tugas kelompok, dan kegiatan jumat bersih berkala",
+          "Melarang siswa saling berbicara saat jam istirahat",
+          "Memisahkan siswa berdasarkan tingkat kekayaan orang tuanya",
+        ],
+        correctOption: 1,
+        hint: "Pembiasaan piket dan jumat bersih menanamkan rasa tanggung jawab kolektif sejak dini.",
+      },
+    ],
+  },
+  "pkn-norma": {
+    1: [
+      {
+        id: "q_nm_1_1",
+        question: "Pengertian dari norma dalam kehidupan bermasyarakat adalah...",
+        options: [
+          "Cerita dongeng rakyat zaman dahulu",
+          "Kaidah, aturan, atau pedoman tingkah laku yang disepakati untuk ditaati bersama",
+          "Hadiah yang diberikan kepada pemenang lomba",
+          "Daftar menu makanan di kantin sekolah",
+        ],
+        correctOption: 1,
+        hint: "Norma menjadi pedoman bagi setiap orang dalam bertutur kata dan bertindak di masyarakat.",
+      },
+      {
+        id: "q_nm_1_2",
+        question: "Ada berapa macam norma pokok yang berlaku dalam kehidupan bermasyarakat di Indonesia?",
+        options: ["2 macam", "3 macam", "4 macam (Agama, Kesusilaan, Kesopanan, dan Hukum)", "10 macam"],
+        correctOption: 2,
+        hint: "Keempat norma tersebut saling melengkapi dalam menciptakan ketertiban hidup bermasyarakat.",
+      },
+      {
+        id: "q_nm_1_3",
+        question: "Norma yang bersumber dari wahyu Tuhan Yang Maha Esa dan terdapat dalam kitab suci adalah norma...",
+        options: ["Norma Agama", "Norma Hukum", "Norma Kebiasaan", "Norma Pergaulan"],
+        correctOption: 0,
+        hint: "Norma agama menuntun umat beriman untuk menjalankan perintah Tuhan dan menjauhi larangan-Nya.",
+      },
+      {
+        id: "q_nm_1_4",
+        question: "Mencium tangan guru (salim) dan mengucapkan salam saat bertemu merupakan penerapan norma...",
+        options: ["Norma Hukum", "Norma Kesopanan", "Norma Fisik", "Norma Olahraga"],
+        correctOption: 1,
+        hint: "Norma kesopanan berakar dari tata krama, adat istiadat, dan sopan santun pergaulan.",
+      },
+      {
+        id: "q_nm_1_5",
+        question: "Apa tujuan utama dibuatnya tata tertib dan aturan di sekolah?",
+        options: [
+          "Agar guru bisa menghukum siswa setiap hari",
+          "Menciptakan suasana belajar yang tertib, aman, teratur, dan nyaman bagi semua siswa",
+          "Supaya siswa tidak bisa bermain sama sekali",
+          "Menaikkan biaya uang sekolah",
+        ],
+        correctOption: 1,
+        hint: "Aturan sekolah diciptakan demi keteraturan, kedisiplinan, dan keselamatan seluruh warga sekolah.",
+      },
+    ],
+    2: [
+      {
+        id: "q_nm_2_1",
+        question: "Norma kesusilaan bersumber dari...",
+        options: [
+          "Undang-undang yang dibuat DPR",
+          "Hati nurani manusia tentang mana yang baik dan mana yang buruk",
+          "Keputusan kepala desa",
+          "Berita di surat kabar",
+        ],
+        correctOption: 1,
+        hint: "Hati nurani selalu menuntun kita untuk berbuat jujur dan merasa bersalah jika berbuat curang.",
+      },
+      {
+        id: "q_nm_2_2",
+        question: "Sanksi bagi seseorang yang melanggar norma hukum memiliki sifat...",
+        options: [
+          "Boleh ditaati boleh diabaikan",
+          "Tegas, nyata, memaksa, dan mengikat sesuai undang-undang yang berlaku",
+          "Hanya berupa ejekan teman saja",
+          "Diberikan setelah 10 tahun kemudian",
+        ],
+        correctOption: 1,
+        hint: "Norma hukum ditegakkan oleh aparat penegak hukum dengan sanksi hukuman atau denda resmi.",
+      },
+      {
+        id: "q_nm_2_3",
+        question: "Sikap yang tepat dalam menjalankan hak dan kewajiban seorang murid di sekolah adalah...",
+        options: [
+          "Menuntut hak fasilitas sekolah tanpa mau menjalankan kewajiban belajar",
+          "Mendahulukan kewajiban belajar dan mematuhi tata tertib sebelum menuntut hak",
+          "Mengabaikan kewajiban piket dan hanya bermain",
+          "Menyerahkan kewajiban kita kepada orang lain",
+        ],
+        correctOption: 1,
+        hint: "Keseimbangan hak dan kewajiban menciptakan keadilan dan ketertiban bersama.",
+      },
+      {
+        id: "q_nm_2_4",
+        question: "Jika kamu melihat kawan membuang bungkus jajanan di lantai koridor sekolah, tindakan yang sesuai norma adalah...",
+        options: [
+          "Ikut membuang sampah sembarangan di sebelahnya",
+          "Mengingatkan kawan dengan santun agar membuangnya ke tempat sampah",
+          "Memarahi dan memukul kawan tersebut",
+          "Membiarkannya membusuk di lantai",
+        ],
+        correctOption: 1,
+        hint: "Menegur dengan sopan adalah cerminan norma kesopanan dan kepedulian terhadap kebersihan lingkungan.",
+      },
+      {
+        id: "q_nm_2_5",
+        question: "Mengapa kita harus membiasakan diri antre dengan sabar saat membeli makanan di kantin sekolah?",
+        options: [
+          "Supaya dianggap anak penakut",
+          "Sebagai wujud menghormati hak orang lain yang datang lebih awal (norma kesopanan)",
+          "Karena tidak ada penjualnya",
+          "Agar makanan habis sebelum giliran kita",
+        ],
+        correctOption: 1,
+        hint: "Budaya antre melatih kesabaran, keadilan, ketertiban, dan menghargai giliran orang lain.",
+      },
+    ],
+    3: [
+      {
+        id: "q_nm_3_1",
+        question: "Mengapa norma kesusilaan sangat erat hubungannya dengan larangan mencontek saat ulangan?",
+        options: [
+          "Karena mencontek membuat pensil cepat habis",
+          "Karena mencontek melawan bisikan hati nurani dan mencoreng nilai kejujuran diri sendiri",
+          "Karena guru tidak suka melihat siswa menoleh",
+          "Agar nilai ulangan semua siswa sama",
+        ],
+        correctOption: 1,
+        hint: "Kejujuran adalah pondasi akhlak mulia yang berakar dari norma kesusilaan hati nurani.",
+      },
+      {
+        id: "q_nm_3_2",
+        question: "Apa yang akan terjadi pada sebuah negara atau lingkungan sekolah jika tidak ada norma dan aturan yang ditaati?",
+        options: [
+          "Semua orang hidup bahagia tanpa batas",
+          "Terjadi kekacauan (anarki), ketidakadilan, hak orang lemah diinjak, dan rasa tidak aman",
+          "Sekolah menjadi tempat terbaik di dunia",
+          "Semua orang menjadi kaya raya",
+        ],
+        correctOption: 1,
+        hint: "Tanpa aturan hukum dan norma, pihak yang kuat akan bertindak sewenang-wenang terhadap yang lemah.",
+      },
+      {
+        id: "q_nm_3_3",
+        question: "Doni menemukan dompet berisi uang di halaman sekolah. Tindakan Doni yang paling mencerminkan kepatuhan norma kesusilaan adalah...",
+        options: [
+          "Menyembunyikannya di tas untuk jajan pribadi",
+          "Menyerahkan dompet utuh kepada guru piket agar diumumkan kepada pemiliknya yang sah",
+          "Membagikan uangnya kepada teman sekelas agar tidak dicurigai",
+          "Membuang dompetnya ke selokan",
+        ],
+        correctOption: 1,
+        hint: "Integritas moral teruji saat kita berani mengembalikan hak milik orang lain dengan jujur.",
+      },
+      {
+        id: "q_nm_3_4",
+        question: "Perbedaan mendasar antara norma kesopanan dan norma hukum terletak pada...",
+        options: [
+          "Norma kesopanan tidak ada aturannya sama sekali",
+          "Sifat sanksinya; sanksi hukum ditegakkan negara secara tegas, sedangkan sanksi kesopanan berupa teguran/celaan masyarakat",
+          "Norma hukum hanya berlaku untuk anak kecil",
+          "Norma kesopanan dibuat oleh presiden saja",
+        ],
+        correctOption: 1,
+        hint: "Norma hukum bersumber dari lembaga negara resmi dengan sanksi pidana/perdata yang terukur.",
+      },
+      {
+        id: "q_nm_3_5",
+        question: "Bagaimana hubungan ketaatan terhadap norma hukum dengan pembentukan karakter Pelajar Pancasila?",
+        options: [
+          "Ketaatan membuat siswa menjadi pasif dan penakut",
+          "Membentuk pribadi yang disiplin, berintegritas tinggi, berakhlak mulia, dan bertanggung jawab",
+          "Tidak ada hubungannya sama sekali",
+          "Ketaatan hanya perlu dilakukan saat ada kamera pengawas (CCTV)",
+        ],
+        correctOption: 1,
+        hint: "Karakter Pelajar Pancasila beriman dan berakhlak mulia tercermin dari kepatuhannya terhadap aturan.",
+      },
+    ],
+  },
+  "pkn-bhinneka": {
+    1: [
+      {
+        id: "q_bh_1_1",
+        question: "Arti dari semboyan bangsa Indonesia 'Bhinneka Tunggal Ika' adalah...",
+        options: [
+          "Bersatu kita menang, sendiri kita senang",
+          "Berbeda-beda tetapi pada hakikatnya tetap satu kesatuan jua",
+          "Satu nusa satu negara tanpa perbedaan",
+          "Kaya dan miskin sama saja",
+        ],
+        correctOption: 1,
+        hint: "Meskipun beraneka ragam suku, bahasa, dan agama, kita tetap satu tumpah darah Indonesia.",
+      },
+      {
+        id: "q_bh_1_2",
+        question: "Di manakah letak pita semboyan Bhinneka Tunggal Ika pada lambang Burung Garuda Pancasila?",
+        options: [
+          "Dikalungkan di leher Burung Garuda",
+          "Dicengkeram kokoh oleh kedua kaki Burung Garuda",
+          "Ditaruh di atas kepala Burung Garuda",
+          "Diselipkan di balik sayap kanan",
+        ],
+        correctOption: 1,
+        hint: "Kedua kaki cengkeraman Burung Garuda mencengkeram pita putih bertuliskan Bhinneka Tunggal Ika.",
+      },
+      {
+        id: "q_bh_1_3",
+        question: "Kitab sastra klasik kuno tempat pertama kali tertulisnya kalimat Bhinneka Tunggal Ika adalah...",
+        options: ["Kitab Bharatayudha", "Kitab Kakawin Sutasoma", "Kitab Ramayana", "Kitab Negarakertagama"],
+        correctOption: 1,
+        hint: "Kitab Kakawin Sutasoma digubah pada zaman Kerajaan Majapahit abad ke-14.",
+      },
+      {
+        id: "q_bh_1_4",
+        question: "Sikap menjaga ketenangan dan menghormati teman yang sedang menjalankan ibadah merupakan contoh sikap...",
+        options: ["Toleransi antarumat beragama", "Ketidakpedulian sosial", "Pura-pura tidak melihat", "Mengganggu ibadah teman"],
+        correctOption: 0,
+        hint: "Toleransi bermakna menghargai dan memberi ruang damai bagi kawan yang berbeda keyakinan.",
+      },
+      {
+        id: "q_bh_1_5",
+        question: "Rumah Gadang dengan atap melengkung menyerupai tanduk kerbau merupakan rumah adat dari suku...",
+        options: ["Suku Jawa", "Suku Minangkabau (Sumatera Barat)", "Suku Dayak", "Suku Asmat"],
+        correctOption: 1,
+        hint: "Rumah Gadang adalah warisan arsitektur megah kebanggaan masyarakat Minangkabau.",
+      },
+    ],
+    2: [
+      {
+        id: "q_bh_2_1",
+        question: "Siapakah pujangga besar Kerajaan Majapahit yang mengarang kitab Kakawin Sutasoma?",
+        options: ["Mpu Sedah", "Mpu Tantular", "Mpu Prapanca", "Mpu Gandring"],
+        correctOption: 1,
+        hint: "Mpu Tantular hidup pada masa pemerintahan Prabu Hayam Wuruk dan Mahapatih Gajah Mada.",
+      },
+      {
+        id: "q_bh_2_2",
+        question: "Pasal 29 Ayat (2) UUD 1945 secara tegas menjamin hak setiap warga negara Indonesia untuk...",
+        options: [
+          "Membeli barang impor tanpa pajak",
+          "Memeluk agamanya masing-masing dan beribadat menurut agama dan kepercayaannya itu",
+          "Mendirikan partai politik sendiri",
+          "Bebas tidak membayar iuran sekolah",
+        ],
+        correctOption: 1,
+        hint: "Kemerdekaan beragama merupakan hak asasi paling mendasar yang dijamin konstitusi negara kita.",
+      },
+      {
+        id: "q_bh_2_3",
+        question: "Sikap 'tepa selira' dalam falsafah hidup bermasyarakat bangsa Indonesia mengandung makna...",
+        options: [
+          "Mementingkan perasaan diri sendiri",
+          "Tenggang rasa, mampu merasakan apa yang dirasakan orang lain dan menjaga perasaannya",
+          "Selalu ingin menang sendiri dalam perdebatan",
+          "Menghindar saat dimintai bantuan",
+        ],
+        correctOption: 1,
+        hint: "Tepa selira menuntun kita untuk tidak menyakiti hati kawan karena kita pun tidak suka disakiti.",
+      },
+      {
+        id: "q_bh_2_4",
+        question: "Manakah tindakan nyata seorang siswa yang mencerminkan toleransi saat perayaan hari besar keagamaan teman?",
+        options: [
+          "Mengejek ucapan hari rayanya",
+          "Memberikan ucapan selamat dengan tulus dan menjaga ketenangan di sekitar rumah ibadahnya",
+          "Menyuruh teman tidak usah merayakannya",
+          "Mengajak teman bolos sekolah",
+        ],
+        correctOption: 1,
+        hint: "Ucapan tulus dan menjaga kedamaian mempererat kerukunan persaudaraan sebangsa.",
+      },
+      {
+        id: "q_bh_2_5",
+        question: "Mengapa keberagaman suku, bahasa daerah, dan budaya di Indonesia harus disyukuri sebagai kekayaan?",
+        options: [
+          "Karena bisa menjadi bahan perlombaan mana yang terbaik",
+          "Karena memperkaya jati diri bangsa, memperindah persatuan, dan menjadi daya tarik dunia",
+          "Supaya kita tidak perlu belajar bahasa persatuan",
+          "Agar setiap suku bisa mendirikan negara sendiri",
+        ],
+        correctOption: 1,
+        hint: "Keragaman budaya seperti warna-warni pelangi yang indah karena bersatu serasi.",
+      },
+    ],
+    3: [
+      {
+        id: "q_bh_3_1",
+        question: "Tokoh pahlawan nasional yang mengusulkan bait Kakawin Sutasoma kepada Bung Karno hingga disahkan menjadi semboyan resmi negara adalah...",
+        options: ["Dr. Soetomo", "Mr. Mohammad Yamin", "Ki Hajar Dewantara", "Jenderal Soedirman"],
+        correctOption: 1,
+        hint: "Mr. Mohammad Yamin adalah sejarawan dan pejuang yang mengagumi karya agung Mpu Tantular.",
+      },
+      {
+        id: "q_bh_3_2",
+        question: "Makna mendalam dari bait Sutasoma 'Bhinneka Tunggal Ika tan hana dharma mangrwa' adalah...",
+        options: [
+          "Hanya ada satu suku yang boleh memimpin negara",
+          "Perbedaan lahiriah bukanlah alasan terpecah belah karena hakikat kebenaran kebajikan adalah satu",
+          "Semua orang harus memakai pakaian adat yang sama",
+          "Tidak boleh mempelajari bahasa daerah lain",
+        ],
+        correctOption: 1,
+        hint: "Inti ajaran leluhur adalah menghargai perbedaan ragam dan mengutamakan nilai kebajikan universal.",
+      },
+      {
+        id: "q_bh_3_3",
+        question: "Bagaimana cara generasi muda membentengi diri dari paham kebencian antarsuku dan radikalisme?",
+        options: [
+          "Mengurung diri dari pergaulan luas",
+          "Menanamkan wawasan kebangsaan, mengamalkan nilai-nilai Pancasila, dan berpikir kritis di medsos",
+          "Mempercayai semua video yang viral tanpa disaring",
+          "Hanya berteman dengan orang yang satu agama dan satu suku saja",
+        ],
+        correctOption: 1,
+        hint: "Pemahaman Pancasila yang kuat menjadikan siswa bijak dan kebal terhadap provokasi adu domba.",
+      },
+      {
+        id: "q_bh_3_4",
+        question: "Peristiwa Sumpah Pemuda 28 Oktober 1928 memiliki makna yang sangat kuat bagi Bhinneka Tunggal Ika karena...",
+        options: [
+          "Para pemuda menyerah kepada penjajah",
+          "Menyatukan tekad pemuda seluruh pulau menjadi satu tumpah darah, satu bangsa, dan satu bahasa persatuan",
+          "Memutuskan hubungan perdagangan antardaerah",
+          "Membubarkan semua organisasi kepemudaan",
+        ],
+        correctOption: 1,
+        hint: "Sumpah Pemuda menjadi tonggak bersejarah persatuan seluruh suku dari Jong Java, Jong Sumatra, Jong Ambon, dll.",
+      },
+      {
+        id: "q_bh_3_5",
+        question: "Di sebuah lingkungan ada masjid dan gereja yang berdampingan. Sikap warga yang menunjukkan kerukunan sejati adalah...",
+        options: [
+          "Meminta salah satu tempat ibadah dipindahkan",
+          "Saling membantu menjaga keamanan dan kelancaran parkir saat masing-masing umat sedang beribadah",
+          "Membunyikan petasan di depan tempat ibadah orang lain",
+          "Tidak saling bertegur sapa ketika berpapasan di jalan",
+        ],
+        correctOption: 1,
+        hint: "Toleransi nyata tampak saat warga saling menjaga ketenteraman dan kenyamanan ibadah sesama.",
+      },
+    ],
+  },
+  "bjawa-unggahungguh": {
+    1: [
+      {
+        id: "q_ug_1_1",
+        question: "Basa Jawa kang lumrah digunakake nalika guneman karo kanca dolanan saumuran yaiku...",
+        options: ["Basa Ngoko", "Basa Krama Inggil", "Basa Sanskerta", "Basa Walikan"],
+        correctOption: 0,
+        hint: "Basa ngoko lumrah digunakake kanggo kanca sebaya utawa kanca dolanan.",
+      },
+      {
+        id: "q_ug_1_2",
+        question: "Basa Jawa kang digunakake nalika matur marang Bapak utawa Ibu Guru ing sekolahan yaiku...",
+        options: ["Basa Ngoko Lugu", "Basa Krama Alus", "Basa Gaul", "Basa Indonesia Campuran"],
+        correctOption: 1,
+        hint: "Marang guru lan wong sing luwih sepuh, kudu nggunakake basa sing sopan yaiku krama alus.",
+      },
+      {
+        id: "q_ug_1_3",
+        question: "Tembung 'mangan' menawa diowahi dadi Basa Krama Alus kanggo wong tuwa yaiku...",
+        options: ["Nedha", "Dhahar", "Nguntal", "Nyicipi"],
+        correctOption: 1,
+        hint: "'Bapak nembe dhahar', dene kanggo awake dhewe nggunakake tembung 'nedha'.",
+      },
+      {
+        id: "q_ug_1_4",
+        question: "Tembung 'turu' menawa dikramakake alus kanggo simbah yaiku...",
+        options: ["Tilem", "Sare", "Merem", "Ngleketer"],
+        correctOption: 1,
+        hint: "Kanggo ngurmati simbah utawa tiyang sepuh, tembung turu dadi 'sare'.",
+      },
+      {
+        id: "q_ug_1_5",
+        question: "Sikep awak kang bener nalika matur karo wong tuwa utawa bapak/ibu guru yaiku...",
+        options: [
+          "Ngadeg kanthi tangan sedhakep utawa ngapurancang sopan",
+          "Mlaku-mlaku karo mangan permen karet",
+          "Mungkur ora ndeleng wong sing diajak guneman",
+          "Nyandhak tangane kanthi kasar",
+        ],
+        correctOption: 0,
+        hint: "Tata krama Jawa ngajak kita nduweni sikep andhap asor lan ngajeni tiyang sepuh.",
+      },
+    ],
+    2: [
+      {
+        id: "q_ug_2_1",
+        question: "Tembung 'lunga' menawa diowahi dadi Basa Krama Alus yaiku...",
+        options: ["Kesah", "Tindak", "Mangkat", "Mlaku"],
+        correctOption: 1,
+        hint: "'Bapak tindak dhateng kantor', dene krama lugu kanggo awake dhewe yaiku 'kesah'.",
+      },
+      {
+        id: "q_ug_2_2",
+        question: "Ukara ngoko 'Bapak lagi mangan ing meja makan' menawa dikramakake kanthi bener dadi...",
+        options: [
+          "Bapak nembe mangan wonten meja",
+          "Bapak nembe dhahar wonten meja dhahar",
+          "Bapak nembe nedha wonten meja",
+          "Bapak lagi nedho ing meja makan",
+        ],
+        correctOption: 1,
+        hint: "Tembung 'lagi' dadi 'nembe', lan 'mangan' dadi 'dhahar' kanggo ngurmati bapak.",
+      },
+      {
+        id: "q_ug_2_3",
+        question: "Nalika mlaku ing sangarepe tiyang sepuh kang lagi lenggah, tata krama kang trep yaiku...",
+        options: [
+          "Mlayu banter kanthi swara seru",
+          "Mbungkukake awak kanthi matur 'Nyuwun sewu, nderek langkung'",
+          "Mlaku jejeg karo dolanan HP",
+          "Mlaku mundur ora noleh",
+        ],
+        correctOption: 1,
+        hint: "Sikap mbungkukake awak lan matur 'nderek langkung' minangka tandha pakurmatan marang tiyang sepuh.",
+      },
+      {
+        id: "q_ug_2_4",
+        question: "Tembung 'teka' krama aluse yaiku...",
+        options: ["Dugie", "Rawuh", "Anjlok", "Mlebu"],
+        correctOption: 1,
+        hint: "Tuladha ukara: 'Pak Guru sampun rawuh ing sekolahan.'",
+      },
+      {
+        id: "q_ug_2_5",
+        question: "Tembung 'omah' menawa kanggo ngurmati omahe Bapak utawa Ibu Guru diarani...",
+        options: ["Griya", "Dalem", "Pondhok", "Kamar"],
+        correctOption: 1,
+        hint: "Omah kanggo ngurmati wong liya diarani 'dalem', dene kanggo awake dhewe diarani 'griya'.",
+      },
+    ],
+    3: [
+      {
+        id: "q_ug_3_1",
+        question: "Beda panganggone basa Krama Lugu lan Krama Alus yaiku...",
+        options: [
+          "Krama Lugu luwih angel tinimbang Krama Alus",
+          "Krama Lugu kanggo awake dhewe utawa wong sadrajat, Krama Alus kanggo ngurmati wong kang luwih sepuh",
+          "Krama Alus mung digunakake dening raja",
+          "Kabeh padha wae ora ana bedane",
+        ],
+        correctOption: 1,
+        hint: "Krama Alus nggunakake tembung krama inggil kanggo ngurmati wong sing diajak guneman.",
+      },
+      {
+        id: "q_ug_3_2",
+        question: "Gatekna ukara iki: 'Kula badhe ... dhateng Solo, dene Bapak sampun ... wau enjing.' Tembung kang pas yaiku...",
+        options: [
+          "Tindak - kesah",
+          "Kesah - tindak",
+          "Mangkat - lunga",
+          "Lunga - tindak",
+        ],
+        correctOption: 1,
+        hint: "Kanggo awake dhewe (kula) nggunakake 'kesah', dene kanggo Bapak nggunakake 'tindak'.",
+      },
+      {
+        id: "q_ug_3_3",
+        question: "Apa paedah (manfaat) sinau unggah-ungguh basa Jawa tumrap murid ing jaman modern saiki?",
+        options: [
+          "Supaya bisa pamer marang wong liya",
+          "Nukulake watak andhap asor, sopan santun, lan nglestarekake budi pekerti luhur bangsa",
+          "Supaya ora usah sinau basa Indonesia",
+          "Kanggo ngapusi kanca dolanan",
+        ],
+        correctOption: 1,
+        hint: "Unggah-ungguh basa ndhidhik budi pekerti lan rasa kurmat marang sapadha-padha.",
+      },
+      {
+        id: "q_ug_3_4",
+        question: "Nalika Budi ora sengaja nyenggol kancane nganti bukune tiba, ukara Jawa kang trep diucapake yaiku...",
+        options: [
+          "'Salahmu dhewe lungguh ing kono!'",
+          "'Nyuwun pangapunten ya, aku ora sengaja. Ayo tak rewangi nata'",
+          "'Ora apa-apa ya wis biasa'",
+          "'Gek ndang resikana bukumu!'",
+        ],
+        correctOption: 1,
+        hint: "Nyuwun pangapunten kanthi tulus nuduhake tanggung jawab lan watak ksatria.",
+      },
+      {
+        id: "q_ug_3_5",
+        question: "Kepriye ukara kang bener nalika arep nyuwun ijin menyang jedhing nalika wulangan ing kelas?",
+        options: [
+          "'Pak, aku metu dhisik ya!'",
+          "'Nyuwun sewu Pak/Bu Guru, kula nyuwun ijin badhe dhateng wingking'",
+          "'Bu, arep pipis saiki'",
+          "'Ijin metu dhisik ya kanca-kanca'",
+        ],
+        correctOption: 1,
+        hint: "Matur kanthi sopan migunakake tembung 'nyuwun sewu' lan 'dhateng wingking'.",
+      },
+    ],
+  },
+  "bjawa-punokawan": {
+    1: [
+      {
+        id: "q_pn_1_1",
+        question: "Papat paraga wayang kang diarani Punokawan yaiku...",
+        options: [
+          "Puntadewa, Werkudara, Janaka, Nakula",
+          "Semar, Gareng, Petruk, lan Bagong",
+          "Kurawa, Durna, Sengkuni, Karna",
+          "Antasena, Antareja, Gatotkaca, Abimanyu",
+        ],
+        correctOption: 1,
+        hint: "Semar minangka bapak, dene Gareng, Petruk, lan Bagong minangka anak-anake.",
+      },
+      {
+        id: "q_pn_1_2",
+        question: "Bapake para Punokawan kang awake lemu, mripate rembes, lan tansah sabar paring pitutur yaiku...",
+        options: ["Petruk", "Kyai Semar", "Bagong", "Gareng"],
+        correctOption: 1,
+        hint: "Kyai Semar Badranaya minangka sesepuh kang wicaksana lan ngayomi.",
+      },
+      {
+        id: "q_pn_1_3",
+        question: "Tokoh Punokawan kang dedege paling dhuwur, irunge dawa, lan seneng gojek yaiku...",
+        options: ["Bagong", "Petruk", "Gareng", "Semar"],
+        correctOption: 1,
+        hint: "Petruk utawa Kanthong Bolong dedege dhuwur kencur lan tangane dawa.",
+      },
+      {
+        id: "q_pn_1_4",
+        question: "Watak utama saka paraga Kyai Semar kang patut dituladha dening bocah sekolah yaiku...",
+        options: [
+          "Sabar, wicaksana, andhap asor, lan tresna marang katentreman",
+          "Seneng pamer kesaktian",
+          "Gampang nesu yen dienyek",
+          "Seneng ngapusi kanca",
+        ],
+        correctOption: 0,
+        hint: "Semar minangka lambang kawicaksanan lan kesabaran sejati.",
+      },
+      {
+        id: "q_pn_1_5",
+        question: "Paraga Punokawan pambarep (anak nomer siji) kang nduweni tangan ceko lan sikil gejig yaiku...",
+        options: ["Gareng (Nala Gareng)", "Petruk", "Bagong", "Togog"],
+        correctOption: 0,
+        hint: "Nala Gareng minangka anak nomer siji, senajan awake cilik nanging atine becik.",
+      },
+    ],
+    2: [
+      {
+        id: "q_pn_2_1",
+        question: "Paraga Gareng nduweni sikil gejig lan tangan ceko. Piwulang pralambange yaiku...",
+        options: [
+          "Kudu ngati-ati anggone tumindak lan ora kena njupuk barang darbeke liyan",
+          "Bocah sekolah kudu seneng gelut",
+          "Ora kena mlaku ing dalan",
+          "Kudu tuku sepatu anyar",
+        ],
+        correctOption: 0,
+        hint: "Tangan ceko ngelingake aja njupuk duweke liyan, sikil gejig ngelingake kudu ngati-ati mlaku.",
+      },
+      {
+        id: "q_pn_2_2",
+        question: "Senjata pusaka arupa lading cilik kang tansah disengkelit dening Petruk yaiku...",
+        options: ["Keris Pasopati", "Pethel", "Gada Rujakpala", "Cakra Baskara"],
+        correctOption: 1,
+        hint: "Pethel yaiku piranti kanggo natah kayu kang dadi pusakane Petruk.",
+      },
+      {
+        id: "q_pn_2_3",
+        question: "Ing crita pewayangan Jawa, para Punokawan nduweni tugas utama yaiku...",
+        options: [
+          "Ngrusak kraton Amarta",
+          "Ngemong lan ngamping-ampingi para ksatria Pandhawa kanthi setya",
+          "Njaluk dhuwit marang para raja",
+          "Melu dadi prajurit Kurawa",
+        ],
+        correctOption: 1,
+        hint: "Punokawan dadi pamomong kang tansah ngelingake para ksatria supaya tetep ing dalan bebener.",
+      },
+      {
+        id: "q_pn_2_4",
+        question: "Paraga Bagong nduweni watak 'blaka suta', tegese yaiku...",
+        options: [
+          "Seneng cidra ing janji",
+          "Jujur, apa anane, lan kendel mbelani bebener tanpa wedi",
+          "Seneng nyimpen rahasia ala",
+          "Seneng mamerake bandhane",
+        ],
+        correctOption: 1,
+        hint: "Bagong iku senajan ceplas-ceplos nanging atine resik lan ora seneng ngapusi.",
+      },
+      {
+        id: "q_pn_2_5",
+        question: "Guyonane para Punokawan ing pagelaran wayang kulit tansah dienteni para penonton amarga...",
+        options: [
+          "Mung ngina kekurangan fisik wong liya",
+          "Senajan ngguyu lucu nanging tansah ngemot piwulang lan kritik sosial kang becik",
+          "Gawe geger lan kisruh",
+          "Niru basa asing",
+        ],
+        correctOption: 1,
+        hint: "Gojekane Punokawan nglipur ati nanging uga paring pencerahan batin.",
+      },
+    ],
+    3: [
+      {
+        id: "q_pn_3_1",
+        question: "Asal-usul paraga Semar ing mitologi Jawa sejatine minangka dewa luhur kang mudhun menyang marcapada kanthi asma...",
+        options: ["Sang Hyang Ismaya", "Batara Guru", "Batara Narada", "Sang Hyang Antaboga"],
+        correctOption: 0,
+        hint: "Sang Hyang Ismaya milih mudhun dadi pamomong rakyat cilik kanthi asma Semar.",
+      },
+      {
+        id: "q_pn_3_2",
+        question: "Filosofi Punokawan menehi piwulang marang para pamimpin negara supaya...",
+        options: [
+          "Urip mewah lan ora nggatekake wong mlarat",
+          "Tansah ngrungokake swarane rakyat cilik lan mimpin kanthi adil wicaksana",
+          "Nglumpukake bandha donya kanggo awake dhewe",
+          "Ora gelem ditegur dening sapa wae",
+        ],
+        correctOption: 1,
+        hint: "Ksatria sejati mesthi ngrungokake pitutur lan sambat-sebuting para pamomonge.",
+      },
+      {
+        id: "q_pn_3_3",
+        question: "Kepriye tuladha kerukunan ing kulawarga Punokawan kang bisa diterapake siswa ing kelas?",
+        options: [
+          "Tulung-tinulung, guyub rukun, lan nampa kekurangane kanca kanthi jembar dhadha",
+          "Saling ngina kekurangan kanca",
+          "Pilih-pilih kanca mung sing pinter wae",
+          "Njaluk opah saben nulungi kanca",
+        ],
+        correctOption: 0,
+        hint: "Gareng, Petruk, lan Bagong senadyan beda rupa nanging tansah kompak lan tresna.",
+      },
+      {
+        id: "q_pn_3_4",
+        question: "Kesenian wayang kulit kang ngemot paraga Punokawan wis diakoni dening badan donya yaiku...",
+        options: [
+          "UNESCO minangka Warisan Budaya Donya Asli Indonesia",
+          "FIFA minangka olahraga tradisional",
+          "UNICEF minangka dolanan bocah",
+          "WHO minangka obat tradisional",
+        ],
+        correctOption: 0,
+        hint: "UNESCO ngakoni wayang kulit Indonesia minangka Masterpiece of Oral and Intangible Heritage.",
+      },
+      {
+        id: "q_pn_3_5",
+        question: "Nalika ana musyawarah kelas, sikap Punokawan endi kang kudu ditrapake supaya ora padu?",
+        options: [
+          "Sikep nesu lan meksa kekarepane dhewe",
+          "Sikep wicaksana, sabar, lan ngrungokake panemune liyan kaya Kyai Semar",
+          "Sikep mungkur lan ora gelem melu mikir",
+          "Sikep ngenyek usulane kanca",
+        ],
+        correctOption: 1,
+        hint: "Kawicaksanan Semar dadi patuladhan anggone ngrampungake prakara kanthi tentrem.",
+      },
+    ],
+  },
+  "bjawa-pandhawa": {
+    1: [
+      {
+        id: "q_pw_1_1",
+        question: "Cacahe para ksatria Pandhawa Lima ana pira?",
+        options: ["3 ksatria", "4 ksatria", "5 ksatria", "100 ksatria"],
+        correctOption: 2,
+        hint: "Pandhawa asale saka tembung 'pandhu putra' kang cacahe ana lima ksatria.",
+      },
+      {
+        id: "q_pw_1_2",
+        question: "Pambarepe (anak nomer siji) ksatria Pandhawa kang misuwur nduweni watak getih putih yaiku...",
+        options: ["Werkudara", "Prabu Puntadewa (Yudhistira)", "Janaka", "Sadewa"],
+        correctOption: 1,
+        hint: "Puntadewa minangka ratu ing Amarta kang resik atine lan ora tau goroh.",
+      },
+      {
+        id: "q_pw_1_3",
+        question: "Ksatria panengah Pandhawa kang prigel (pinter) banget ing babagan manah yaiku...",
+        options: ["Raden Janaka (Arjuna)", "Raden Nakula", "Raden Werkudara", "Prabu Kresna"],
+        correctOption: 0,
+        hint: "Raden Arjuna minangka ksatria gantheng kang tekun sinau lan sekti olah panah.",
+      },
+      {
+        id: "q_pw_1_4",
+        question: "Ksatria Pandhawa kang lair kembar yaiku...",
+        options: [
+          "Puntadewa lan Werkudara",
+          "Janaka lan Werkudara",
+          "Raden Nakula lan Raden Sadewa",
+          "Gareng lan Petruk",
+        ],
+        correctOption: 2,
+        hint: "Nakula lan Sadewa lair bareng (kembar) saka garwa Dewi Madrim.",
+      },
+      {
+        id: "q_pw_1_5",
+        question: "Ksatria Pandhawa nomer loro kang awake gedhe dhuwur gagah prakosa lan duwe Kuku Pancanaka yaiku...",
+        options: ["Raden Janaka", "Raden Werkudara (Bima)", "Raden Sadewa", "Prabu Puntadewa"],
+        correctOption: 1,
+        hint: "Werkudara satriya ing Jodhipati kang nduweni watak jujur lan kukuh bakuh mbelani bebener.",
+      },
+    ],
+    2: [
+      {
+        id: "q_pw_2_1",
+        question: "Kasatriyane Raden Janaka (Arjuna) manggon ing...",
+        options: ["Jodhipati", "Madukara", "Sawojajar", "Bumi Retawu"],
+        correctOption: 1,
+        hint: "Arjuna satriya ing Madukara, dene Werkudara ing Jodhipati.",
+      },
+      {
+        id: "q_pw_2_2",
+        question: "Watake Prabu Puntadewa diarani 'getih putih' amarga...",
+        options: [
+          "Seneng lara-laranen",
+          "Jujur, ora tau goroh (ngapusi), sabar, lan seneng menehi pangapura",
+          "Wernane kulite putih mulus",
+          "Seneng ngunjuk susu",
+        ],
+        correctOption: 1,
+        hint: "Getih putih minangka pralambang watak ksatria kang suci tanpa niyat ala.",
+      },
+      {
+        id: "q_pw_2_3",
+        question: "Asmane ibu kandhunge Puntadewa, Werkudara, lan Janaka yaiku...",
+        options: ["Dewi Madrim", "Dewi Kunthi Nalibrata", "Dewi Srikandi", "Dewi Drupadi"],
+        correctOption: 1,
+        hint: "Dewi Kunthi minangka ibu kang wicaksana ngasuh lan ndhidhik para Pandhawa.",
+      },
+      {
+        id: "q_pw_2_4",
+        question: "Gaman pusaka ampuh kagungane Raden Janaka kang awujud panah sekti yaiku...",
+        options: ["Kuku Pancanaka", "Panah Pasopati", "Gada Rujakpala", "Keris Mpu Gandring"],
+        correctOption: 1,
+        hint: "Panah Pasopati dadi pusaka pamungkas Raden Janaka nalika ngadhepi mungsuh.",
+      },
+      {
+        id: "q_pw_2_5",
+        question: "Raden Nakula lan Sadewa nduweni keprigelan mligi ing babagan...",
+        options: [
+          "Ngrumat tetuwuhan, peternakan jaran, lan ilmu perbintangan/lintang",
+          "Gawe prau lan kapal perang",
+          "Nulis buku dongeng",
+          "Dagang ing pasar",
+        ],
+        correctOption: 0,
+        hint: "Ksatria kembar Sawojajar pinter babagan tetanen lan tresna marang sato kewan.",
+      },
+    ],
+    3: [
+      {
+        id: "q_pw_3_1",
+        question: "Falsafah luhur ing Perang Bharatayudha 'Sura Dira Jayaningrat Lebur Dening Pangastuti' ngemu teges...",
+        options: [
+          "Sapa sing menang perang bakal dadi sugih",
+          "Kabeh sipat angkara murka, sombong, lan licik bakal kalah dening kabecikan, kejujuran, lan kasabaran",
+          "Perang iku siji-sijine dalan golek tentrem",
+          "Wong licik mesthi tansah menang",
+        ],
+        correctOption: 1,
+        hint: "Kabecikan sejati bakal tansah unggul ngalahake tumindak durangkara.",
+      },
+      {
+        id: "q_pw_3_2",
+        question: "Ksatria Werkudara ora tau nggunakake basa krama marang sapa wae kajaba marang Dewa Ruci lan ibune, amarga...",
+        options: [
+          "Ora bisa basa Jawa",
+          "Nduweni watak blaka suta, tegas, ora seneng lamis (munafik), nanging bekti lahir batin",
+          "Seneng ngenyek wong liya",
+          "Lali tata krama",
+        ],
+        correctOption: 1,
+        hint: "Senadyan basane ngoko, bektine Werkudara marang guru lan wong tuwa tanpa upama.",
+      },
+      {
+        id: "q_pw_3_3",
+        question: "Sikap apa saka Raden Janaka nalika sinau marang Resi Drona kang kudu ditiru murid SD?",
+        options: [
+          "Fokus nggatekake wulangan guru, tlaten gladhen, lan ora gampang putus asa",
+          "Seneng nyalahake kanca yen gagal",
+          "Mung sinau sedina sadurunge ujian",
+          "Ngganggu kanca sing lagi ngrungokake guru",
+        ],
+        correctOption: 0,
+        hint: "Konsentrasi lan ketekunan sinau Janaka ndadekake dheweke dadi ksatria pilih tanding.",
+      },
+      {
+        id: "q_pw_3_4",
+        question: "Piwulang apa kang bisa dijupuk saka paseduluran Pandhawa kang tetep rukun senajan ngadhepi pacoban gedhe?",
+        options: [
+          "Saling nyalahake nalika ana masalah",
+          "Kekompakan, rukun karo sedulur, lan setya janji ndadekake kulawarga kuwat",
+          "Mlayu nylametake awake dhewe",
+          "Njaluk pitulungane para mungsuh",
+        ],
+        correctOption: 1,
+        hint: "Kekuwatan Pandhawa ana ing kerukunan lan tekad manunggal mbelani bebener.",
+      },
+      {
+        id: "q_pw_3_5",
+        question: "Ing Perang Bharatayudha, para Pandhawa berjuang dudu amarga seneng perang, nanging kanggo...",
+        options: [
+          "Njarah bandha donyane kraton Ngastina",
+          "Netepi darma ksatria yaiku mbelani bebener lan ngilangi angkara murka ing bumi",
+          "Pamer kesaktian marang para dewa",
+          "Mbales dendam pribadi kanthi kejem",
+        ],
+        correctOption: 1,
+        hint: "Perjuangan Pandhawa minangka darma ngadegake keadilan kanggo katentremaning jagad.",
+      },
+    ],
+  },
+  "bjawa-aksara": {
+    1: [
+      {
+        id: "q_ak_1_1",
+        question: "Cacahe aksara Jawa nglegena (aksara dhasar) kabeh ana pira?",
+        options: ["10 aksara", "15 aksara", "20 aksara", "26 aksara"],
+        correctOption: 2,
+        hint: "Aksara Jawa nglegena diwiwiti saka Ha nganti Nga cacahe ana 20 aksara.",
+      },
+      {
+        id: "q_ak_1_2",
+        question: "Baris kapisan saka aksara Jawa unine yaiku...",
+        options: ["Da, Ta, Sa, Wa, La", "Ha, Na, Ca, Ra, Ka", "Pa, Dha, Ja, Ya, Nya", "Ma, Ga, Ba, Tha, Nga"],
+        correctOption: 1,
+        hint: "Urutan aksara Jawa kapisan yaiku Ha-Na-Ca-Ra-Ka kang tegese ana utusan.",
+      },
+      {
+        id: "q_ak_1_3",
+        question: "Sandhangan swara 'Wulu' wujude bunder cilik ing dhuwure aksara, digunakake kanggo ngowahi swara dadi...",
+        options: ["a", "i", "u", "e"],
+        correctOption: 1,
+        hint: "Aksara 'Ka' diwenehi wulu unine dadi 'Ki'.",
+      },
+      {
+        id: "q_ak_1_4",
+        question: "Sandhangan swara 'Suku' kang manggon ing ngisore aksara digunakake kanggo swara...",
+        options: ["o", "u", "i", "e"],
+        correctOption: 1,
+        hint: "Aksara 'Ba' diwenehi suku unine dadi 'Bu'.",
+      },
+      {
+        id: "q_ak_1_5",
+        question: "Sandhangan swara 'Taling Tarung' digunakake kanggo ngasilake swara...",
+        options: ["o", "u", "i", "a"],
+        correctOption: 0,
+        hint: "Aksara 'Sa' diapit taling tarung unine dadi 'So'.",
+      },
+    ],
+    2: [
+      {
+        id: "q_ak_2_1",
+        question: "Sandhangan swara 'Pepet' ngowahi aksara nglegena dadi muni swara...",
+        options: ["e (kaya tembung 'sega' utawa 'sepet')", "i (kaya tembung 'pipi')", "u (kaya tembung 'tuku')", "o (kaya tembung 'toko')"],
+        correctOption: 0,
+        hint: "Pepet ngasilake swara 'e' mantep kayata ing tembung 'sepet' utawa 'sega'.",
+      },
+      {
+        id: "q_ak_2_2",
+        question: "Sandhangan panyigeg wanda 'Layar' digunakake kanggo nambahi swara mati...",
+        options: ["r", "h", "ng", "k"],
+        correctOption: 0,
+        hint: "Layar awujud garis miring ing dhuwur aksara kanggo nambahi swara 'r'.",
+      },
+      {
+        id: "q_ak_2_3",
+        question: "Sandhangan panyigeg wanda 'Cecak' digunakake kanggo nambahi swara mati...",
+        options: ["ng", "h", "r", "l"],
+        correctOption: 0,
+        hint: "Cecak wujude bunder cilik buntutan kanggo swara 'ng'.",
+      },
+      {
+        id: "q_ak_2_4",
+        question: "Sandhangan panyigeg wanda 'Wignyan' digunakake kanggo nambahi swara mati...",
+        options: ["h", "r", "ng", "s"],
+        correctOption: 0,
+        hint: "Wignyan manggon ing mburine aksara kanggo swara 'h' kayata ing tembung 'gajah'.",
+      },
+      {
+        id: "q_ak_2_5",
+        question: "Tembung 'buku' menawa ditulis nganggo aksara Jawa mbutuhake sandhangan swara yaiku...",
+        options: ["Wulu", "Suku", "Pepet", "Taling"],
+        correctOption: 1,
+        hint: "Aksara Ba diwenehi Suku (Bu) lan aksara Ka diwenehi Suku (Ku).",
+      },
+    ],
+    3: [
+      {
+        id: "q_ak_3_1",
+        question: "Sandhangan 'Pangkon' lumrahe digunakake ing endi?",
+        options: [
+          "Ing ngarep ukara",
+          "Ing pungkasaning tembung utawa ukara kanggo mateni aksara",
+          "Ing tengah-tengah tembung kang urip",
+          "Ing ngisor kabeh aksara",
+        ],
+        correctOption: 1,
+        hint: "Pangkon gunane kanggo mateni aksara ing pungkasan ukara.",
+      },
+      {
+        id: "q_ak_3_2",
+        question: "Pasangan aksara Jawa digunakake nalika ana kahanan...",
+        options: [
+          "Aksara mati ketemu aksara urip ing tengahing tembung utawa ukara",
+          "Kabeh aksara kudu dipasangani",
+          "Aksara Jawa ditulis nganggo mangsi abang",
+          "Ukara diwiwiti nganggo huruf kapital",
+        ],
+        correctOption: 0,
+        hint: "Pasangan mateni aksara sadurunge tanpa nggunakake sandhangan pangkon ing tengah tembung.",
+      },
+      {
+        id: "q_ak_3_3",
+        question: "Gatekna bedane swara taling [é] lan pepet [e] ing conto tembung Jawa iki:",
+        options: [
+          "'Bebek' (kewan) nganggo taling, dene 'sega' nganggo pepet",
+          "'Soto' nganggo wulu",
+          "'Kucing' nganggo suku lan layar",
+          "'Buku' nganggo taling tarung",
+        ],
+        correctOption: 0,
+        hint: "Taling ngasilake swara [é] kaya ing 'lele' utawa 'bebek', dene pepet kaya ing 'kembang'.",
+      },
+      {
+        id: "q_ak_3_4",
+        question: "Apa tujuane para siswa SD ing Jawa Tengah, Jawa Timur, lan DIY sinau aksara Jawa?",
+        options: [
+          "Supaya ora bisa maca aksara latin",
+          "Nglestarekake warisan luhur kabudayan bangsa lan ngurmati peninggalan leluhur Nusantara",
+          "Kanggo ngirim pesen rahasia perang",
+          "Mung syarat ujian tanpa guna",
+        ],
+        correctOption: 1,
+        hint: "Aksara Jawa minangka identitas budaya agung kang diakui internasional.",
+      },
+      {
+        id: "q_ak_3_5",
+        question: "Miturut dongeng legendhane, aksara Jawa Hanacaraka diciptakake dening tokoh pahlawan...",
+        options: ["Prabu Brawijaya", "Aji Saka kanggo ngelingi lelabuhane Dora lan Sembada", "Raden Wijaya", "Ken Arok"],
+        correctOption: 1,
+        hint: "Aji Saka nganggit aksara Hanacaraka kanggo mengeti abdine kang setya nganti tumekaning pati.",
+      },
+    ],
+  },
+  "bjawa-anakkewan": {
+    1: [
+      {
+        id: "q_an_1_1",
+        question: "Jenenge anak pitik ing basa Jawa yaiku...",
+        options: ["Meri", "Kuthuk", "Cemeng", "Belo"],
+        correctOption: 1,
+        hint: "Pitik babon tansah nginthil anak-anake kang cilik arane kuthuk.",
+      },
+      {
+        id: "q_an_1_2",
+        question: "Jenenge anak bebek yaiku...",
+        options: ["Meri", "Kuthuk", "Gogor", "Pedhet"],
+        correctOption: 0,
+        hint: "Anak bebek kang seneng nglangi ing blumbang arane meri.",
+      },
+      {
+        id: "q_an_1_3",
+        question: "Jenenge anak kucing ing basa Jawa yaiku...",
+        options: ["Cemeng", "Kirik", "Bledug", "Cebong"],
+        correctOption: 0,
+        hint: "Anak kucing kang lucu lan nggregetake diarani cemeng.",
+      },
+      {
+        id: "q_an_1_4",
+        question: "Jenenge anak sapi yaiku...",
+        options: ["Pedhet", "Belo", "Gudel", "Cempe"],
+        correctOption: 0,
+        hint: "Anak sapi kang lagi nyusu marang babone diarani pedhet.",
+      },
+      {
+        id: "q_an_1_5",
+        question: "Jenenge anak jaran yaiku...",
+        options: ["Belo", "Pedhet", "Meri", "Kuthuk"],
+        correctOption: 0,
+        hint: "Anak jaran kang pinter lumayu kenceng arane belo.",
+      },
+    ],
+    2: [
+      {
+        id: "q_an_2_1",
+        question: "Jenenge anak kodhok yaiku...",
+        options: ["Cebong / Berudu", "Sawiyah", "Kroyo", "Gogor"],
+        correctOption: 0,
+        hint: "Kodhok nalika isih cilik nglangi ing banyu arane cebong.",
+      },
+      {
+        id: "q_an_2_2",
+        question: "Jenenge anak gajah yaiku...",
+        options: ["Bledug", "Gudel", "Pedhet", "Cemeng"],
+        correctOption: 0,
+        hint: "Anak gajah kang nduweni tlale cilik diarani bledug.",
+      },
+      {
+        id: "q_an_2_3",
+        question: "Jenenge anak macan ing basa Jawa yaiku...",
+        options: ["Gogor", "Kirik", "Belo", "Meri"],
+        correctOption: 0,
+        hint: "Anak macan kang isih ana ing guwa diarani gogor.",
+      },
+      {
+        id: "q_an_2_4",
+        question: "Swara jaran ing basa Jawa diarani...",
+        options: ["Mbengik", "Kluruk", "Ngeong", "Gumerit"],
+        correctOption: 0,
+        hint: "Pitik kluruk, kucing ngeong, dene jaran mbengik.",
+      },
+      {
+        id: "q_an_2_5",
+        question: "Wit pari kang wis diundhuh gabahé diarani...",
+        options: ["Damen", "Glugu", "Tebon", "Klaras"],
+        correctOption: 0,
+        hint: "Batang tanduran pari sawise panen diarani damen.",
+      },
+    ],
+    3: [
+      {
+        id: "q_an_3_1",
+        question: "Godhong klapa kang isih enom wernane kuning/ijo enom diarani...",
+        options: ["Janur", "Klaras", "Blarak", "Damen"],
+        correctOption: 0,
+        hint: "Janur kerep dianyam dadi kupat nalika riyaya bakda kupat.",
+      },
+      {
+        id: "q_an_3_2",
+        question: "Piwulang budi pekerti apa kang bisa dijupuk saka sinau arane anak kewan lan tetuwuhan?",
+        options: [
+          "Nresnani lingkungan alam, welas asih marang sato kewan, lan ngreksa ciptaane Gusti",
+          "Kewan kena disiksa lan diburu nganti entek",
+          "Ora usah ngopeni wit-witan ing omah",
+          "Ngrusak tandurane tangga",
+        ],
+        correctOption: 0,
+        hint: "Welas asih marang samubarang titah ndadekake urip selaras karo alam.",
+      },
+      {
+        id: "q_an_3_3",
+        question: "Jenenge anak wedhus yaiku 'cempe'. Kepriye carane murid ngrumat kewan ingon-ingon kanthi bener?",
+        options: [
+          "Menehi pakan lan ngombe kanthi ajeg, kandhange diresiki, lan diasihi kanthi becik",
+          "Ditinggal lunga tanpa dipakani",
+          "Ditaleni ing papan kang panas tanpa iyub-iyub",
+          "Digebugi saben dina",
+        ],
+        correctOption: 0,
+        hint: "Tanggung jawab ngingu kewan yaiku nyukupi pakane lan njaga kesehatane.",
+      },
+      {
+        id: "q_an_3_4",
+        question: "Arane anak kebo yaiku 'gudel', dene wit jagung diarani...",
+        options: ["Tebon", "Damen", "Glugu", "Blarak"],
+        correctOption: 0,
+        hint: "Wit jagung diarani tebon, godhonge apik kanggo pakan sapi lan wedhus.",
+      },
+      {
+        id: "q_an_3_5",
+        question: "Kasugihan tembung arane anak kewan ing basa Jawa nuduhake yen leluhur wong Jawa nduweni watak...",
+        options: [
+          "Tansah cedhak, tliti nggatekake, lan urip selaras karo alam lingkungane",
+          "Wedi marang kabeh jinis kewan",
+          "Males nulis basa ilmiah",
+          "Seneng nyimpen kewan galak ing njero omah",
+        ],
+        correctOption: 0,
+        hint: "Tembung basa Jawa nggambarake kearifan lokal lan kawruh alam kang jembar.",
+      },
+    ],
+  },
+  "bjawa-geguritan": {
+    1: [
+      {
+        id: "q_gg_1_1",
+        question: "Geguritan sajroning sastra Jawa yaiku karya sastra kang awujud...",
+        options: [
+          "Puisi gagrag anyar basa Jawa kang endah",
+          "Crita dongeng kancil",
+          "Tembang macapat nganggo guru lagu",
+          "Buku kamus basa Jawa",
+        ],
+        correctOption: 0,
+        hint: "Geguritan yaiku puisi Jawa modern kang ora kaiket guru gatra lan guru lagu kanthi kaku.",
+      },
+      {
+        id: "q_gg_1_2",
+        question: "Tembung 'geguritan' asale saka tembung lingga...",
+        options: ["Gurit kang tegese tulisan, kidung, utawa syair", "Gering", "Giri", "Guru"],
+        correctOption: 0,
+        hint: "Tembung lingga gurit tegese tulisan utawa karangan endah.",
+      },
+      {
+        id: "q_gg_1_3",
+        question: "Nalika maca geguritan, obahing praupan (ekspresi wajah) kudu...",
+        options: [
+          "Laras lan cocog karo isi geguritan kang diwaca",
+          "Mesem terus senajan geguritane sedhih",
+          "Ditutupi nganggo buku",
+          "Katon nesu saben wektu",
+        ],
+        correctOption: 0,
+        hint: "Ekspresi praupan nggambarake rasa bungah, sedhih, utawa semangat geguritan.",
+      },
+      {
+        id: "q_gg_1_4",
+        question: "Basa kang endah, mentes, lan ngemot teges entar ing geguritan diarani...",
+        options: ["Basa Rinengga", "Basa Pasar", "Basa Kawi Kuno", "Basa Walikan"],
+        correctOption: 0,
+        hint: "Basa rinengga yaiku basa kang dipaesi supaya katon endah lan ngresepake ati.",
+      },
+      {
+        id: "q_gg_1_5",
+        question: "Tema geguritan bocah SD bisa ngenani babagan...",
+        options: [
+          "Katresnan marang wong tuwa, guru, kaendahan alam, lan budi pekerti",
+          "Politik negara manca",
+          "Tawuran antargeng",
+          "Mung crita hantu medeni",
+        ],
+        correctOption: 0,
+        hint: "Tema geguritan bocah ngemot nilai budi pekerti, rasa syukur, lan katresnan.",
+      },
+    ],
+    2: [
+      {
+        id: "q_gg_2_1",
+        question: "Papat syarat utama kang kudu digatekake nalika maca geguritan yaiku...",
+        options: [
+          "Wicara, Wirama, Wirasa, lan Wiraga",
+          "Wadhuk, Kali, Segara, lan Gunung",
+          "Macapat, Kidung, Campursari, lan Dangdut",
+          "Klambi, Sepatu, Topi, lan Tas",
+        ],
+        correctOption: 0,
+        hint: "4W yaiku Wicara (pocapan), Wirama (lagu/tempo), Wirasa (penghayatan), lan Wiraga (solah bawa).",
+      },
+      {
+        id: "q_gg_2_2",
+        question: "'Wirasa' sajroning maca geguritan ngemot teges...",
+        options: [
+          "Penghayatan utawa ngrasakake jeroning isi geguritan supaya katon urip",
+          "Pocapan aksara kang cetha",
+          "Sandhangan kang dienggo",
+          "Banter lirihe swara",
+        ],
+        correctOption: 0,
+        hint: "Wirasa yaiku kemampuan njiwani rasa sedhih, bungah, utawa gregeting geguritan.",
+      },
+      {
+        id: "q_gg_2_3",
+        question: "'Wiraga' sajroning maca geguritan ngemot teges...",
+        options: [
+          "Solah bawa, obahing awak, lan pasemon (ekspresi wajah) kang trep",
+          "Lagu lan tembang",
+          "Maca kanthi cepet-cepetan",
+          "Nulis ukara ing papan tulis",
+        ],
+        correctOption: 0,
+        hint: "Wiraga yaiku patrap solah bawa lan gerak tubuh kang luwes mendukung isi puisi.",
+      },
+      {
+        id: "q_gg_2_4",
+        question: "Ciri khas geguritan gagrag lawas (kuno) yaiku diwiwiti kanthi tembung...",
+        options: ["'Sun nggegurit'", "'Dina iki'", "'Kanca-kancaku'", "'Ayo padha'"],
+        correctOption: 0,
+        hint: "Geguritan gagrag lawas lumrahe nganggo purwaka tembung 'Sun nggegurit'.",
+      },
+      {
+        id: "q_gg_2_5",
+        question: "Pesen luhur kang pengin diaturake dening panggurit marang wong kang maca diarani...",
+        options: ["Amanat", "Latar", "Alur", "Paraga"],
+        correctOption: 0,
+        hint: "Amanat yaiku pitutur luhur lan piwulang becik sajroning karya sastra.",
+      },
+    ],
+    3: [
+      {
+        id: "q_gg_3_1",
+        question: "Purwakanthi swara yaiku runtuting swara vokal ing sajroning ukara geguritan. Tuladha purwakanthi swara yaiku...",
+        options: [
+          "'Tiwas sayah ora paedah' (runtute swara 'ah')",
+          "'Bobot timbang'",
+          "'Tata titi tentrem'",
+          "'Gedhe cilik'",
+        ],
+        correctOption: 0,
+        hint: "Swara 'ah' kang runtut ing pungkasan tembung diarani purwakanthi guru swara.",
+      },
+      {
+        id: "q_gg_3_2",
+        question: "Nalika maca geguritan kanthi tema perjuangan pahlawan bangsa, wirama lan wiragane kudu...",
+        options: [
+          "Katon lesu lan swarane lirih bisik-bisik",
+          "Tegas, semangat makantar-kantar, tatag, lan praupan gagah wani",
+          "Kaya wong lagi ngantuk",
+          "Maca karo ngguyu terbahak-bahak",
+        ],
+        correctOption: 1,
+        hint: "Tema perjuangan mbutuhake greget wirama kang mantep lan ekspresi wani.",
+      },
+      {
+        id: "q_gg_3_3",
+        question: "Kepriye trap-trapane nulis geguritan prasaja tumrap murid sekolah dasar?",
+        options: [
+          "Nemtokake tema dhisik, milih tembung basa rinengga kang endah, banjur nata dadi bait kang mentes",
+          "Njiplak puisi saka internet tanpa diowahi",
+          "Nulis ukara sakarepe dhewe tanpa tema",
+          "Mung nulis siji tembung wae",
+        ],
+        correctOption: 0,
+        hint: "Langkah nulis diwiwiti saka nemtokake tema, ngumpulake gagasan, lan milih tembung endah.",
+      },
+      {
+        id: "q_gg_3_4",
+        question: "Apa paedah (manfaat) maca geguritan ing ngarep kelas tumrap kapribadene siswa?",
+        options: [
+          "Nglatih rasa percaya diri, wani tampil, olah vokal, lan tresna marang sastra daerah",
+          "Supaya dadi sombong",
+          "Supaya diejek kanca",
+          "Kanggo ngentekake wektu wulangan",
+        ],
+        correctOption: 0,
+        hint: "Tampil maca geguritan ngasah keberanian mental, artikulasi wicara, lan apresiasi seni.",
+      },
+      {
+        id: "q_gg_3_5",
+        question: "Gatekna pethikan geguritan iki: 'Ibu... panjenengan minangka surya kang tansah madhangi lakuku...' Tembung 'surya' ngemu teges...",
+        options: [
+          "Srengenge (matahari) kang tansah paring pepadhang lan pangayoman tulus",
+          "Lampu senter",
+          "Lintang panjer wengi",
+          "Rembulan padhang",
+        ],
+        correctOption: 0,
+        hint: "Surya minangka dasanama saka srengenge, pralambang katresnan ibu kang tanpa wates.",
+      },
+    ],
+  },
+};
+
+export function shuffleQuestionOptions(q: Question): Question {
+  const correctText = q.options[q.correctOption] ?? "";
+  const shuffled = [...q.options];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = shuffled[i]!;
+    shuffled[i] = shuffled[j]!;
+    shuffled[j] = temp;
+  }
+  const newCorrectIndex = shuffled.indexOf(correctText);
+  return {
+    ...q,
+    options: shuffled,
+    correctOption: newCorrectIndex >= 0 ? newCorrectIndex : q.correctOption,
+  };
+}
+
+export async function getQuestionsByLevel(level: number, chapterId?: string): Promise<Question[]> {
   await delay(200);
-  // Jika ada soal yang di-generate dari modul aktif guru, utamakan soal tersebut
+
+  const cleanId = (chapterId || "").toLowerCase().replace(/^mod-/, "").trim();
+
+  let selectedList: Question[] | null = null;
+
+  // 1. Jika ada modul kurikulum yang sedang divalidasi guru dan cocok dengan chapterId
   if (
     activeCurriculumState?.quizQuestions?.[level] &&
-    activeCurriculumState.quizQuestions[level].length > 0
+    activeCurriculumState.quizQuestions[level].length > 0 &&
+    (!cleanId ||
+      activeCurriculumState.id?.toLowerCase().includes(cleanId) ||
+      cleanId.includes(activeCurriculumState.id?.toLowerCase().replace(/^mod-/, "")))
   ) {
-    return activeCurriculumState.quizQuestions[level];
+    selectedList = activeCurriculumState.quizQuestions[level];
   }
-  const data = mockQuestions[level];
-  if (!data) {
-    throw new Error(`Soal untuk level ${level} tidak ditemukan.`);
+
+  // 2. Cek apakah ada modul kurikulum tersimpan yang cocok dengan chapterId
+  if (!selectedList) {
+    const storedModules = await getCurriculumModules();
+    const matchedModule = storedModules.find(
+      (m) =>
+        m.id?.toLowerCase().includes(cleanId) ||
+        cleanId.includes(m.id?.toLowerCase().replace(/^mod-/, "")) ||
+        (m.title && cleanId && m.title.toLowerCase().includes(cleanId))
+    );
+    if (matchedModule?.quizQuestions?.[level] && matchedModule.quizQuestions[level].length > 0) {
+      selectedList = matchedModule.quizQuestions[level];
+    }
   }
-  return data;
+
+  // 3. Cek Bank Soal Tematik per-Bab Bawaan (PKn & Bahasa Jawa Bab 1 s/d Bab 6)
+  if (!selectedList && cleanId) {
+    for (const [key, questionsByLvl] of Object.entries(chapterQuizBank)) {
+      if (cleanId.includes(key) || key.includes(cleanId)) {
+        if (questionsByLvl[level] && questionsByLvl[level].length > 0) {
+          selectedList = questionsByLvl[level];
+          break;
+        }
+      }
+    }
+  }
+
+  // 4. Default: Jika chapterId cocok dengan salah satu kunci chapterQuizBank
+  if (!selectedList) {
+    const defaultBank = chapterQuizBank["pkn-sila3"]?.[level];
+    if (defaultBank && defaultBank.length > 0) {
+      selectedList = defaultBank;
+    }
+  }
+
+  if (!selectedList) {
+    const data = mockQuestions[level];
+    if (!data) {
+      throw new Error(`Soal untuk level ${level} tidak ditemukan.`);
+    }
+    selectedList = data;
+  }
+
+  // Acak urutan opsi jawaban (A, B, C, D) sehingga posisi jawaban benar tersebar merata & tidak selalu di opsi B
+  return selectedList.map(shuffleQuestionOptions);
 }
 
 // --- "Database" materi in-memory --------------------------------------------
@@ -1724,7 +3360,7 @@ export async function addStudentPoints(
   let user: UserAccount | undefined;
   if (identifier) {
     const norm = identifier.toLowerCase().trim();
-    user = usersDb.find((u) => u.id === identifier || u.email.toLowerCase() === norm);
+    user = usersDb.find((u) => (u.id === identifier || u.email.toLowerCase() === norm) && u.role === "pelajar");
   }
   if (!user) {
     user = usersDb.find((u) => u.role === "pelajar");
@@ -1767,7 +3403,7 @@ export async function updateStudentQuizScore(
   let user: UserAccount | undefined;
   if (identifier) {
     const norm = identifier.toLowerCase().trim();
-    user = usersDb.find((u) => u.id === identifier || u.email.toLowerCase() === norm);
+    user = usersDb.find((u) => (u.id === identifier || u.email.toLowerCase() === norm) && u.role === "pelajar");
   }
   if (!user) {
     user = usersDb.find((u) => u.role === "pelajar");
@@ -1979,7 +3615,10 @@ export async function getUserProfile(
   let user: UserAccount | undefined;
   if (identifier) {
     const norm = identifier.toLowerCase().trim();
-    user = usersDb.find((u) => u.id === identifier || u.email.toLowerCase() === norm);
+    // Prioritaskan mencari akun dengan identifier DAN peran yang sesuai (pelajar/pengajar)
+    user = usersDb.find(
+      (u) => (u.id === identifier || u.email.toLowerCase() === norm) && u.role === fallbackRole
+    );
   }
   if (!user) {
     user = usersDb.find((u) => u.role === fallbackRole);
@@ -2065,7 +3704,7 @@ export async function updateUserProfile(
   await delay(400);
   let user: UserAccount | undefined;
   if (userId) {
-    user = usersDb.find((u) => u.id === userId);
+    user = usersDb.find((u) => u.id === userId && u.role === role);
   }
   if (!user) {
     user = usersDb.find((u) => u.email.toLowerCase() === payload.email.toLowerCase() && u.role === role);

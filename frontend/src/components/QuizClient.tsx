@@ -7,8 +7,9 @@ import {
   playWrongSound,
 } from "@/lib/soundEffects";
 import { useUIStore } from "@/lib/store/useUIStore";
+import { availableChapters } from "@shared/catalog";
 import type { Question } from "@shared/schema";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function QuizClient({ initialQuestions }: { initialQuestions?: Question[] }) {
@@ -23,9 +24,21 @@ export default function QuizClient({ initialQuestions }: { initialQuestions?: Qu
   const [feedback, setFeedback] = useState<string | null>(null);
   const [answerStatus, setAnswerStatus] = useState<"idle" | "correct" | "wrong">("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   const activeValidatedModule = useUIStore((s) => s.activeValidatedModule);
-  const validatedQuestions = activeValidatedModule?.quizQuestions?.[level];
+  const currentChapterId = useUIStore((s) => s.currentChapterId);
+  const activeChapter = chapterParam || currentChapterId || "pkn-sila3";
+
+  // Cek apakah ada modul aktif tervalidasi yang cocok dengan bab ini
+  const isMatchingModule = Boolean(
+    activeValidatedModule &&
+      (activeValidatedModule.id === activeChapter ||
+        activeChapter.includes(activeValidatedModule.id) ||
+        activeValidatedModule.id.includes(activeChapter))
+  );
+
+  const validatedQuestions = isMatchingModule ? activeValidatedModule?.quizQuestions?.[level] : undefined;
 
   const {
     data: apiQuestions,
@@ -33,10 +46,36 @@ export default function QuizClient({ initialQuestions }: { initialQuestions?: Qu
     isError,
     error,
     refetch,
-  } = useQuizQuestionsQuery(level, level === 1 ? initialQuestions : undefined);
+  } = useQuizQuestionsQuery(
+    level,
+    activeChapter,
+    level === 1 && !chapterParam ? initialQuestions : undefined
+  );
 
-  const questions =
+  const rawQuestions =
     validatedQuestions && validatedQuestions.length > 0 ? validatedQuestions : apiQuestions;
+
+  // Acak urutan pilihan ganda (A, B, C, D) secara otomatis agar kunci jawaban tersebar merata & tidak monoton di opsi B
+  const questions = useMemo(() => {
+    if (!rawQuestions || rawQuestions.length === 0) return null;
+    return rawQuestions.map((q) => {
+      const correctText = q.options[q.correctOption] ?? "";
+      const shuffled = [...q.options];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = shuffled[i]!;
+        shuffled[i] = shuffled[j]!;
+        shuffled[j] = temp;
+      }
+      const newCorrectIndex = shuffled.indexOf(correctText);
+      return {
+        ...q,
+        options: shuffled,
+        correctOption: newCorrectIndex >= 0 ? newCorrectIndex : q.correctOption,
+      };
+    });
+  }, [rawQuestions]);
+
   const isLoading = (!questions || questions.length === 0) && isApiLoading;
 
   const selectedOption = useUIStore((s) => s.quizDraft.selectedOption);
@@ -55,6 +94,13 @@ export default function QuizClient({ initialQuestions }: { initialQuestions?: Qu
       switchChapterMissions(chapterParam);
     }
   }, [chapterParam, switchChapterMissions]);
+
+  useEffect(() => {
+    setQuestionIndex(0);
+    resetQuizDraft();
+    setFeedback(null);
+    setAnswerStatus("idle");
+  }, [level, activeChapter, resetQuizDraft]);
 
   function handleSubmitAnswer() {
     if (!questions || isSubmitting) return;
@@ -140,12 +186,18 @@ export default function QuizClient({ initialQuestions }: { initialQuestions?: Qu
   }
 
   function handleExit() {
-    if (confirm("Mau keluar dari game kuis ini? Nanti koinnya ngga nambah lho!"))
-      navigate(
-        chapterParam
-          ? `/dashboard/pelajar?chapter=${encodeURIComponent(chapterParam)}`
-          : "/dashboard/pelajar"
-      );
+    playClickSound();
+    setShowExitModal(true);
+  }
+
+  function confirmExit() {
+    playClickSound();
+    setShowExitModal(false);
+    navigate(
+      chapterParam
+        ? `/dashboard/pelajar?chapter=${encodeURIComponent(chapterParam)}`
+        : "/dashboard/pelajar"
+    );
   }
 
   const totalQuestions = questions?.length ?? 5;
@@ -168,9 +220,18 @@ export default function QuizClient({ initialQuestions }: { initialQuestions?: Qu
               Tingkat Soal: Level {level} 🚀
             </h1>
             <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
-              {activeValidatedModule?.title
-                ? `Materi: ${activeValidatedModule.chapterCode} • ${activeValidatedModule.title}`
-                : "Uji Pemahaman Pembelajaran"}
+              {(() => {
+                const catalogChapter = availableChapters.find(
+                  (c) => c.value === activeChapter || c.value === chapterParam
+                );
+                if (isMatchingModule && activeValidatedModule) {
+                  return `Materi: ${activeValidatedModule.chapterCode ?? "Modul"} • ${activeValidatedModule.title}`;
+                }
+                if (catalogChapter) {
+                  return `Materi: ${catalogChapter.label}`;
+                }
+                return `Materi: ${activeChapter}`;
+              })()}
             </p>
           </div>
         </div>
@@ -246,7 +307,7 @@ export default function QuizClient({ initialQuestions }: { initialQuestions?: Qu
                   const badgeClass = badgeColors[idx % badgeColors.length];
 
                   let optionCardClass =
-                    "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-400 hover:bg-amber-50/50 dark:hover:bg-slate-700/60 shadow-md hover:-translate-y-1";
+                    "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 hover:border-amber-400 hover:bg-amber-50/50 dark:hover:bg-slate-700/60 shadow-md hover:-translate-y-1";
 
                   if (answerStatus === "correct" && isSelected) {
                     optionCardClass =
@@ -256,7 +317,7 @@ export default function QuizClient({ initialQuestions }: { initialQuestions?: Qu
                       "bg-rose-50 dark:bg-rose-950/80 border-rose-500 text-rose-950 dark:text-rose-100 ring-4 ring-rose-300 shadow-md font-bold";
                   } else if (answerStatus === "wrong" && isCorrectChoice) {
                     optionCardClass =
-                      "bg-emerald-50 dark:bg-emerald-950/80 border-emerald-500 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-400/60 font-bold";
+                      "bg-emerald-50 dark:bg-emerald-950/80 border-emerald-500 text-emerald-950 dark:text-emerald-100 ring-4 ring-emerald-400/60 font-bold";
                   } else if (isSelected) {
                     optionCardClass =
                       "bg-amber-50 dark:bg-amber-950/80 border-amber-400 dark:border-amber-400 text-amber-950 dark:text-amber-100 ring-4 ring-amber-300/60 shadow-xl scale-[1.02] font-black";
@@ -292,31 +353,25 @@ export default function QuizClient({ initialQuestions }: { initialQuestions?: Qu
                         {option}
                       </span>
 
-                      {/* Interactive Selection Indicators */}
-                      {isSelected && answerStatus === "idle" && (
-                        <span className="shrink-0 bg-amber-400 text-amber-950 text-xs font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1 animate-pulse">
-                          <span>⭐</span>
-                          <span className="hidden sm:inline">Dipilih</span>
-                        </span>
-                      )}
-                      {answerStatus === "correct" && isSelected && (
-                        <span className="shrink-0 bg-emerald-600 text-white text-xs font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
-                          <span>🎉</span>
-                          <span>Tepat!</span>
-                        </span>
-                      )}
-                      {answerStatus === "wrong" && isSelected && (
-                        <span className="shrink-0 bg-rose-600 text-white text-xs font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
-                          <span>❌</span>
-                          <span>Belum Pas</span>
-                        </span>
-                      )}
-                      {answerStatus === "wrong" && isCorrectChoice && !isSelected && (
-                        <span className="shrink-0 bg-emerald-600 text-white text-xs font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
-                          <span>✅</span>
-                          <span className="hidden sm:inline">Jawaban Tepat</span>
-                        </span>
-                      )}
+                      {/* Fixed-size Status Indicator */}
+                      <span
+                        className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border-2 text-xs font-black transition-colors ${
+                          isSelected && answerStatus === "idle"
+                            ? "border-amber-500 bg-amber-400 text-amber-950"
+                            : answerStatus === "correct" && isSelected
+                            ? "border-emerald-600 bg-emerald-600 text-white"
+                            : answerStatus === "wrong" && isSelected
+                            ? "border-rose-600 bg-rose-600 text-white"
+                            : answerStatus === "wrong" && isCorrectChoice
+                            ? "border-emerald-600 bg-emerald-600 text-white"
+                            : "border-slate-300 dark:border-slate-600 bg-transparent text-transparent"
+                        }`}
+                      >
+                        {isSelected && answerStatus === "idle" && "✓"}
+                        {answerStatus === "correct" && isSelected && "✓"}
+                        {answerStatus === "wrong" && isSelected && "✗"}
+                        {answerStatus === "wrong" && isCorrectChoice && !isSelected && "✓"}
+                      </span>
                     </label>
                   );
                 })}
@@ -404,6 +459,70 @@ export default function QuizClient({ initialQuestions }: { initialQuestions?: Qu
           </>
         )}
       </article>
+
+      {/* Modal Konfirmasi Keluar Kuis yang Ceria & Serasi dengan Web Edukasi */}
+      {showExitModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="exit-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200"
+        >
+          <div className="bg-white dark:bg-slate-900 border-4 border-amber-400 dark:border-amber-500 rounded-[2.2rem] max-w-sm sm:max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-5 text-center relative overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Background Glow Hiasan */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-300 dark:bg-amber-600/20 rounded-full mix-blend-multiply filter blur-2xl opacity-40 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-300 dark:bg-pink-600/20 rounded-full mix-blend-multiply filter blur-2xl opacity-40 pointer-events-none" />
+
+            {/* Ikon Lucu Beranimasi Bounce */}
+            <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-amber-950 flex items-center justify-center text-4xl shadow-xl border-4 border-amber-200 dark:border-amber-400 animate-bounce">
+              🤔
+            </div>
+
+            {/* Judul & Deskripsi Ramah Anak */}
+            <div className="space-y-2 relative z-10">
+              <h3
+                id="exit-modal-title"
+                className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white"
+              >
+                Mau Keluar dari Game Kuis?
+              </h3>
+              <p className="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 leading-relaxed max-w-xs mx-auto">
+                Koleksi poin dan medali kuis berhargamu belum bertambah lho! Yakin mau kembali ke ruang belajar sekarang?
+              </p>
+            </div>
+
+            {/* Badge Peringatan Gamifikasi */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs font-black shadow-2xs relative z-10">
+              <span>🪙</span>
+              <span>Koin kuis belum bertambah</span>
+            </div>
+
+            {/* Tombol Aksi Keren & Interaktif */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 relative z-10">
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  setShowExitModal(false);
+                }}
+                className="w-full sm:flex-1 py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-sm sm:text-base border-b-4 border-emerald-700 active:translate-y-1 active:border-b-0 shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>🎮</span>
+                <span>Lanjut Main Kuis!</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmExit}
+                className="w-full sm:w-auto py-3 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-700 dark:text-rose-300 font-black text-xs sm:text-sm border-2 border-rose-300 dark:border-rose-700 active:translate-y-0.5 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>🚪</span>
+                <span>Tetap Keluar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

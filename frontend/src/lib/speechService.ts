@@ -21,6 +21,8 @@ let activeUtterance: SpeechSynthesisUtterance | null = null;
 let speechTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let keepAliveTimer: ReturnType<typeof setInterval> | null = null;
 let cachedVoices: SpeechSynthesisVoice[] = [];
+let activeAudioElement: HTMLAudioElement | null = null;
+let currentSpeechToken = 0;
 
 // Inisialisasi & caching suara sistem
 if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -90,7 +92,7 @@ export function getBestVoice(): { voice: SpeechSynthesisVoice | null; lang: stri
 export function sanitizeSpeechText(text: string): string {
   return text
     .replace(/\p{Extended_Pictographic}/gu, "")
-    .replace(/[\u{1F1E6}-\u{1F1FF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}\u{FE00}-\u{FE0F}]/gu, "")
+    .replace(/[\u{1F1E6}-\u{1F1FF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}\u{FE00}-\u{FE0F}\u{200B}-\u{200D}\u{FEFF}]/gu, "")
     .replace(/["“”«»]/g, "")
     .replace(/[\*\#\@\_]/g, " ")
     .replace(/\s+/g, " ")
@@ -129,6 +131,20 @@ export function splitIntoSentences(text: string): string[] {
  * Menghentikan seluruh pemutaran suara yang sedang berjalan dan membersihkan antrean
  */
 export function stopSpeaking(): void {
+  // Batalkan token audio saat ini agar audio yang sedang loading tidak diputar
+  currentSpeechToken++;
+
+  if (activeAudioElement) {
+    try {
+      activeAudioElement.pause();
+      activeAudioElement.removeAttribute("src");
+      activeAudioElement.load();
+    } catch {
+      // Ignore
+    }
+    activeAudioElement = null;
+  }
+
   if (speechTimeoutId) {
     clearTimeout(speechTimeoutId);
     speechTimeoutId = null;
@@ -141,6 +157,7 @@ export function stopSpeaking(): void {
 
   activeUtterance = null;
 
+  // Hentikan dan bersihkan antrean Web Speech agar suara robot lama tidak pernah terdengar
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
     try {
       window.speechSynthesis.cancel();
@@ -154,32 +171,58 @@ export function stopSpeaking(): void {
 }
 
 /**
- * Memutar suara teks dengan engine tahan banting terhadap macet di Chrome
+ * Memutar suara teks dengan engine AI Microsoft Edge Neural TTS (id-ID-ArdiNeural)
+ * Menggantikan suara robotik lama agar seluruh pembacaan materi di luar game (AiContentPanel,
+ * pesan motivasi, penjelasan aksara, dll) memiliki suara guru yang konsisten, ramah, dan manusiawi.
  */
 export function startSpeaking(options: SpeechOptions): void {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    options.onError?.(new Error("SpeechSynthesis tidak didukung di peramban ini."));
-    options.onEnd?.();
-    return;
-  }
+  playHumanLikeSpeech({
+    ...options,
+    voice: "id-ID-ArdiNeural",
+    provider: "edge",
+  });
+}
 
-  // 1. Bersihkan timeout & timer sebelumnya
-  if (speechTimeoutId) {
-    clearTimeout(speechTimeoutId);
-    speechTimeoutId = null;
+/**
+ * Mengecek apakah browser sedang memutar suara TTS
+ */
+export function isSpeaking(): boolean {
+  if (activeAudioElement && !activeAudioElement.paused && !activeAudioElement.ended) {
+    return true;
   }
-  if (keepAliveTimer) {
-    clearInterval(keepAliveTimer);
-    keepAliveTimer = null;
-  }
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
+  return window.speechSynthesis.speaking && activeUtterance !== null;
+}
 
-  // 2. Batalkan antrean lama dan bangunkan engine jika tertidur
-  try {
-    window.speechSynthesis.cancel();
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume();
+export interface HumanLikeSpeechOptions extends SpeechOptions {
+  voice?: string;
+  provider?: "edge" | "elevenlabs";
+}
+
+/**
+ * Pre-cache audio TTS di background agar saat murid tiba di Pos 1-5 suara langsung berbunyi 0ms
+ */
+export function preloadHumanLikeSpeech(texts: string[], voice = "id-ID-ArdiNeural"): void {
+  if (typeof window === "undefined" || typeof fetch === "undefined") return;
+  for (const text of texts) {
+    const clean = sanitizeSpeechText(text);
+    if (!clean) continue;
+    const url = `/api/tts?text=${encodeURIComponent(clean)}&voice=${encodeURIComponent(voice)}&provider=edge`;
+    try {
+      // Fetch di background untuk menghangatkan cache server & peramban
+      fetch(url).catch(() => {});
+    } catch {
+      // Ignore
     }
-  } catch {}
+  }
+}
+
+/**
+ * Memutar suara penjelasan materi dengan AI Neural TTS yang 100% konsisten & manusiawi
+ * (Menggunakan Microsoft Edge Neural id-ID-ArdiNeural tanpa kontaminasi suara robot lama)
+ */
+export function playHumanLikeSpeech(options: HumanLikeSpeechOptions): void {
+  stopSpeaking();
 
   const cleanText = sanitizeSpeechText(options.text);
   if (!cleanText) {
@@ -187,81 +230,63 @@ export function startSpeaking(options: SpeechOptions): void {
     return;
   }
 
-  // 3. Buat objek utterance
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-  activeUtterance = utterance; // Simpan di memori global agar bebas dari Garbage Collection Chrome
+  const token = ++currentSpeechToken;
+  const voice = options.voice || "id-ID-ArdiNeural";
+  const provider = options.provider || "edge";
+  const url = `/api/tts?text=${encodeURIComponent(cleanText)}&voice=${encodeURIComponent(voice)}&provider=${encodeURIComponent(provider)}`;
 
-  const { voice, lang } = getBestVoice();
-  if (voice) {
-    utterance.voice = voice;
-  }
-  utterance.lang = lang || "id-ID";
-  utterance.rate = options.rate ?? 0.95;
-  utterance.pitch = options.pitch ?? 1.15;
-  utterance.volume = options.volume ?? 1.0;
-
-  utterance.onstart = () => {
-    options.onStart?.();
-
-    // Keepalive ping setiap 6 detik untuk mencegah bug cutoff 15 detik Chromium
-    if (keepAliveTimer) clearInterval(keepAliveTimer);
-    keepAliveTimer = setInterval(() => {
-      try {
-        if (typeof window !== "undefined" && "speechSynthesis" in window) {
-          if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-            window.speechSynthesis.pause();
-            window.speechSynthesis.resume();
-          }
-        }
-      } catch {}
-    }, 6000);
-  };
-
-  utterance.onend = () => {
-    if (keepAliveTimer) {
-      clearInterval(keepAliveTimer);
-      keepAliveTimer = null;
-    }
-    activeUtterance = null;
-    options.onEnd?.();
-  };
-
-  utterance.onerror = (event) => {
-    if (keepAliveTimer) {
-      clearInterval(keepAliveTimer);
-      keepAliveTimer = null;
-    }
-    activeUtterance = null;
-
-    const isInterrupted =
-      (event as unknown as { error?: string })?.error === "interrupted" ||
-      (event as unknown as { error?: string })?.error === "canceled";
-
-    if (!isInterrupted) {
-      options.onError?.(event);
-    }
-    options.onEnd?.();
-  };
-
-  // 4. Jeda aman 120ms setelah cancel() agar C++ audio thread browser selesai mereset buffer sebelum speak()
-  speechTimeoutId = setTimeout(() => {
+  if (typeof window !== "undefined" && typeof Audio !== "undefined") {
     try {
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-      window.speechSynthesis.speak(utterance);
-    } catch (err) {
-      activeUtterance = null;
-      options.onError?.(err);
-      options.onEnd?.();
-    }
-  }, 120);
-}
+      const audio = new Audio();
+      audio.preload = "auto";
+      activeAudioElement = audio;
 
-/**
- * Mengecek apakah browser sedang memutar suara TTS
- */
-export function isSpeaking(): boolean {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
-  return window.speechSynthesis.speaking && activeUtterance !== null;
+      audio.onplay = () => {
+        if (token === currentSpeechToken) {
+          options.onStart?.();
+        }
+      };
+
+      audio.onended = () => {
+        if (token === currentSpeechToken) {
+          activeAudioElement = null;
+          options.onEnd?.();
+        }
+      };
+
+      audio.onerror = (e) => {
+        if (token === currentSpeechToken) {
+          activeAudioElement = null;
+          options.onError?.(e);
+          options.onEnd?.();
+        }
+      };
+
+      audio.src = url;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          // Abaikan AbortError yang wajar terjadi saat siswa berpindah pos atau menutup dialog
+          if (err?.name === "AbortError") {
+            return;
+          }
+          if (token === currentSpeechToken) {
+            activeAudioElement = null;
+            options.onError?.(err);
+            options.onEnd?.();
+          }
+        });
+      }
+      return;
+    } catch (err) {
+      if (token === currentSpeechToken) {
+        options.onError?.(err);
+        options.onEnd?.();
+      }
+      return;
+    }
+  }
+
+  // Jika lingkungan non-browser (misal saat testing)
+  options.onEnd?.();
 }

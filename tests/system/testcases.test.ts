@@ -136,6 +136,21 @@ describe("SKPL Table 8.2 Verification — Comprehensive Test Cases (TC-01 to TC-
     expect(questions[0]?.hint).toBeDefined();
   });
 
+  // TC-17b: Kuis per-bab spesifik (PKn & Bahasa Jawa)
+  it("TC-17b: Kuis per-bab memuat soal spesifik sesuai materi yang dipilih (PKn vs Bahasa Jawa)", async () => {
+    const pknNormaQ = await getQuestionsByLevel(1, "pkn-norma");
+    expect(pknNormaQ.length).toBeGreaterThan(0);
+    expect(pknNormaQ[0]!.question.toLowerCase()).toContain("norma");
+
+    const bjawaAksaraQ = await getQuestionsByLevel(1, "bjawa-aksara");
+    expect(bjawaAksaraQ.length).toBeGreaterThan(0);
+    expect(bjawaAksaraQ[0]!.question.toLowerCase()).toContain("aksara");
+
+    const bjawaPunokawanQ = await getQuestionsByLevel(1, "bjawa-punokawan");
+    expect(bjawaPunokawanQ.length).toBeGreaterThan(0);
+    expect(bjawaPunokawanQ[0]!.question.toLowerCase()).toContain("punokawan");
+  });
+
   // TC-18: Rekomendasi belajar otomatis
   it("TC-18: Sistem mengidentifikasi siswa terkendala nilai < 60 untuk intervensi", async () => {
     const students = await getStudentsNeedingHelp();

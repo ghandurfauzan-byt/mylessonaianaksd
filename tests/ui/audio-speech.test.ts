@@ -4,7 +4,10 @@ import {
   splitIntoSentences,
   startSpeaking,
   stopSpeaking,
+  playHumanLikeSpeech,
+  preloadHumanLikeSpeech,
 } from "../../frontend/src/lib/speechService";
+import { cleanTtsText } from "../../backend/server/ttsService";
 import {
   playClickSound,
   playCoinSound,
@@ -57,5 +60,29 @@ describe("Audio & Speech System Resilience Tests", () => {
       },
     });
     expect(ended).toBe(true);
+  });
+
+  it("playHumanLikeSpeech executes safely in non-browser or test environments with onEnd callback", () => {
+    let ended = false;
+    playHumanLikeSpeech({
+      text: "",
+      onEnd: () => {
+        ended = true;
+      },
+    });
+    expect(ended).toBe(true);
+  });
+
+  it("cleanTtsText properly sanitizes text for neural TTS generation", () => {
+    const raw = "Halo anak-anak hebat! 👨‍🏫 Mari belajar *Sila Ke-3* 🇮🇩 dengan gembira!";
+    const cleaned = cleanTtsText(raw);
+    expect(cleaned).not.toContain("👨‍🏫");
+    expect(cleaned).not.toContain("🇮🇩");
+    expect(cleaned).not.toContain("*");
+    expect(cleaned).toContain("Halo anak-anak hebat! Mari belajar Sila Ke-3 dengan gembira!");
+  });
+
+  it("preloadHumanLikeSpeech runs safely without throwing exceptions in non-browser environments", () => {
+    expect(() => preloadHumanLikeSpeech(["Halo", "Selamat datang"])).not.toThrow();
   });
 });

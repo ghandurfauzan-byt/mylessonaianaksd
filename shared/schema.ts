@@ -56,6 +56,7 @@ export type Question = z.infer<typeof QuestionSchema>;
 
 export const QuizQuestionsResponseSchema = z.object({
   level: z.number().int(),
+  chapter: z.string().optional(),
   questions: z.array(QuestionSchema),
 });
 export type QuizQuestionsResponse = z.infer<typeof QuizQuestionsResponseSchema>;
