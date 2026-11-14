@@ -27,10 +27,10 @@
     "institution": "SD Negeri 1 Madiun",
     "kelas": "Kelas 4",
     "noAbsen": "01",
-    "points": 2425,
+    "points": 2475,
     "materialScore": 0,
     "quizScore": 100,
-    "gamePoints": 2425,
+    "gamePoints": 2475,
     "weakness": {
       "chapterId": "pkn-sila3",
       "chapterName": "Pendidikan Pancasila (Makna Sila Ke-3)",
@@ -62,8 +62,8 @@
         "weaknessNote": "Beda ragam basa ngoko lugu lan krama alus marang guru."
       },
       "pkn-kls1-simbol": {
-        "points": 800,
-        "gamePoints": 800,
+        "points": 850,
+        "gamePoints": 850,
         "quizScore": 0,
         "status": "tuntas"
       }
@@ -397,14 +397,5 @@
     },
     "kelas": "Kelas 6",
     "noAbsen": "01"
-  },
-  {
-    "id": "usr_1794685329210",
-    "name": "Guru Uji 1794685329210",
-    "email": "guru_uji_1794685329210@gmail.com",
-    "passwordHash": "$2b$10$e1e4d7AwMQBrtXpBYJw4vevzV7/yrwbtMu3ry28MsZ5464TY8yaWC",
-    "role": "pengajar",
-    "nimNip": "199xxxxxxxxx",
-    "institution": "SD Negeri 1 Madiun"
   }
 ]
