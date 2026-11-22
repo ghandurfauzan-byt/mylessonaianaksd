@@ -80,4 +80,25 @@ describe("Security Controls & Authentication (NFR-01, TC-01, TC-02, TC-03, TC-05
       expect(updatedTeachers.some((t) => t.email === `guru_uji_${timestamp}@gmail.com`)).toBe(true);
     });
   });
+
+  describe("Role Isolation & Profile Security", () => {
+    it("should never return a teacher profile when a student role profile is requested", async () => {
+      const { getUserProfile } = await import("../../backend/server/data");
+      // Passing teacher id or email with fallbackRole 'pelajar' must NOT return teacher profile
+      const profile = await getUserProfile("usr_teacher_retno", "pelajar");
+      expect(profile.role).toBe("pelajar");
+      expect(profile.name).not.toContain("Retno");
+
+      const profile2 = await getUserProfile("guru@gmail.com", "pelajar");
+      expect(profile2.role).toBe("pelajar");
+      expect(profile2.name).not.toContain("Retno");
+    });
+
+    it("getRegisteredStudents must strictly contain only students (no teachers)", async () => {
+      const { getRegisteredStudents } = await import("../../backend/server/data");
+      const students = await getRegisteredStudents();
+      expect(students.every((s) => s.name !== "Ibu Retno Ningrum, S.Pd.")).toBe(true);
+      expect(students.every((s) => s.email !== "guru@gmail.com")).toBe(true);
+    });
+  });
 });

@@ -100,6 +100,7 @@ import {
 import { SESSION_COOKIE, USER_ID_COOKIE, isValidRole, type Role } from "./session";
 import { checkChromaHealth } from "./chroma";
 import { checkLocalLlmHealth, queryLocalLlm } from "./local_llm";
+import { synthesizeSpeech } from "./ttsService";
 
 const PORT = Number(process.env.PORT ?? 4000);
 const isProduction = process.env.NODE_ENV === "production";
@@ -150,6 +151,12 @@ router.post("/login", async (req: Request, res: Response) => {
     try {
       const user = await verifyUserCredentials(email, password);
       res.cookie(SESSION_COOKIE, user.role, {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 1000 * 60 * 60 * 8,
+      });
+      res.cookie(USER_ID_COOKIE, user.id, {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
@@ -212,6 +219,12 @@ router.post("/register", async (req: Request, res: Response) => {
   try {
     const user = await registerUserAccount(parsed.data);
     res.cookie(SESSION_COOKIE, user.role, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 1000 * 60 * 60 * 8,
+    });
+    res.cookie(USER_ID_COOKIE, user.id, {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
@@ -565,9 +578,10 @@ router.get("/ai-content", async (req: Request, res: Response) => {
 
 router.get("/quiz", async (req: Request, res: Response) => {
   const level = Number(req.query.level ?? "1");
+  const chapter = (req.query.chapter as string) || undefined;
   try {
-    const questions = await getQuestionsByLevel(level);
-    res.json({ level, questions });
+    const questions = await getQuestionsByLevel(level, chapter);
+    res.json({ level, chapter, questions });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gagal memuat soal.";
     res.status(404).json({ error: message });
@@ -598,6 +612,75 @@ router.post("/materials", async (req: Request, res: Response) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gagal mengunggah dokumen.";
     return res.status(502).json({ error: message });
+  }
+});
+
+// --- Human-Like Neural Text-To-Speech (Edge Neural & ElevenLabs) ---
+router.get("/tts", async (req: Request, res: Response) => {
+  const text = typeof req.query.text === "string" ? req.query.text : "";
+  if (!text.trim()) {
+    return res.status(400).json({ error: "Parameter 'text' diperlukan." });
+  }
+
+  const voice = typeof req.query.voice === "string" ? req.query.voice : "id-ID-ArdiNeural";
+  const provider = (req.query.provider === "elevenlabs" ? "elevenlabs" : "edge") as "edge" | "elevenlabs";
+  const rate = typeof req.query.rate === "string" ? req.query.rate : "+0%";
+  const pitch = typeof req.query.pitch === "string" ? req.query.pitch : "+0Hz";
+
+  try {
+    const { buffer, mimeType } = await synthesizeSpeech({
+      text,
+      voice,
+      provider,
+      rate,
+      pitch,
+    });
+
+    res.set({
+      "Content-Type": mimeType,
+      "Content-Length": String(buffer.length),
+      "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+    });
+    return res.send(buffer);
+  } catch (err: any) {
+    console.error("[TTS Route Error]", err);
+    return res.status(500).json({ error: err.message || "Gagal membuat audio TTS." });
+  }
+});
+
+router.post("/tts", async (req: Request, res: Response) => {
+  const text = typeof req.body?.text === "string" ? req.body.text : "";
+  if (!text.trim()) {
+    return res.status(400).json({ error: "Field 'text' diperlukan." });
+  }
+
+  const voice = typeof req.body?.voice === "string" ? req.body.voice : "id-ID-ArdiNeural";
+  const provider = (req.body?.provider === "elevenlabs" ? "elevenlabs" : "edge") as "edge" | "elevenlabs";
+  const rate = typeof req.body?.rate === "string" ? req.body.rate : "+0%";
+  const pitch = typeof req.body?.pitch === "string" ? req.body.pitch : "+0Hz";
+  const elevenlabsApiKey = typeof req.body?.elevenlabsApiKey === "string" ? req.body.elevenlabsApiKey : undefined;
+  const elevenlabsVoiceId = typeof req.body?.elevenlabsVoiceId === "string" ? req.body.elevenlabsVoiceId : undefined;
+
+  try {
+    const { buffer, mimeType } = await synthesizeSpeech({
+      text,
+      voice,
+      provider,
+      rate,
+      pitch,
+      elevenlabsApiKey,
+      elevenlabsVoiceId,
+    });
+
+    res.set({
+      "Content-Type": mimeType,
+      "Content-Length": String(buffer.length),
+      "Cache-Control": "public, max-age=86400",
+    });
+    return res.send(buffer);
+  } catch (err: any) {
+    console.error("[TTS POST Route Error]", err);
+    return res.status(500).json({ error: err.message || "Gagal membuat audio TTS." });
   }
 });
 
@@ -645,6 +728,12 @@ v1Router.post("/auth/register", async (req: Request, res: Response) => {
       path: "/",
       maxAge: 1000 * 60 * 60 * 8,
     });
+    res.cookie(USER_ID_COOKIE, user.id, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 1000 * 60 * 60 * 8,
+    });
     return res.status(201).json({
       success: true,
       message: "Akun berhasil didaftarkan.",
@@ -670,6 +759,12 @@ v1Router.post("/auth/login", async (req: Request, res: Response) => {
     try {
       const user = await verifyUserCredentials(email, password);
       res.cookie(SESSION_COOKIE, user.role, {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 1000 * 60 * 60 * 8,
+      });
+      res.cookie(USER_ID_COOKIE, user.id, {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
@@ -735,7 +830,8 @@ v1Router.get("/auth/session", async (req: Request, res: Response) => {
       data: { authenticated: false, role: null },
     });
   }
-  const user = await getUserProfileByRole(role);
+  const userIdCookie = req.cookies?.[USER_ID_COOKIE];
+  const user = await getUserProfile(userIdCookie, role);
   return res.json({
     success: true,
     data: {

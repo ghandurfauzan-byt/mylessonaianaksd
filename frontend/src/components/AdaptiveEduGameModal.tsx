@@ -30,6 +30,7 @@ import {
   startAdventureBgm,
   stopAdventureBgm,
 } from "@/lib/soundEffects";
+import { stopSpeaking, playHumanLikeSpeech, preloadHumanLikeSpeech } from "@/lib/speechService";
 import { useUIStore, resolveGameTypeForModule, ValidatedModuleSummary, GameType } from "@/lib/store/useUIStore";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -608,52 +609,65 @@ export default function AdaptiveEduGameModal({
   // State Posisi Pemain dalam 3D
   const playerPosRef = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 18 });
 
+  // Proximity & Auto-Trigger Refs untuk Masuk Dialog Otomatis di Pak Guru & Semua Pos
+  const insideZoneRef = useRef<string | null>(null);
+  const isDialogOpenRef = useRef(false);
+  const dialogCooldownUntilRef = useRef<number>(0);
+  const gameStartedRef = useRef(false);
+
+  useEffect(() => {
+    gameStartedRef.current = gameStarted;
+  }, [gameStarted]);
+
   // --------------------------------------------------------------------------
-  // SUARA PENJELASAN PAK GURU (WEB SPEECH SYNTHESIS API - BAHASA INDONESIA)
+  // SUARA PENJELASAN PAK GURU (AI HUMAN-LIKE NEURAL VOICE DENGAN FALLBACK)
   // --------------------------------------------------------------------------
   const speakGuruVoice = useCallback((text: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "id-ID";
-      utterance.rate = 1.0;
-      utterance.pitch = 1.05;
-
-      const voices = window.speechSynthesis.getVoices();
-      const idVoice = voices.find(
-        (v) =>
-          v.lang.includes("id") ||
-          v.lang.includes("ID") ||
-          v.name.toLowerCase().includes("indonesia")
-      );
-      if (idVoice) utterance.voice = idVoice;
-
-      utterance.onstart = () => setIsGuruSpeaking(true);
-      utterance.onend = () => setIsGuruSpeaking(false);
-      utterance.onerror = () => setIsGuruSpeaking(false);
-
-      window.speechSynthesis.speak(utterance);
-    } catch {
-      setIsGuruSpeaking(false);
-    }
+    if (!text.trim()) return;
+    setIsGuruSpeaking(true);
+    playHumanLikeSpeech({
+      text,
+      voice: "id-ID-ArdiNeural", // Suara Pak Guru Ardi (Neural Voice) yang ramah & ekspresif
+      onStart: () => setIsGuruSpeaking(true),
+      onEnd: () => setIsGuruSpeaking(false),
+      onError: () => setIsGuruSpeaking(false),
+    });
   }, []);
 
   const stopGuruVoice = useCallback(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      setIsGuruSpeaking(false);
-    }
+    stopSpeaking();
+    setIsGuruSpeaking(false);
   }, []);
+
+  // Pastikan suara pembacaan materi langsung berhenti seketika saat murid keluar/menutup dialog
+  useEffect(() => {
+    const isAnyOpen = showGuruDialog || !!activeSukuDialog;
+    if (!isAnyOpen) {
+      stopGuruVoice();
+      if (isDialogOpenRef.current) {
+        // Jeda 1.2 detik setelah dialog ditutup agar pemain punya jeda melangkah keluar bulatan
+        dialogCooldownUntilRef.current = Date.now() + 1200;
+      }
+    }
+    isDialogOpenRef.current = isAnyOpen;
+  }, [showGuruDialog, activeSukuDialog, stopGuruVoice]);
+
+  // Bersihkan suara saat modal dilepas (unmount)
+  useEffect(() => {
+    return () => {
+      stopGuruVoice();
+    };
+  }, [stopGuruVoice]);
 
   // --------------------------------------------------------------------------
   // DATA 5 POS MATERI EDUKASI (DINAMIS MENYESUAIKAN MATERI DASHBOARD SISWA)
   // TIAP POS MEMILIKI PENUNGGU PAK GURU, NAMA POS, DAN SUB-MATERI TERTENTU
   // --------------------------------------------------------------------------
   const sukuList: SukuAdat[] = useMemo(() => {
-    const mod = currentModule;
-    const rawTitle = (mod?.title || chapterTitle || chapter || "").toLowerCase();
-    const rawChapter = (chapter || mod?.id || "").toLowerCase();
+    const buildStations = (): SukuAdat[] => {
+      const mod = currentModule;
+      const rawTitle = (mod?.title || chapterTitle || chapter || "").toLowerCase();
+      const rawChapter = (chapter || mod?.id || "").toLowerCase();
 
     // 0a. PANCASILA RESMI: 5 POS MEMBAHAS IMPLEMENTASI SILA 1 s/d SILA 5 SECARA NYATA
     // Pos 1 = Sila 1, Pos 2 = Sila 2, Pos 3 = Sila 3, Pos 4 = Sila 4, Pos 5 = Sila 5
@@ -2027,6 +2041,29 @@ export default function AdaptiveEduGameModal({
       opsi: dynQuiz?.opsi || st.opsi,
     };
   });
+};
+
+const rawStations = buildStations();
+
+// Acak posisi pilihan jawaban kuis (A, B, C) di setiap pos agar jawaban benar terdistribusi secara acak
+const letters = ["A", "B", "C", "D"];
+return rawStations.map((st) => {
+  if (!st.opsi || st.opsi.length < 2) return st;
+  const shuffled = [...st.opsi];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = shuffled[i]!;
+    shuffled[i] = shuffled[j]!;
+    shuffled[j] = temp;
+  }
+  return {
+    ...st,
+    opsi: shuffled.map((o, idx) => ({
+      ...o,
+      id: letters[idx] ?? String.fromCharCode(65 + idx),
+    })),
+  };
+});
 }, [chapter, activeValidatedModule, chapterTitle, resolvedTitle, currentModule]);
 
   // --------------------------------------------------------------------------
@@ -2044,10 +2081,10 @@ export default function AdaptiveEduGameModal({
       return {
         subject: "Pendidikan Pancasila",
         submateri: "4 Macam Norma & Aturan Masyarakat",
-        salam: "Halo anak-anak pintar! Selamat datang di Petualangan Desa Norma Nusantara.",
+        salam: "Halo anak-anak pintar! Selamat datang di Kampus Cerdas Norma Nusantara.",
         arahan: "Hari ini Pak Guru mengajak kalian mempelajari 4 macam norma penting: Norma Agama, Norma Kesusilaan, Norma Kesopanan, dan Norma Hukum. Aturan ditaati agar hidup kita tertib, aman, dan damai.",
-        misi: "Di sepanjang jalan desa ini, kunjungi 5 Pos Belajar untuk memahami contoh nyata norma dalam kehidupan sehari-hari, menjawab kuis pemahaman, dan mengumpulkan koin prestasi!",
-        speech: "Halo murid-murid hebat! Hari ini kita berpetualang mempelajari materi Norma dan Aturan Masyarakat. Di sepanjang jalan desa ini, kalian akan belajar empat macam norma yaitu Norma Agama, Norma Kesusilaan, Norma Kesopanan, dan Norma Hukum. Kunjungi kelima pos belajar, taati aturan, dan kumpulkan skor terbaikmu!",
+        misi: "Di sepanjang jalan sekolah ini, kunjungi 5 Paviliun Belajar untuk memahami contoh nyata norma dalam kehidupan sehari-hari, menjawab kuis pemahaman, dan mengumpulkan koin prestasi!",
+        speech: "Halo murid-murid hebat! Hari ini kita berpetualang mempelajari materi Norma dan Aturan Masyarakat di Kompleks Belajar SD Cerdas. Di sepanjang jalan kampus ini, kalian akan belajar empat macam norma yaitu Norma Agama, Norma Kesusilaan, Norma Kesopanan, dan Norma Hukum. Kunjungi kelima paviliun belajar, taati aturan, dan kumpulkan skor terbaikmu!",
       };
     }
 
@@ -2056,10 +2093,10 @@ export default function AdaptiveEduGameModal({
       return {
         subject: "Pendidikan Pancasila",
         submateri: "Pancasila Sila Ke-3: Persatuan Indonesia",
-        salam: "Halo penjelajah Pancasila cilik! Selamat datang di Desa Bhinneka Nusantara.",
+        salam: "Halo penjelajah Pancasila cilik! Selamat datang di Kampus Cerdas Bhinneka Nusantara.",
         arahan: "Hari ini Pak Guru mengajak kalian mengamalkan Sila Ke-3: 'Persatuan Indonesia' bersimbol Pohon Beringin. Kita belajar menjaga kerukunan, toleransi, cinta tanah air, dan persaudaraan sebangsa.",
-        misi: "Jelajahi 5 Pos Rumah Adat suku bangsa, pelajari keragaman budaya Nusantara, jawab kuis pengamalan sila ketiga, dan raih poin tertinggi!",
-        speech: "Halo penjelajah muda! Di petualangan ini kita belajar mengamalkan nilai luhur Pancasila Sila Ketiga, Persatuan Indonesia. Pohon beringin yang rindang menaungi keragaman suku bangsa kita. Kunjungi lima pos rumah adat dan amalkan nilai persatuan!",
+        misi: "Jelajahi 5 Paviliun Belajar suku bangsa, pelajari keragaman budaya Nusantara, jawab kuis pengamalan sila ketiga, dan raih poin tertinggi!",
+        speech: "Halo penjelajah muda! Di petualangan ini kita belajar mengamalkan nilai luhur Pancasila Sila Ketiga, Persatuan Indonesia. Pohon beringin yang rindang menaungi keragaman suku bangsa kita. Kunjungi lima paviliun belajar dan amalkan nilai persatuan!",
       };
     }
 
@@ -2068,10 +2105,10 @@ export default function AdaptiveEduGameModal({
       return {
         subject: "Pendidikan Pancasila",
         submateri: "Semboyan Bhinneka Tunggal Ika & Kebudayaan",
-        salam: "Halo penjelajah budaya! Selamat datang di Desa Bhinneka Tunggal Ika.",
+        salam: "Halo penjelajah budaya! Selamat datang di Kampus Cerdas Bhinneka Tunggal Ika.",
         arahan: "Semboyan suci dari Kakawin Sutasoma karya Mpu Tantular mengajarkan bahwa walau berbeda-beda suku, adat, bahasa, dan agama, kita tetap satu kesatuan Indonesia yang rukun.",
-        misi: "Kalian akan singgah di rumah adat Joglo, Rumah Panggung Sunda, Rumah Gadang Minang, Rumah Betang Dayak, dan Honai Papua. Jawab kuis tiap pos untuk mengamalkannya!",
-        speech: "Selamat datang di Desa Budaya Bhinneka Tunggal Ika! Hari ini Pak Guru mengajak kalian mengenal kekayaan rumah adat, pakaian daerah, dan kesenian Nusantara dari Sabang sampai Merauke. Belajarlah saling menghargai perbedaan!",
+        misi: "Kalian akan singgah di paviliun Joglo, Rumah Panggung Sunda, Rumah Gadang Minang, Rumah Betang Dayak, dan Honai Papua. Jawab kuis tiap pos untuk mengamalkannya!",
+        speech: "Selamat datang di Kampus Budaya Bhinneka Tunggal Ika! Hari ini Pak Guru mengajak kalian mengenal kekayaan rumah adat, pakaian daerah, dan kesenian Nusantara dari Sabang sampai Merauke. Belajarlah saling menghargai perbedaan!",
       };
     }
 
@@ -2080,10 +2117,10 @@ export default function AdaptiveEduGameModal({
       return {
         subject: "Pendidikan Pancasila",
         submateri: "Semangat Gotong Royong & Kerja Sama",
-        salam: "Halo anak-anak tangguh! Selamat datang di Desa Gotong Royong Nusantara.",
+        salam: "Halo anak-anak tangguh! Selamat datang di Kampus Cerdas Gotong Royong Nusantara.",
         arahan: "Gotong royong adalah warisan luhur nenek moyang bangsa. Seperti kata pepatah 'Berat sama dipikul, ringan sama dijinjing', pekerjaan yang berat akan terasa ringan jika dikerjakan bersama.",
-        misi: "Kunjungi 5 Pos Belajar tentang piket kelas, kerja bakti lingkungan RT, tolong-menolong musibah, dan solidaritas sosial!",
-        speech: "Halo anak-anak hebat! Hari ini kita belajar semangat gotong royong. Bersama-sama kita lebih kuat! Kunjungi lima pos belajar untuk memahami indahnya tolong-menolong dan kerja sama di sekolah dan masyarakat.",
+        misi: "Kunjungi 5 Paviliun Belajar tentang piket kelas, kerja bakti lingkungan, tolong-menolong musibah, dan solidaritas sosial!",
+        speech: "Halo anak-anak hebat! Hari ini kita belajar semangat gotong royong. Bersama-sama kita lebih kuat! Kunjungi lima paviliun belajar untuk memahami indahnya tolong-menolong dan kerja sama di sekolah dan masyarakat.",
       };
     }
 
@@ -2092,10 +2129,10 @@ export default function AdaptiveEduGameModal({
       return {
         subject: "Pendidikan Pancasila",
         submateri: "Semangat Kebangsaan & Sumpah Pemuda 1928",
-        salam: "Halo para tunas bangsa! Selamat datang di Jalur Perjuangan Kebangsaan.",
+        salam: "Halo para tunas bangsa! Selamat datang di Kampus Perjuangan Kebangsaan.",
         arahan: "Hari ini kita belajar semangat persatuan pemuda dari Kongres Pemuda II 1928, sejarah lagu Indonesia Raya ciptaan W.R. Supratman, dan Sang Saka Merah Putih.",
-        misi: "Temukan 5 pos tonggak kebangsaan, pahami perjuangan para pahlawan kemerdekaan, dan jawab kuisnya!",
-        speech: "Halo para tunas bangsa! Hari ini Pak Guru mengajak kalian meneladani semangat persatuan para pemuda pejuang bangsa. Ikrar satu nusa, satu bangsa, dan satu bahasa Indonesia. Mari kita jelajahi lima pos kebangsaan!",
+        misi: "Temukan 5 paviliun tonggak kebangsaan, pahami perjuangan para pahlawan kemerdekaan, dan jawab kuisnya!",
+        speech: "Halo para tunas bangsa! Hari ini Pak Guru mengajak kalian meneladani semangat persatuan para pemuda pejuang bangsa. Ikrar satu nusa, satu bangsa, dan satu bahasa Indonesia. Mari kita jelajahi lima paviliun kebangsaan!",
       };
     }
 
@@ -2104,10 +2141,10 @@ export default function AdaptiveEduGameModal({
       return {
         subject: "Basa Jawa",
         submateri: "20 Aksara Jawa Legena Hanacaraka & Sandhangan Swara",
-        salam: "Sugeng rawuh para siswa ing Desa Kasusastran Aksara Jawa!",
+        salam: "Sugeng rawuh para siswa ing Kampus Cerdas Kasusastran Aksara Jawa!",
         arahan: "Dina iki Pak Guru ngajak kowe kabeh sinau 20 aksara Jawa legena (Ha-Na-Ca-Ra-Ka, Da-Ta-Sa-Wa-La, Pa-Dha-Ja-Ya-Nya, Ma-Ga-Ba-Tha-Nga) kang diciptakake dening Prabu Aji Saka kanggo ngurmati abdine Dora lan Sembada.",
-        misi: "Ing saben pos omah adat, kowe bakal nemoni aksara Jawa legena lan sandhangan swara wulu, suku, taling, pepet. Wangsulana pitakon kuis kanthi bener!",
-        speech: "Sugeng rawuh para siswa ing Desa Pasinaon Aksara Jawa! Dina iki awake dhewe bakal sinau rong puluh aksara Jawa Hanacaraka lan sandhangan swara. Ayo jelajahi saben pos lan tuntasake kuis aksara Jawa kanthi gembira!",
+        misi: "Ing saben paviliun pasinaon, kowe bakal nemoni aksara Jawa legena lan sandhangan swara wulu, suku, taling, pepet. Wangsulana pitakon kuis kanthi bener!",
+        speech: "Sugeng rawuh para siswa ing Kampus Cerdas Pasinaon Aksara Jawa! Dina iki awake dhewe bakal sinau rong puluh aksara Jawa Hanacaraka lan sandhangan swara. Ayo jelajahi saben paviliun lan tuntasake kuis aksara Jawa kanthi gembira!",
       };
     }
 
@@ -2119,7 +2156,7 @@ export default function AdaptiveEduGameModal({
         salam: "Sugeng rawuh para siswa ing Padhepokan Wayang Punokawan!",
         arahan: "Kanjeng Sunan Kalijaga nyampurnakake tokoh Punokawan minangka tuntunan budi pekerti luhur. Semar kang wicaksana, Gareng kang ngati-ati, Petruk kang loman lan seneng tetulung, sarta Bagong kang jujur apa anane.",
         misi: "Kunjungi 5 Pos Padhepokan Punokawan, sinau watak luhur saben paraga, lan wangsulana kuis kanggo nglumpukake poin!",
-        speech: "Sugeng rawuh para siswa! Dina iki Pak Guru ngajak kowe kabeh sinau watak luhur para paraga wayang Punokawan: Semar, Gareng, Petruk, lan Bagong. Tirua watak andhap asor, guyub rukun, lan jujur ing saben pos desa iki!",
+        speech: "Sugeng rawuh para siswa! Dina iki Pak Guru ngajak kowe kabeh sinau watak luhur para paraga wayang Punokawan: Semar, Gareng, Petruk, lan Bagong. Tirua watak andhap asor, guyub rukun, lan jujur ing saben paviliun iki!",
       };
     }
 
@@ -2130,7 +2167,7 @@ export default function AdaptiveEduGameModal({
         submateri: "Crita Kepahlawanan & Ksatria Pandhawa Lima",
         salam: "Sugeng rawuh para siswa ing Ksatryan Pandhawa Lima!",
         arahan: "Awake dhewe sinau kepahlawanan Pandhawa Lima (Puntadewa, Werkudara, Janaka, Nakula, Sadewa). Falsafah luhur 'Sura Dira Jayaningrat Lebur Dening Pangastuti' mulangake yen kabecikan mesthi ngalahake angkara murka.",
-        misi: "Jelajahi 5 pos ksatryan, pahami watak ksatria sejati kang jujur lan kukuh, sarta rampungake kuis materi!",
+        misi: "Jelajahi 5 paviliun ksatryan, pahami watak ksatria sejati kang jujur lan kukuh, sarta rampungake kuis materi!",
         speech: "Sugeng rawuh ing Ksatryan Pandhawa! Dina iki kita sinau tuladha ksatria sejati kang jujur, kukuh bakuh, fokus sinau, lan guyub rukun. Kabecikan mesthi bakal menang nglawan angkara murka!",
       };
     }
@@ -2142,7 +2179,7 @@ export default function AdaptiveEduGameModal({
         submateri: "Unggah-Ungguh Basa Jawa & Tata Krama Subasita",
         salam: "Sugeng rawuh para siswa ing Bale Tata Krama Basa Jawa!",
         arahan: "Basa Jawa ngemot piwulang subasita lan tata krama kang adiluhung. Kowe bakal sinau mbedakake Basa Ngoko Lugu marang kanca sapadha umur, sarta Basa Krama Alus marang bapak/ibu guru sarta wong tuwa.",
-        misi: "Ing 5 pos desa, gladhen tata krama lumaku (ndherek langkung), tembung krama nedha vs dhahar, lan budi pekerti luhur!",
+        misi: "Ing 5 paviliun pasinaon, gladhen tata krama lumaku (ndherek langkung), tembung krama nedha vs dhahar, lan budi pekerti luhur!",
         speech: "Sugeng rawuh para siswa! Dina iki Pak Guru bakal mbimbing kowe kabeh sinau unggah-ungguh basa Jawa lan tata krama subasita marang tiyang sepuh lan bapak ibu guru. Ayo sinau kanthi trapsila!",
       };
     }
@@ -2154,8 +2191,8 @@ export default function AdaptiveEduGameModal({
         submateri: "Kaendahan Seni Puisi Jawa (Geguritan Gagrag Anyar)",
         salam: "Sugeng rawuh para siswa ing Taman Kasusastran Geguritan!",
         arahan: "Geguritan yaiku puisi Jawa gagrag anyar kang endah lan mardika, nggambarake rasa tresna marang alam pertiwi, pahlawan, guru, lan kabudayan luhur.",
-        misi: "Kunjungi 5 pos sastra kanggo nyinaoni wirama, wirasa, wiraga, lan wicara nalika maca geguritan!",
-        speech: "Sugeng rawuh ing Taman Geguritan Jawa! Pak Guru ngajak kowe kabeh ngresapi kaendahan tembung lan rasa ing geguritan Jawa. Ayo jelajahi saben pos desa iki!",
+        misi: "Kunjungi 5 paviliun sastra kanggo nyinaoni wirama, wirasa, wiraga, lan wicara nalika maca geguritan!",
+        speech: "Sugeng rawuh ing Taman Pasinaon Geguritan Jawa! Pak Guru ngajak kowe kabeh ngresapi kaendahan tembung lan rasa ing geguritan Jawa. Ayo jelajahi saben paviliun belajar iki!",
       };
     }
 
@@ -2165,14 +2202,14 @@ export default function AdaptiveEduGameModal({
     return {
       subject: isJawa ? "Basa Jawa" : "Pendidikan Pancasila",
       submateri: cleanTopicTitle,
-      salam: isJawa ? `Sugeng rawuh para siswa ing Desa Pasinaon ${cleanTopicTitle}!` : `Halo murid hebat! Selamat datang di petualangan edukasi materi ${cleanTopicTitle}.`,
+      salam: isJawa ? `Sugeng rawuh para siswa ing Kampus Cerdas Pasinaon ${cleanTopicTitle}!` : `Halo murid hebat! Selamat datang di petualangan edukasi materi ${cleanTopicTitle}.`,
       arahan: dynamicDesc || (isJawa
         ? `Ing petualangan iki awake dhewe bakal nyinaoni intisari materi ${cleanTopicTitle} kanthi trapsila lan gembira.`
         : `Hari ini Pak Guru mengajak kalian menjelajahi dan mengamalkan nilai-nilai penting dalam materi ${cleanTopicTitle}.`),
-      misi: "Kunjungi 5 Pos Belajar yang ada di desa, pahami materinya, jawab kuis untuk mengumpulkan skor game, dan sapa teman sekelasmu!",
+      misi: "Kunjungi 5 Paviliun Belajar yang ada di sekolah, pahami materinya, jawab kuis untuk mengumpulkan skor game, dan sapa teman sekelasmu!",
       speech: isJawa
-        ? `Sugeng rawuh para siswa! Dina iki awake dhewe bakal sinau materi ${cleanTopicTitle}. Kunjungi limang pos belajar ing desa iki lan wangsulana kuis kanthi bener!`
-        : `Halo murid-murid hebat! Selamat datang di petualangan materi ${cleanTopicTitle}. Pak Guru sudah menyiapkan lima pos belajar untuk kalian jelajahi. Kumpulkan koin dan jawab kuisnya!`,
+        ? `Sugeng rawuh para siswa! Dina iki awake dhewe bakal sinau materi ${cleanTopicTitle}. Kunjungi limang paviliun belajar ing sekolah iki lan wangsulana kuis kanthi bener!`
+        : `Halo murid-murid hebat! Selamat datang di petualangan materi ${cleanTopicTitle}. Pak Guru sudah menyiapkan lima paviliun belajar untuk kalian jelajahi. Kumpulkan koin dan jawab kuisnya!`,
     };
   }, [resolvedTitle, currentModule, chapter, isJawaTopic, cleanTopicTitle]);
 
@@ -2180,6 +2217,15 @@ export default function AdaptiveEduGameModal({
     .slice(0, 5)
     .map((p, i) => `Pos ${i + 1} ${p.subMateri || p.namaPos}`)
     .join(", ");
+
+  // Pre-cache audio suara AI Pak Guru dan 5 Pos di background agar langsung bersuara seketika (0ms)
+  useEffect(() => {
+    const textsToWarm: string[] = [guruBriefing.speech];
+    for (const suku of sukuList.slice(0, 5)) {
+      textsToWarm.push(`Halo murid hebat! Selamat datang di ${suku.namaPos}. ${suku.penjelasanGuru}`);
+    }
+    preloadHumanLikeSpeech(textsToWarm, "id-ID-ArdiNeural");
+  }, [guruBriefing.speech, sukuList]);
 
   // --------------------------------------------------------------------------
   // SISWA ONLINE (KOSTUM BERBEDA DENGAN MODEL ANATOMI SERAGAM)
@@ -2362,11 +2408,11 @@ export default function AdaptiveEduGameModal({
       addPoints(5, `Menyapa teman sekelas: ${nearestStudent.name}`, chapter);
       setFriendGreetingBubble({
         name: nearestStudent.name,
-        text: `👋 "Halo ${studentName}! Senang ketemu kamu di jalan desa! Ayo kumpulkan koin & jelajahi 5 Suku bareng!"`,
+        text: `👋 "Halo ${studentName}! Senang ketemu kamu di sekolah cerdas! Ayo kumpulkan koin & jelajahi 5 Paviliun bareng!"`,
       });
-      setActiveNotification(`👋 Kamu melambaikan tangan dada menyapa ${nearestStudent.name}! (+5 Poin Persahabatan!)`);
+      setActiveNotification(`👋 Kamu melambaikan tangan menyapa ${nearestStudent.name}! (+5 Poin Persahabatan!)`);
     } else {
-      setActiveNotification("👋 Kamu melambaikan tangan dada menyapa seluruh kawan di desa!");
+      setActiveNotification("👋 Kamu melambaikan tangan menyapa seluruh kawan di sekolah!");
     }
 
     if (waveTimeoutRef.current) clearTimeout(waveTimeoutRef.current);
@@ -2505,61 +2551,68 @@ export default function AdaptiveEduGameModal({
     sunLight.castShadow = true;
     scene.add(sunLight);
 
-    // 3. TERRAIN LEMBUT DESA
+    // 3. TERRAIN LEMBUT KAMPUS SEKOLAH SD CERDAS
     const groundGeo = new THREE.PlaneGeometry(140, 440);
-    const groundMat = new THREE.MeshLambertMaterial({ color: "#22c55e" });
+    const groundMat = new THREE.MeshLambertMaterial({ color: "#16a34a" }); // Rumput taman kampus hijau asri
     const groundMesh = new THREE.Mesh(groundGeo, groundMat);
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.position.set(0, 0, -150);
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
 
-    // Jalan Paving Pedesaan Hangat
+    // Jalan Aspal Kampus Sekolah Digital (Hitam Elegan Kontras dengan Garis Emas)
     const pathGeo = new THREE.PlaneGeometry(12, 400);
-    const pathMat = new THREE.MeshLambertMaterial({ color: "#fef08a" });
+    const pathMat = new THREE.MeshLambertMaterial({ color: "#1e293b" });
     const pathMesh = new THREE.Mesh(pathGeo, pathMat);
     pathMesh.rotation.x = -Math.PI / 2;
     pathMesh.position.set(0, 0.02, -150);
     scene.add(pathMesh);
 
-    // Pembatas Batu Tepi Jalan Kiri & Kanan (Curbs)
-    const curbGeo = new THREE.BoxGeometry(0.35, 0.22, 400);
-    const curbMat = new THREE.MeshLambertMaterial({ color: "#94a3b8" });
+    // Garis Pemandu Tengah Jalan Warna Emas Ceria
+    const centerLineGeo = new THREE.PlaneGeometry(0.35, 400);
+    const centerLineMat = new THREE.MeshBasicMaterial({ color: "#facc15" });
+    const centerLineMesh = new THREE.Mesh(centerLineGeo, centerLineMat);
+    centerLineMesh.rotation.x = -Math.PI / 2;
+    centerLineMesh.position.set(0, 0.03, -150);
+    scene.add(centerLineMesh);
+
+    // Pembatas Trotoar Biru Edukasi Kampus (Khas Identitas Web ExplainMyLesson)
+    const curbGeo = new THREE.BoxGeometry(0.35, 0.24, 400);
+    const curbMat = new THREE.MeshLambertMaterial({ color: "#0284c7" });
     const curbLeft = new THREE.Mesh(curbGeo, curbMat);
-    curbLeft.position.set(-6.15, 0.11, -150);
+    curbLeft.position.set(-6.15, 0.12, -150);
     scene.add(curbLeft);
     const curbRight = curbLeft.clone();
     curbRight.position.x = 6.15;
     scene.add(curbRight);
 
-    // Tiang Lampu Lentera Pedesaan Hangat di Pinggir Jalan
+    // Tiang Lampu Taman Digital Kampus Sekolah
     const lanternZPositions = [10, -45, -105, -165, -225, -285];
     lanternZPositions.forEach((lz, lIdx) => {
       const lampGroup = new THREE.Group();
       const poleMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.12, 0.14, 4.2, 8),
-        new THREE.MeshLambertMaterial({ color: "#334155" })
+        new THREE.CylinderGeometry(0.12, 0.14, 4.4, 8),
+        new THREE.MeshLambertMaterial({ color: "#0f172a" })
       );
-      poleMesh.position.y = 2.1;
+      poleMesh.position.y = 2.2;
       lampGroup.add(poleMesh);
 
       const lampHead = new THREE.Mesh(
-        new THREE.BoxGeometry(0.55, 0.65, 0.55),
+        new THREE.SphereGeometry(0.42, 16, 12),
         new THREE.MeshLambertMaterial({ color: "#fef08a", emissive: "#facc15" })
       );
-      lampHead.position.set(0, 4.3, 0);
+      lampHead.position.set(0, 4.4, 0);
       lampGroup.add(lampHead);
 
       const lampCap = new THREE.Mesh(
-        new THREE.ConeGeometry(0.48, 0.35, 4),
-        new THREE.MeshLambertMaterial({ color: "#1e293b" })
+        new THREE.CylinderGeometry(0.55, 0.55, 0.08, 6),
+        new THREE.MeshLambertMaterial({ color: "#0284c7" })
       );
-      lampCap.rotation.y = Math.PI / 4;
-      lampCap.position.set(0, 4.75, 0);
+      lampCap.position.set(0, 4.85, 0);
       lampGroup.add(lampCap);
 
       const pLight = new THREE.PointLight("#fef08a", 0.9, 12);
-      pLight.position.set(0, 4.3, 0);
+      pLight.position.set(0, 4.4, 0);
       lampGroup.add(pLight);
 
       lampGroup.position.set(lIdx % 2 === 0 ? -5.8 : 5.8, 0, lz);
@@ -2584,69 +2637,77 @@ export default function AdaptiveEduGameModal({
     }
 
     // ------------------------------------------------------------------------
-    // GAPURA MASUK MEGAH (Z = +14) - TULISAN TAJAM & PRESISI
+    // GERBANG UTAMA SEKOLAH SD CERDAS EXPLAINMYLESSON AI (Z = +14)
     // ------------------------------------------------------------------------
     const gapuraGroup = new THREE.Group();
-    const pillarMat = new THREE.MeshLambertMaterial({ color: "#991b1b" });
-    const goldMat = new THREE.MeshLambertMaterial({ color: "#facc15" });
+    const pillarMat = new THREE.MeshLambertMaterial({ color: "#0f172a" }); // Navy Blue Akademis
+    const blueEduMat = new THREE.MeshLambertMaterial({ color: "#0284c7" }); // Cyan Edukasi khas Web
+    const goldMat = new THREE.MeshLambertMaterial({ color: "#facc15" }); // Gold Accent
 
-    // Pilar Kiri & Kanan
-    const leftPil = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.5, 2.4), pillarMat);
-    leftPil.position.set(-6.5, 4.25, 14);
+    // Pilar Kiri & Kanan Gedung Gerbang Sekolah
+    const leftPil = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.8, 2.4), pillarMat);
+    leftPil.position.set(-6.5, 4.4, 14);
     gapuraGroup.add(leftPil);
 
-    const rightPil = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.5, 2.4), pillarMat);
-    rightPil.position.set(6.5, 4.25, 14);
+    const rightPil = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.8, 2.4), pillarMat);
+    rightPil.position.set(6.5, 4.4, 14);
     gapuraGroup.add(rightPil);
 
-    // Ornamen Emas pada Pilar
-    const pilGoldL = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.4, 2.6), goldMat);
-    pilGoldL.position.set(-6.5, 7.8, 14);
+    // Ornamen Biru Muda & Emas pada Pilar
+    const pilTrimL = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.45, 2.6), blueEduMat);
+    pilTrimL.position.set(-6.5, 7.8, 14);
+    gapuraGroup.add(pilTrimL);
+    const pilTrimR = pilTrimL.clone();
+    pilTrimR.position.x = 6.5;
+    gapuraGroup.add(pilTrimR);
+
+    const pilGoldL = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.25, 2.5), goldMat);
+    pilGoldL.position.set(-6.5, 8.1, 14);
     gapuraGroup.add(pilGoldL);
     const pilGoldR = pilGoldL.clone();
     pilGoldR.position.x = 6.5;
     gapuraGroup.add(pilGoldR);
 
-    // Balok Atas Gapura
-    const archBeam = new THREE.Mesh(new THREE.BoxGeometry(15.4, 2.2, 2.4), pillarMat);
-    archBeam.position.set(0, 8.6, 14);
+    // Balok Atas Gerbang Sekolah Modern
+    const archBeam = new THREE.Mesh(new THREE.BoxGeometry(15.4, 2.4, 2.4), pillarMat);
+    archBeam.position.set(0, 8.8, 14);
     gapuraGroup.add(archBeam);
 
-    const archRoof = new THREE.Mesh(new THREE.BoxGeometry(16.2, 0.5, 2.8), goldMat);
-    archRoof.position.set(0, 9.85, 14);
+    const archRoof = new THREE.Mesh(new THREE.BoxGeometry(16.4, 0.55, 2.8), blueEduMat);
+    archRoof.position.set(0, 10.1, 14);
     gapuraGroup.add(archRoof);
 
-        // Banner Tulisan Gapura Resolusi Tinggi (1200x280) - Anti Terpotong
+    // Banner Tulisan Gapura Resolusi Tinggi (1200x280) - Serasi dengan Identitas Web
     const bannerCanvas = document.createElement("canvas");
     bannerCanvas.width = 1200;
     bannerCanvas.height = 280;
     const bCtx = bannerCanvas.getContext("2d")!;
 
-    // Background Mewah Merah Marun & Border Emas
-    bCtx.fillStyle = "#7f1d1d";
+    // Background Navy & Border Emas Mewah (Serasi dengan Navbar Web)
+    bCtx.fillStyle = "#0f172a";
     bCtx.fillRect(0, 0, 1200, 280);
-    bCtx.strokeStyle = "#facc15";
+    bCtx.strokeStyle = "#0284c7";
     bCtx.lineWidth = 14;
     bCtx.strokeRect(7, 7, 1186, 266);
-    bCtx.strokeStyle = "#ffffff";
-    bCtx.lineWidth = 3;
-    bCtx.strokeRect(20, 20, 1160, 240);
+    bCtx.strokeStyle = "#facc15";
+    bCtx.lineWidth = 4;
+    bCtx.strokeRect(18, 18, 1164, 244);
 
-    // Judul Utama Gapura Auto-Fitted (Jamin Tidak Terpotong)
+    // Judul Utama Gapura Auto-Fitted
     const mainBannerTitle = isJawaTopic
-      ? "★ DESA KABUDAYAN BASA JAWA ★"
-      : `★ JELAJAH EDUKASI: ${(resolvedTitle || "NUSANTARA").toUpperCase().slice(0, 32)} ★`;
+      ? "★ KAMPUS BASA JAWA: SD CERDAS EXPLAINMYLESSON ★"
+      : `★ SD CERDAS EXPLAINMYLESSON AI: ${(resolvedTitle || "EDUKASI").toUpperCase().slice(0, 26)} ★`;
 
-    drawFittedText(bCtx, mainBannerTitle, 600, 95, 1120, 52, {
-      color: "#fef08a",
+    drawFittedText(bCtx, mainBannerTitle, 600, 95, 1120, 48, {
+      color: "#facc15",
       shadowColor: "#ca8a04",
       shadowBlur: 10,
     });
 
     // Subjudul Gapura Auto-Fitted
     const subBannerTitle = isJawaTopic
-      ? `🎭  ${resolvedTitle.toUpperCase()} • SINAU BUDI PAKARTI & 5 POS  🎭`
-      : `🇮🇩  ${resolvedTitle.toUpperCase()} • JELAJAH PENGAMALAN 5 POS  🇮🇩`;
+      ? `🎭  ${resolvedTitle.toUpperCase()} • 5 POS PASINAON INTERAKTIF  🎭`
+      : `🇮🇩  ${resolvedTitle.toUpperCase()} • 5 POS PEMBELAJARAN ADAPTIF  🇮🇩`;
 
     drawFittedText(
       bCtx,
@@ -2654,8 +2715,8 @@ export default function AdaptiveEduGameModal({
       600,
       190,
       1120,
-      30,
-      { color: "#ffffff" }
+      28,
+      { color: "#38bdf8" }
     );
 
     const bannerTexture = new THREE.CanvasTexture(bannerCanvas);
@@ -2666,7 +2727,7 @@ export default function AdaptiveEduGameModal({
       new THREE.PlaneGeometry(13.2, 2.3),
       new THREE.MeshBasicMaterial({ map: bannerTexture })
     );
-    bannerMeshFront.position.set(0, 8.6, 15.25);
+    bannerMeshFront.position.set(0, 8.8, 15.25);
     gapuraGroup.add(bannerMeshFront);
 
     // Banner Sisi Belakang
@@ -2674,11 +2735,45 @@ export default function AdaptiveEduGameModal({
       new THREE.PlaneGeometry(13.2, 2.3),
       new THREE.MeshBasicMaterial({ map: bannerTexture })
     );
-    bannerMeshBack.position.set(0, 8.6, 12.75);
+    bannerMeshBack.position.set(0, 8.8, 12.75);
     bannerMeshBack.rotation.y = Math.PI;
     gapuraGroup.add(bannerMeshBack);
 
     scene.add(gapuraGroup);
+
+    // Tiang Bendera Merah Putih di Pinggir Samping Gerbang (Z = +16.5, X = -6.8)
+    const flagGroup = new THREE.Group();
+    const flagPole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.1, 8.5, 12),
+      new THREE.MeshLambertMaterial({ color: "#f8fafc" })
+    );
+    flagPole.position.y = 4.25;
+    flagGroup.add(flagPole);
+
+    const flagRed = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.6, 0.55),
+      new THREE.MeshBasicMaterial({ color: "#dc2626", side: THREE.DoubleSide })
+    );
+    flagRed.position.set(0.8, 8.0, 0);
+    flagGroup.add(flagRed);
+
+    const flagWhite = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.6, 0.55),
+      new THREE.MeshBasicMaterial({ color: "#ffffff", side: THREE.DoubleSide })
+    );
+    flagWhite.position.set(0.8, 7.45, 0);
+    flagGroup.add(flagWhite);
+
+    const flagBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 1.0, 0.35, 16),
+      new THREE.MeshLambertMaterial({ color: "#334155" })
+    );
+    flagBase.position.y = 0.17;
+    flagGroup.add(flagBase);
+
+    // Diletakkan di pinggir samping jalan (tidak di tengah jalan)
+    flagGroup.position.set(-6.8, 0, 16.5);
+    scene.add(flagGroup);
 
     // ------------------------------------------------------------------------
     // PAPAN SKOR KELAS 3D DINAMIS (DI KANAN GAPURA: X = +4.0, Z = +16.5)
@@ -2716,7 +2811,7 @@ export default function AdaptiveEduGameModal({
         shadowColor: "#ca8a04",
         shadowBlur: 6,
       });
-      drawFittedText(lbCtx, `${(resolvedTitle || "Desa Edukasi").slice(0, 24)} • Live 🟢`, 256, 64, 460, 15, {
+      drawFittedText(lbCtx, `${(resolvedTitle || "SD Cerdas AI").slice(0, 24)} • Live 🟢`, 256, 64, 460, 15, {
         color: "#38bdf8",
       });
 
@@ -2973,7 +3068,7 @@ export default function AdaptiveEduGameModal({
     gCtx.fillText("👨‍🏫 Pak Guru Virtual", 170, 38);
     gCtx.fillStyle = "#facc15";
     gCtx.font = "bold 22px sans-serif";
-    gCtx.fillText("Tekan 'E' untuk Suara Guru 🔊", 170, 70);
+    gCtx.fillText("Dekati untuk Suara Guru 🔊", 170, 70);
 
     const guruSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(guruCanvas) }));
     guruSprite.position.set(0, 5.0, 0);
@@ -3038,10 +3133,7 @@ export default function AdaptiveEduGameModal({
     }
 
     // ------------------------------------------------------------------------
-    // 5 RUMAH ADAT SUKU NUSANTARA, PLANG NAMA DI DEPAN & TITIK MISI BERCAHAYA
-    // ------------------------------------------------------------------------
-    // ------------------------------------------------------------------------
-    // 5 RUMAH ADAT POS PEMBELAJARAN: PENUNGGU PAK GURU, PLANG NAMA & TITIK MISI
+    // 5 PAVILIUN BELAJAR SD CERDAS (MODERN SCHOOL LEARNING PAVILIONS)
     // ------------------------------------------------------------------------
     interface HotspotItem {
       suku: SukuAdat;
@@ -3057,72 +3149,169 @@ export default function AdaptiveEduGameModal({
     sukuList.forEach((suku, sIdx) => {
       const hGroup = new THREE.Group();
 
-      // Dinding Rumah
-      const wallMesh = new THREE.Mesh(
-        new THREE.BoxGeometry(11, 7.5, 9),
-        new THREE.MeshLambertMaterial({ color: suku.warnaKhas })
+      // 1. Fondasi Podium Bertingkat Modern
+      const basePlatform = new THREE.Mesh(
+        new THREE.BoxGeometry(13, 0.6, 11),
+        new THREE.MeshLambertMaterial({ color: "#0f172a" })
       );
-      wallMesh.position.y = 3.75;
+      basePlatform.position.y = 0.3;
+      basePlatform.receiveShadow = true;
+      hGroup.add(basePlatform);
+
+      const innerDeck = new THREE.Mesh(
+        new THREE.BoxGeometry(12.2, 0.4, 10.2),
+        new THREE.MeshLambertMaterial({ color: "#1e293b" })
+      );
+      innerDeck.position.y = 0.7;
+      hGroup.add(innerDeck);
+
+      // 2. Bangunan Paviliun Utama (Gaya Modern Clean Architecture)
+      const wallMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(11, 6.8, 9),
+        new THREE.MeshLambertMaterial({ color: "#f8fafc" })
+      );
+      wallMesh.position.y = 4.1;
       wallMesh.castShadow = true;
       hGroup.add(wallMesh);
 
-      // Atap Khas Adat Nusantara
-      let roofMesh: THREE.Mesh;
-      if (suku.id.includes("minang") || suku.namaSuku.includes("Minang")) {
-        roofMesh = new THREE.Mesh(new THREE.ConeGeometry(8, 6, 4), new THREE.MeshLambertMaterial({ color: "#78350f" }));
-        roofMesh.rotation.y = Math.PI / 4;
-        roofMesh.position.y = 9.8;
-      } else if (suku.id.includes("papua") || suku.namaSuku.includes("Papua")) {
-        roofMesh = new THREE.Mesh(new THREE.SphereGeometry(6, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: "#ca8a04" }));
-        roofMesh.position.y = 7.5;
-      } else {
-        roofMesh = new THREE.Mesh(new THREE.ConeGeometry(8.5, 4.5, 4), new THREE.MeshLambertMaterial({ color: "#92400e" }));
-        roofMesh.rotation.y = Math.PI / 4;
-        roofMesh.position.y = 9.5;
-      }
-      roofMesh.castShadow = true;
-      hGroup.add(roofMesh);
+      // 3. Portal Aksen Warna Identitas Materi Suku/Sila
+      const portalAccent = new THREE.Mesh(
+        new THREE.BoxGeometry(11.4, 7.0, 1.2),
+        new THREE.MeshLambertMaterial({ color: suku.warnaKhas })
+      );
+      portalAccent.position.set(0, 4.2, suku.xPos > 0 ? -4.1 : 4.1);
+      hGroup.add(portalAccent);
 
-      // Pintu Rumah Kayu
-      const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 4.2, 0.2), new THREE.MeshLambertMaterial({ color: "#451a03" }));
-      doorMesh.position.set(0, 2.1, suku.xPos > 0 ? -4.51 : 4.51);
+      // 4. Kanopi Modern Kampus Cerdas Mengambang
+      const canopyRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(12.8, 0.8, 10.8),
+        new THREE.MeshLambertMaterial({ color: "#0284c7" })
+      );
+      canopyRoof.position.y = 7.9;
+      canopyRoof.castShadow = true;
+      hGroup.add(canopyRoof);
+
+      const roofTopDeck = new THREE.Mesh(
+        new THREE.BoxGeometry(11.8, 0.4, 9.8),
+        new THREE.MeshLambertMaterial({ color: "#0f172a" })
+      );
+      roofTopDeck.position.y = 8.5;
+      hGroup.add(roofTopDeck);
+
+      // 5. Lambang Mahkota Bintang Emas SD Cerdas di Atas Paviliun
+      const starCrest = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.85, 0.85, 0.28, 5),
+        new THREE.MeshLambertMaterial({ color: "#facc15", emissive: "#ca8a04" })
+      );
+      starCrest.rotation.x = Math.PI / 2;
+      starCrest.position.set(0, 9.4, suku.xPos > 0 ? -4.6 : 4.6);
+      hGroup.add(starCrest);
+
+      // 6. Pintu Kaca Digital Transparan
+      const doorMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(2.6, 4.4, 0.25),
+        new THREE.MeshLambertMaterial({ color: "#0369a1", transparent: true, opacity: 0.85 })
+      );
+      doorMesh.position.set(0, 2.9, suku.xPos > 0 ? -4.62 : 4.62);
       hGroup.add(doorMesh);
 
-      // Jendela Rumah Berpijar Hangat (Kiri & Kanan Pintu)
-      const winGeo = new THREE.PlaneGeometry(1.6, 1.4);
-      const winMat = new THREE.MeshBasicMaterial({ color: "#fef08a" });
+      // 7. Jendela Kaca Smart Classroom Berpijar Biru Lembut
+      const winGeo = new THREE.BoxGeometry(2.4, 2.0, 0.2);
+      const winMat = new THREE.MeshBasicMaterial({ color: "#bae6fd" });
       const winLeft = new THREE.Mesh(winGeo, winMat);
-      winLeft.position.set(-2.8, 3.8, suku.xPos > 0 ? -4.52 : 4.52);
-      if (suku.xPos <= 0) winLeft.rotation.y = Math.PI;
+      winLeft.position.set(-3.2, 4.2, suku.xPos > 0 ? -4.62 : 4.62);
       hGroup.add(winLeft);
 
       const winRight = new THREE.Mesh(winGeo, winMat);
-      winRight.position.set(2.8, 3.8, suku.xPos > 0 ? -4.52 : 4.52);
-      if (suku.xPos <= 0) winRight.rotation.y = Math.PI;
+      winRight.position.set(3.2, 4.2, suku.xPos > 0 ? -4.62 : 4.62);
       hGroup.add(winRight);
 
-      // Anak Tangga Masuk Teras Rumah
+      // 8. Anak Tangga Menuju Teras Depan
       const stepMesh = new THREE.Mesh(
-        new THREE.BoxGeometry(3.2, 0.3, 1.2),
-        new THREE.MeshLambertMaterial({ color: "#64748b" })
+        new THREE.BoxGeometry(3.6, 0.4, 1.4),
+        new THREE.MeshLambertMaterial({ color: "#334155" })
       );
-      stepMesh.position.set(0, 0.15, suku.xPos > 0 ? -5.1 : 5.1);
+      stepMesh.position.set(0, 0.2, suku.xPos > 0 ? -5.3 : 5.3);
       hGroup.add(stepMesh);
 
-      // Letakkan Rumah agak ke belakang agar halaman depan lega dan terbuka
+      // 9. Mini AI Companion Robot Maskot Mengambang di Depan Paviliun
+      const botGroup = new THREE.Group();
+      const botBody = new THREE.Mesh(
+        new THREE.SphereGeometry(0.65, 18, 18),
+        new THREE.MeshLambertMaterial({ color: "#ffffff" })
+      );
+      botBody.position.y = 2.4;
+      botGroup.add(botBody);
+
+      // Layar Visor Robot Berpijar Biru Ramah
+      const botVisor = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.38, 0.38, 0.2, 16),
+        new THREE.MeshBasicMaterial({ color: "#38bdf8" })
+      );
+      botVisor.rotation.x = Math.PI / 2;
+      botVisor.position.set(0, 2.45, suku.xPos > 0 ? -0.52 : 0.52);
+      botGroup.add(botVisor);
+
+      // Antena Robot AI dengan Ujung Emas
+      const botAntenna = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, 0.45, 8),
+        new THREE.MeshLambertMaterial({ color: "#facc15" })
+      );
+      botAntenna.position.set(0, 3.25, 0);
+      botGroup.add(botAntenna);
+
+      const botBulb = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 10, 10),
+        new THREE.MeshLambertMaterial({ color: "#facc15", emissive: "#ca8a04" })
+      );
+      botBulb.position.set(0, 3.52, 0);
+      botGroup.add(botBulb);
+
+      // Cincin Levitasi Mengambang di Bawah Robot
+      const botRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.5, 0.07, 8, 24),
+        new THREE.MeshBasicMaterial({ color: "#0284c7" })
+      );
+      botRing.rotation.x = Math.PI / 2;
+      botRing.position.y = 1.45;
+      botGroup.add(botRing);
+
+      botGroup.position.set(suku.xPos > 0 ? -4.6 : 4.6, 0, suku.xPos > 0 ? -5.0 : 5.0);
+      hGroup.add(botGroup);
+
+      // 10. Taman Bunga & Tanaman Asri Kampus di Kiri-Kanan Paviliun
+      const planterGeo = new THREE.BoxGeometry(2.4, 0.45, 1.2);
+      const planterMat = new THREE.MeshLambertMaterial({ color: "#0f172a" });
+      const planterFlowerMat = new THREE.MeshLambertMaterial({ color: "#f59e0b" });
+
+      const planterL = new THREE.Mesh(planterGeo, planterMat);
+      planterL.position.set(-4.5, 0.22, suku.xPos > 0 ? -3.0 : 3.0);
+      const flwL = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55), planterFlowerMat);
+      flwL.position.set(-4.5, 0.7, suku.xPos > 0 ? -3.0 : 3.0);
+      hGroup.add(planterL);
+      hGroup.add(flwL);
+
+      const planterR = new THREE.Mesh(planterGeo, planterMat);
+      planterR.position.set(4.5, 0.22, suku.xPos > 0 ? -3.0 : 3.0);
+      const flwR = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55), new THREE.MeshLambertMaterial({ color: "#ec4899" }));
+      flwR.position.set(4.5, 0.7, suku.xPos > 0 ? -3.0 : 3.0);
+      hGroup.add(planterR);
+      hGroup.add(flwR);
+
+      // Letakkan Paviliun di samping jalan agar halaman luas dan leluasa
       const houseX = suku.xPos > 0 ? 17.5 : -17.5;
       hGroup.position.set(houseX, 0, suku.zPos);
       scene.add(hGroup);
 
       // ----------------------------------------------------------------------
-      // PLANG PAPAN NAMA POS DI DEPAN RUMAH (DIMAJUKAN KE HALAMAN DEKAT JALAN)
-      // JAUH DARI TEMBOK RUMAH, MENGHADAP JALAN SECARA JELAS
+      // PLANG PAPAN NAMA DIGITAL POS DI DEPAN PAVILIUN
+      // DIMAJUKAN KE DEKAT JALAN DENGAN DESAIN MODERN ELEGAN
       // ----------------------------------------------------------------------
       const signX = suku.xPos > 0 ? 7.2 : -7.2;
       const signZ = suku.zPos - (suku.xPos > 0 ? 2.6 : -2.6);
       const signGroup = new THREE.Group();
 
-      const signPole1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.2, 8), new THREE.MeshLambertMaterial({ color: "#78350f" }));
+      const signPole1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.2, 8), new THREE.MeshLambertMaterial({ color: "#0f172a" }));
       signPole1.position.set(-1.2, 1.6, 0);
       signGroup.add(signPole1);
 
@@ -3130,23 +3319,23 @@ export default function AdaptiveEduGameModal({
       signPole2.position.set(1.2, 1.6, 0);
       signGroup.add(signPole2);
 
-            const signCanvas = document.createElement("canvas");
+      const signCanvas = document.createElement("canvas");
       signCanvas.width = 720;
       signCanvas.height = 360;
       const sCtx = signCanvas.getContext("2d")!;
-      sCtx.fillStyle = "#1e1b4b";
+      sCtx.fillStyle = "#0f172a";
       sCtx.fillRect(0, 0, 720, 360);
+      sCtx.strokeStyle = "#0284c7";
+      sCtx.lineWidth = 14;
+      sCtx.strokeRect(7, 7, 706, 346);
       sCtx.strokeStyle = "#facc15";
-      sCtx.lineWidth = 12;
-      sCtx.strokeRect(6, 6, 708, 348);
-      sCtx.strokeStyle = "#ffffff";
-      sCtx.lineWidth = 2;
-      sCtx.strokeRect(16, 16, 688, 328);
+      sCtx.lineWidth = 4;
+      sCtx.strokeRect(18, 18, 684, 324);
 
-      drawFittedText(sCtx, `🏷️ ${suku.namaPos.toUpperCase()}`, 360, 55, 660, 34, { color: "#facc15" });
+      drawFittedText(sCtx, `🏫 SD CERDAS AI: ${suku.namaPos.toUpperCase()}`, 360, 55, 660, 32, { color: "#facc15" });
       drawFittedText(sCtx, `📚 Materi: ${suku.subMateri}`, 360, 130, 660, 28, { color: "#ffffff" });
-      drawFittedText(sCtx, `👨‍🏫 Penunggu: ${suku.guruNama}`, 360, 205, 660, 26, { color: "#38bdf8" });
-      drawFittedText(sCtx, "📍 Berdiri di Titik Misi & Tekan 'E' untuk Kuis", 360, 280, 660, 24, { color: "#4ade80" });
+      drawFittedText(sCtx, `👨‍🏫 Pengampu: ${suku.guruNama}`, 360, 205, 660, 26, { color: "#38bdf8" });
+      drawFittedText(sCtx, "✨ Masuk Titik Belajar untuk Dialog & Kuis", 360, 280, 660, 24, { color: "#4ade80" });
 
       const signBoard = new THREE.Mesh(
         new THREE.PlaneGeometry(4.0, 2.0),
@@ -3195,9 +3384,9 @@ export default function AdaptiveEduGameModal({
       gpCanvas.width = 420;
       gpCanvas.height = 96;
       const gpCtx = gpCanvas.getContext("2d")!;
-      gpCtx.fillStyle = "#1e1b4b";
+      gpCtx.fillStyle = "#0f172a";
       gpCtx.fillRect(0, 0, 420, 96);
-      gpCtx.strokeStyle = "#facc15";
+      gpCtx.strokeStyle = "#0284c7";
       gpCtx.lineWidth = 6;
       gpCtx.strokeRect(3, 3, 414, 90);
       gpCtx.fillStyle = "#ffffff";
@@ -3206,10 +3395,10 @@ export default function AdaptiveEduGameModal({
       gpCtx.fillText(`👨‍🏫 ${suku.guruNama}`, 210, 36);
       gpCtx.fillStyle = "#38bdf8";
       gpCtx.font = "bold 18px sans-serif";
-      gpCtx.fillText(`Penunggu: ${suku.namaPos}`, 210, 62);
+      gpCtx.fillText(`Paviliun: ${suku.namaPos}`, 210, 62);
       gpCtx.fillStyle = "#4ade80";
       gpCtx.font = "bold 16px sans-serif";
-      gpCtx.fillText("[ Tekan 'E' untuk Dialog & Kuis ]", 210, 85);
+      gpCtx.fillText("[ Dekati untuk Dialog & Kuis ]", 210, 85);
 
       const gpSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gpCanvas) }));
       gpSprite.position.set(0, 5.0, 0);
@@ -3263,13 +3452,18 @@ export default function AdaptiveEduGameModal({
       padCanvas.width = 400;
       padCanvas.height = 92;
       const pdCtx = padCanvas.getContext("2d")!;
+      pdCtx.fillStyle = "#0f172a";
+      pdCtx.fillRect(0, 0, 400, 92);
+      pdCtx.strokeStyle = "#38bdf8";
+      pdCtx.lineWidth = 5;
+      pdCtx.strokeRect(3, 3, 394, 86);
       pdCtx.fillStyle = "#ffffff";
       pdCtx.font = "bold 24px sans-serif";
       pdCtx.textAlign = "center";
       pdCtx.fillText(`🎯 ${suku.namaPos.toUpperCase()}`, 200, 36);
       pdCtx.fillStyle = "#facc15";
       pdCtx.font = "bold 20px sans-serif";
-      pdCtx.fillText(`👨‍🏫 Bersama ${suku.guruNama} [Tekan 'E']`, 200, 72);
+      pdCtx.fillText(`👨‍🏫 Bersama ${suku.guruNama} [Dekati]`, 200, 72);
 
       const padSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(padCanvas) }));
       padSprite.position.set(0, 4.2, 0);
@@ -3385,10 +3579,13 @@ export default function AdaptiveEduGameModal({
       let moveX = 0;
       let moveZ = 0;
 
-      if (keys.forward) moveZ -= 1;
-      if (keys.backward) moveZ += 1;
-      if (keys.left) moveX -= 1;
-      if (keys.right) moveX += 1;
+      const isBlocked = isDialogOpenRef.current;
+      if (!isBlocked) {
+        if (keys.forward) moveZ -= 1;
+        if (keys.backward) moveZ += 1;
+        if (keys.left) moveX -= 1;
+        if (keys.right) moveX += 1;
+      }
 
       const isMoving = moveX !== 0 || moveZ !== 0;
 
@@ -3548,28 +3745,54 @@ export default function AdaptiveEduGameModal({
         hp.beaconMesh.scale.y = 1 + Math.sin(Date.now() * 0.003 + hp.suku.silaKe) * 0.15;
       });
 
-      // 1. Auto-Trigger Pos Pembelajaran saat mendekati lingkaran (radius < 3.8 meter)
-      // Tidak perlu pencet tombol 'E', langsung terbuka otomatis berjalan!
-      if (!activeSukuDialogRef.current && !showLeaderboardRef.current && !allSukuCompletedRef.current) {
-        for (const hp of hotspotList) {
-          const distToHotspot = Math.hypot(
-            playerGroup.position.x - hp.x,
-            playerGroup.position.z - hp.z
-          );
-          if (distToHotspot < 3.8 && !visitedSukuIdsRef.current.includes(hp.suku.id)) {
-            setActiveSukuDialog(hp.suku);
-            setSukuDialogStage("penjelasan");
-            setSelectedAnswer(null);
-            setAnswerFeedback(null);
-            speakGuruVoice(
-              `Halo murid hebat! Selamat datang di ${hp.suku.namaPos}. Simak penjelasan implementasi berikut: ${hp.suku.penjelasanGuru}`
-            );
-            break;
+      // ----------------------------------------------------------------------
+      // DETEKSI PROXIMITY OTOMATIS: MASUK KE DIALOG PAK GURU & 5 POS TANPA PENCET 'E'
+      // ----------------------------------------------------------------------
+      const px = playerGroup.position.x;
+      const pz = playerGroup.position.z;
+
+      // 1. Cek Pak Guru Virtual di Dekat Gapura (X = -4.0, Z = 16)
+      const distToGuru = Math.hypot(px - (-4.0), pz - 16);
+      if (distToGuru < 3.2) {
+        if (insideZoneRef.current !== 'guru') {
+          insideZoneRef.current = 'guru';
+          if (!isDialogOpenRef.current && Date.now() > dialogCooldownUntilRef.current && gameStartedRef.current) {
+            setShowGuruDialog(true);
+            setHasTalkedToGuru(true);
+            setGuruTab('apa_itu');
+            speakGuruVoice(guruBriefing.speech);
           }
+        }
+      } else if (distToGuru > 4.5 && insideZoneRef.current === 'guru') {
+        insideZoneRef.current = null;
+      }
+
+      // 2. Cek Seluruh 5 Pos Belajar (Bulatan Titik Misi & Pak Guru Penunggu Pos)
+      for (const hp of hotspotList) {
+        const distToHotspot = Math.hypot(px - hp.x, pz - hp.z);
+        const distToPosGuru = Math.hypot(px - hp.guruX, pz - hp.guruZ);
+        const inPosZone = distToHotspot < 3.4 || distToPosGuru < 3.2;
+
+        if (inPosZone) {
+          if (insideZoneRef.current !== hp.suku.id) {
+            insideZoneRef.current = hp.suku.id;
+            if (!isDialogOpenRef.current && Date.now() > dialogCooldownUntilRef.current && gameStartedRef.current) {
+              setActiveSukuDialog(hp.suku);
+              setSukuDialogStage('penjelasan');
+              setSelectedAnswer(null);
+              setAnswerFeedback(null);
+              speakGuruVoice(
+                'Halo murid hebat! Selamat datang di ' + hp.suku.namaPos + '. Simak penjelasan implementasi berikut: ' + hp.suku.penjelasanGuru
+              );
+            }
+          }
+          break;
+        } else if (insideZoneRef.current === hp.suku.id && distToHotspot > 4.8 && distToPosGuru > 4.5) {
+          insideZoneRef.current = null;
         }
       }
 
-      // 2. Auto-Wave saat bertemu teman sekelas online (radius < 4.0 meter)
+      // 3. Auto-Wave saat bertemu teman sekelas online (radius < 4.0 meter)
       // Karakter otomatis melambaikan tangan sendiri (dada sendiri) tanpa tombol!
       const nowAutoWave = Date.now();
       for (const student of onlineStudents) {
@@ -3648,6 +3871,7 @@ export default function AdaptiveEduGameModal({
         // 1. Cek Apakah Dekat dengan Pak Guru Virtual (X = -4.0, Z = +16)
         const distToGuru = Math.hypot(px - (-4.0), pz - 16);
         if (distToGuru < 4.8) {
+          insideZoneRef.current = "guru";
           setShowGuruDialog(true);
           setHasTalkedToGuru(true);
           setGuruTab("apa_itu");
@@ -3672,6 +3896,7 @@ export default function AdaptiveEduGameModal({
           const distToHotspot = Math.hypot(px - hp.x, pz - hp.z);
           const distToPosGuru = Math.hypot(px - hp.guruX, pz - hp.guruZ);
           if (distToHotspot < 4.2 || distToPosGuru < 4.2) {
+            insideZoneRef.current = hp.suku.id;
             setActiveSukuDialog(hp.suku);
             setSelectedAnswer(null);
             setAnswerFeedback(null);
@@ -3742,7 +3967,7 @@ export default function AdaptiveEduGameModal({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 id="game-title" className="font-black text-xs sm:text-sm text-yellow-300 truncate tracking-wide">
-                    {isJawaTopic ? "SINAU BASA JAWA INTERAKTIF" : `PETUALANGAN 3D: ${(resolvedTitle || "JELAJAH DESA NUSANTARA").toUpperCase()}`}
+                    {isJawaTopic ? "SINAU BASA JAWA INTERAKTIF" : `PETUALANGAN 3D: ${(resolvedTitle || "SEKOLAH SD CERDAS AI").toUpperCase()}`}
                   </h2>
                   <span className="hidden md:inline-flex text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-400/30">
                     🟢 4 Siswa Online
@@ -3808,7 +4033,7 @@ export default function AdaptiveEduGameModal({
                   ? "Roda Putar Cerdas (Kuis Kilat)"
                   : officialGameType === "ulartangga"
                   ? "Papan Ular Tangga (Evaluasi Ceria)"
-                  : "Petualangan 3D Jelajah Desa"}
+                  : "Petualangan 3D Kampus SD Cerdas"}
               </div>
             </div>
           </div>
@@ -3927,7 +4152,7 @@ export default function AdaptiveEduGameModal({
                 <div className="absolute top-3 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-30 max-w-sm bg-yellow-400 text-slate-950 py-1.5 px-3 rounded-xl shadow-lg text-center animate-bounce font-black text-xs border border-white flex items-center justify-center gap-1.5">
                   <span>👉</span>
                   <span>
-                    Temui <b>Pak Guru</b> (kiri gapura) lalu tekan <b>'E'</b> untuk panduan suara!
+                    Dekati <b>Pak Guru</b> (kiri gapura) untuk mendengar panduan suara otomatis!
                   </span>
                 </div>
               )}
@@ -3991,7 +4216,7 @@ export default function AdaptiveEduGameModal({
 
                       <div className="pt-1.5 border-t border-slate-700/60">
                         <span className="text-emerald-300 font-black text-[11px] block mb-1">
-                          📍 5 Pos Belajar di Desa (Tekan 'E' di Setiap Pos):
+                          📍 5 Paviliun Belajar Cerdas (Dekati Setiap Pos untuk Belajar & Kuis):
                         </span>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[10px]">
                           {sukuList.slice(0, 5).map((pos, idx) => (
@@ -4016,7 +4241,7 @@ export default function AdaptiveEduGameModal({
                       <span>•</span>
                       <span>⚡ <b>Shift</b>: Lari</span>
                       <span>•</span>
-                      <span>🎯 <b>E</b>: Kuis (+25)</span>
+                      <span>🎯 <b>Pos</b>: Masuk Titik (+25)</span>
                       <span>•</span>
                       <span>🪙 <b>Koin</b> (+5)</span>
                       <span>•</span>
@@ -4087,8 +4312,8 @@ export default function AdaptiveEduGameModal({
                               } else {
                                 speakGuruVoice(
                                   isJawaTopic
-                                    ? "Cara main: Kowe bisa mlaku ing Desa Nusantara nganggo WASD, njupuk koin emas, lan nekani 5 pos omah adat banjur pencet E kanggo mangsuli kuis materi!"
-                                    : "Cara mainnya mudah: jalan dengan tombol WASD atau panah, ambil koin emas di jalan, kunjungi 5 pos rumah adat lalu tekan E untuk menjawab kuis dan sapa teman sekelasmu!"
+                                    ? "Cara main: Kowe bisa mlaku ing Sekolah Cerdas nganggo WASD, njupuk koin emas, lan nekani 5 paviliun pasinaon kanggo sinau lan mangsuli kuis materi!"
+                                    : "Cara mainnya mudah: jalan dengan tombol WASD atau panah, ambil koin emas di jalan, cukup dekati 5 paviliun belajar untuk belajar kuis dan sapa teman sekelasmu!"
                                 );
                               }
                             }
@@ -4100,6 +4325,18 @@ export default function AdaptiveEduGameModal({
                           }`}
                         >
                           <span>{isGuruSpeaking ? "⏹️ Hentikan Suara" : "🔊 Putar Suara Guru"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            playClickSound();
+                            stopGuruVoice();
+                            setShowGuruDialog(false);
+                          }}
+                          className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white flex items-center justify-center font-bold text-xs cursor-pointer transition border border-slate-700 shrink-0"
+                          aria-label="Tutup Dialog"
+                        >
+                          ✕
                         </button>
                       </div>
                     </div>
@@ -4145,7 +4382,7 @@ export default function AdaptiveEduGameModal({
                         onClick={() => {
                           setGuruTab("cara_main");
                           speakGuruVoice(
-                            "Cara mainnya mudah: jalan dengan WASD atau panah, ambil koin emas di jalan, kunjungi 5 pos di kiri dan kanan jalan lalu tekan E untuk menjawab kuis dan sapa teman sekelasmu!"
+                            "Cara mainnya mudah: jalan dengan WASD atau panah, ambil koin emas di jalan, cukup dekati 5 pos di kiri dan kanan jalan untuk belajar kuis dan sapa teman sekelasmu!"
                           );
                         }}
                         className={`flex-1 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
@@ -4192,9 +4429,9 @@ export default function AdaptiveEduGameModal({
                         <div className="space-y-2">
                           <b className="text-emerald-300 block">Panduan Petualangan & Game:</b>
                           <p>
-                            1. <b>Jalan</b> melewati Gapura Nusantara dengan tombol WASD atau Panah.<br />
-                            2. <b>Kumpulkan Koin Emas (+5 Poin)</b> yang bertebaran di sepanjang jalan desa.<br />
-                            3. <b>Kunjungi 5 Rumah Pos Adat</b> lalu tekan <b>'E'</b> untuk menjawab kuis materi (+25 Poin).<br />
+                            1. <b>Jalan</b> melewati Gerbang Sekolah Cerdas dengan tombol WASD atau Panah.<br />
+                            2. <b>Kumpulkan Koin Emas (+5 Poin)</b> yang bertebaran di sepanjang jalan sekolah.<br />
+                            3. <b>Kunjungi 5 Paviliun Belajar:</b> Cukup dekati Pak Guru atau bulatan titik misi untuk langsung membuka kuis materi (+25 Poin).<br />
                             4. <b>Sapa Teman Sekelas Online</b> dengan menekan tombol <b>'Q'</b> atau <b>'Dada'</b>!<br />
                             5. <b>Teka-Teki Kartu:</b> Pilih tab <b>Menjodohkan Kartu</b> di bagian atas untuk mencocokkan pasangan kata & aksara!
                           </p>
@@ -4212,7 +4449,7 @@ export default function AdaptiveEduGameModal({
                         onClick={() => {
                           stopGuruVoice();
                           setShowGuruDialog(false);
-                          setActiveNotification("🚀 Petunjuk selesai! Silakan mulai menjelajahi jalan desa!");
+                          setActiveNotification("🚀 Petunjuk selesai! Silakan mulai menjelajahi area sekolah!");
                           setTimeout(() => setActiveNotification(null), 3000);
                         }}
                         className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 px-6 rounded-2xl text-xs transition cursor-pointer"
@@ -4243,9 +4480,47 @@ export default function AdaptiveEduGameModal({
                           </p>
                         </div>
                       </div>
-                      <span className="text-[10px] bg-yellow-400/20 text-yellow-300 font-bold px-2.5 py-1 rounded-full border border-yellow-400/30 shrink-0">
-                        Pos {activeSukuDialog.silaKe} {activeSukuDialog.simbolSila || "⭐"}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] bg-yellow-400/20 text-yellow-300 font-bold px-2 py-0.5 rounded-full border border-yellow-400/30">
+                          Pos {activeSukuDialog.silaKe} {activeSukuDialog.simbolSila || "🌟"}
+                        </span>
+                        {/* Tombol Suara Guru (Putar / Hentikan) persis seperti di Guru Pertama Gerbang */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isGuruSpeaking) {
+                              stopGuruVoice();
+                            } else {
+                              speakGuruVoice(
+                                `Halo murid hebat! Selamat datang di ${activeSukuDialog.namaPos}. ${activeSukuDialog.penjelasanGuru}`
+                              );
+                            }
+                          }}
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md ${
+                            isGuruSpeaking
+                              ? "bg-rose-600 text-white animate-pulse"
+                              : "bg-sky-500 hover:bg-sky-600 text-white"
+                          }`}
+                          title={isGuruSpeaking ? "Hentikan Suara" : "Putar Suara Penjelasan"}
+                        >
+                          <span>{isGuruSpeaking ? "⏹️ Hentikan Suara" : "🔊 Putar Suara Guru"}</span>
+                        </button>
+                        {/* Tombol Tutup X di Header */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            playClickSound();
+                            stopGuruVoice();
+                            setActiveSukuDialog(null);
+                            setSelectedAnswer(null);
+                            setAnswerFeedback(null);
+                          }}
+                          className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white flex items-center justify-center font-bold text-xs cursor-pointer transition border border-slate-700 shrink-0"
+                          aria-label="Tutup Dialog"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
 
                     {/* TAHAP 1: PENJELASAN IMPLEMENTASI NYATA */}
@@ -4646,19 +4921,6 @@ export default function AdaptiveEduGameModal({
                     <span>👋</span>
                     <span className="hidden sm:inline">DADA / SAPA (Q)</span>
                     <span className="sm:hidden">SAPA (Q)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const event = new KeyboardEvent("keydown", { key: "e" });
-                      window.dispatchEvent(event);
-                    }}
-                    className="px-4 sm:px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs sm:text-sm shadow-xl flex items-center gap-1.5 cursor-pointer border-2 border-white"
-                  >
-                    <span>🎯</span>
-                    <span className="hidden sm:inline">INTERAKSI (E)</span>
-                    <span className="sm:hidden">(E)</span>
                   </button>
 
                   <button
