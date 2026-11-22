@@ -205,39 +205,79 @@ export default function AiContentPanel({
     );
   }
 
-  return (
-    <div className="flex flex-col space-y-4">
-      {/* Top Header & RAG Badge */}
-      <div className="space-y-2.5 border-b-2 border-sky-100 dark:border-slate-800 pb-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleReadAloud}
-              className={`text-xs font-black px-4 py-2 rounded-full border-2 transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer ${
-                isPlaying
-                  ? "bg-rose-500 hover:bg-rose-600 text-white border-rose-600 shadow-md animate-pulse"
-                  : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 dark:border-blue-500 shadow-md hover:scale-105"
-              }`}
-              title={isPlaying ? "Klik untuk menghentikan suara" : "Klik untuk mendengarkan penjelasan materi"}
-            >
-              <span>{isPlaying ? "⏹️" : "🔊"}</span>
-              <span>{isPlaying ? "Hentikan Suara" : "Dengarkan Penjelasan"}</span>
-            </button>
-          </div>
-        </div>
+    // Identifikasi jenjang kelas siswa (Kelas 1-3: Fase A vs Kelas 4 ke atas: Fase B/C)
+    const currentStudent = useUIStore((s) => (s as any).currentStudent);
+    const activeGrade = activeValidatedModule?.grade || currentStudent?.kelas || "Kelas 4";
+    const isJuniorGrade = activeGrade.includes("1") || activeGrade.includes("2") || activeGrade.includes("3");
 
-        <div>
-          <h2 className="text-xl sm:text-2xl font-black text-sky-900 dark:text-sky-300 tracking-tight">
-            {stripEmojis(content.title)
-              .replace(/^Ringkasan Modul & (?:Pengamalan|Trap-Trapan|Tuladha Budi Pekerti)?:?\s*/i, "Pemaparan Materi: ")
-              .replace(/^Pemaparan Materi:\s*Pemaparan Materi:\s*/i, "Pemaparan Materi: ")}
-          </h2>
-          <p className="text-xs sm:text-sm font-bold text-sky-600 dark:text-sky-400 mt-0.5">
-            Pemaparan materi lengkap, sejarah singkat, dan konsep pemahaman untuk anak hebat 🌟
-          </p>
+    return (
+      <div className="flex flex-col space-y-4">
+        {/* Top Header & Grade Badge */}
+        <div className="space-y-2.5 border-b-2 border-sky-100 dark:border-slate-800 pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleReadAloud}
+                className={`text-xs font-black px-4 py-2 rounded-full border-2 transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer ${
+                  isPlaying
+                    ? "bg-rose-500 hover:bg-rose-600 text-white border-rose-600 shadow-md animate-pulse"
+                    : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 dark:border-blue-500 shadow-md hover:scale-105"
+                }`}
+                title={isPlaying ? "Klik untuk menghentikan suara" : "Klik untuk mendengarkan penjelasan materi"}
+              >
+                <span>{isPlaying ? "⏹️" : "🔊"}</span>
+                <span>{isPlaying ? "Hentikan Suara" : "Dengarkan Penjelasan"}</span>
+              </button>
+
+              {/* Badge Jenjang Kelas & Karakteristik Materi */}
+              {isJuniorGrade ? (
+                <span className="text-[11px] font-black bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 text-white px-3 py-1 rounded-full shadow-sm animate-pulse flex items-center gap-1.5">
+                  <span>🌈</span>
+                  <span>{activeGrade} (Fase A) • Materi Ringkas &amp; Jelas</span>
+                </span>
+              ) : (
+                <span className="text-[11px] font-black bg-slate-800 text-sky-200 border border-sky-400/40 px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5">
+                  <span>📘</span>
+                  <span>{activeGrade} (Fase B/C) • Materi Mendalam &amp; Terstruktur</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-sky-900 dark:text-sky-300 tracking-tight">
+              {stripEmojis(content.title)
+                .replace(/^Ringkasan Modul & (?:Pengamalan|Trap-Trapan|Tuladha Budi Pekerti)?:?\s*/i, "Pemaparan Materi: ")
+                .replace(/^Pemaparan Materi:\s*Pemaparan Materi:\s*/i, "Pemaparan Materi: ")}
+            </h2>
+            <p className="text-xs sm:text-sm font-bold text-sky-600 dark:text-sky-400 mt-0.5">
+              {isJuniorGrade
+                ? "Materi ringkas, mudah dipahami, dan menyenangkan untuk adik-adik kelas awal 🎈"
+                : "Materi pembelajaran mendalam, analitis, dan soal kuis 100% bersumber dari teks di bawah ini 🎯"}
+            </p>
+          </div>
+
+          {/* Jaminan Penyelarasan Kuis Khusus Kelas 4 ke Atas */}
+          {!isJuniorGrade && (
+            <div className="bg-sky-50 dark:bg-slate-800/80 border border-sky-200 dark:border-sky-800 p-2.5 rounded-xl text-xs flex items-center gap-2 text-sky-950 dark:text-sky-200 font-semibold">
+              <span className="text-base">🎯</span>
+              <span>
+                <b>Jaminan Kuis Presisi:</b> Pertanyaan kuis dibuat 100% langsung dari teks materi yang ditampilkan tanpa keluar konteks.
+              </span>
+            </div>
+          )}
+
+          {/* Maskot Animasi Interaktif Ceria Khusus Kelas 1, 2, 3 */}
+          {isJuniorGrade && (
+            <div className="bg-gradient-to-r from-yellow-100 via-pink-100 to-sky-100 dark:from-slate-800 dark:to-slate-900 border-2 border-pink-300 dark:border-pink-800 p-3 rounded-2xl flex items-center gap-3 animate-in fade-in">
+              <div className="text-3xl animate-bounce">🤖✨</div>
+              <div className="text-xs font-black text-purple-950 dark:text-purple-200 leading-snug">
+                "Halo murid pintar! Simak cerita seru dan intisari singkat di bawah ini ya! Klik tombol kartu untuk mendengarkan suara ceria!" 🌟
+              </div>
+            </div>
+          )}
         </div>
-      </div>
 
       {/* Visual Interaktif Khusus Aksara Jawa */}
       {(() => {
@@ -1289,11 +1329,20 @@ export default function AiContentPanel({
             ? "bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 dark:from-slate-800 dark:via-blue-950/40 dark:to-slate-800 border-blue-400 dark:border-blue-600 shadow-md ring-2 ring-blue-300/40 dark:ring-blue-800/40"
             : colors[idx % colors.length];
 
+          const animationEffect = isJuniorGrade
+            ? "hover:scale-[1.02] active:scale-[0.98] animate-in fade-in zoom-in-95 shadow-md transition-transform"
+            : "transition-colors";
+
           return (
             <div
               key={`${content.title}-${idx}`}
-              className={`p-4 sm:p-5 rounded-2xl border-2 transition-all hover:shadow-md ${style}`}
+              className={`p-4 sm:p-5 rounded-2xl border-2 ${animationEffect} ${style} relative overflow-hidden`}
             >
+              {isJuniorGrade && (
+                <span className="absolute top-2 right-2 text-base select-none pointer-events-none opacity-40">
+                  {["⭐", "🌟", "✨", "🎈", "🎨", "🚀"][idx % 6]}
+                </span>
+              )}
               {prefix ? (
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/5 dark:border-white/5 pb-2">

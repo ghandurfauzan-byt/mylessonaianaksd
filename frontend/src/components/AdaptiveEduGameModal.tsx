@@ -553,10 +553,34 @@ export default function AdaptiveEduGameModal({
   const [guruTab, setGuruTab] = useState<"apa_itu" | "makna_sila" | "cara_main">("apa_itu");
   const [isGuruSpeaking, setIsGuruSpeaking] = useState(false);
 
-  // Dialog Kuis Rumah Suku
+  // Dialog Kuis Rumah Suku (2 Tahap: Penjelasan Implementasi Sila Dulu -> Baru Soal Kuis)
   const [activeSukuDialog, setActiveSukuDialog] = useState<SukuAdat | null>(null);
+  const [sukuDialogStage, setSukuDialogStage] = useState<"penjelasan" | "kuis">("penjelasan");
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerFeedback, setAnswerFeedback] = useState<{ isCorrect: boolean; text: string } | null>(null);
+
+  // Synchronization refs for high-frequency Three.js animate() loop
+  const visitedSukuIdsRef = useRef<string[]>([]);
+  useEffect(() => {
+    visitedSukuIdsRef.current = visitedSukuIds;
+  }, [visitedSukuIds]);
+
+  const activeSukuDialogRef = useRef<SukuAdat | null>(null);
+  useEffect(() => {
+    activeSukuDialogRef.current = activeSukuDialog;
+  }, [activeSukuDialog]);
+
+  const showLeaderboardRef = useRef<boolean>(false);
+  useEffect(() => {
+    showLeaderboardRef.current = showLeaderboard;
+  }, [showLeaderboard]);
+
+  const allSukuCompletedRef = useRef<boolean>(false);
+  useEffect(() => {
+    allSukuCompletedRef.current = allSukuCompleted;
+  }, [allSukuCompleted]);
+
+  const lastAutoWaveTimeRef = useRef<{ [id: string]: number }>({});
 
   // Sapaan Interaksi Teman
   const [friendGreetingBubble, setFriendGreetingBubble] = useState<{ name: string; text: string } | null>(null);
@@ -631,7 +655,225 @@ export default function AdaptiveEduGameModal({
     const rawTitle = (mod?.title || chapterTitle || chapter || "").toLowerCase();
     const rawChapter = (chapter || mod?.id || "").toLowerCase();
 
-    // 0. MATERI BASA JAWA / SEJARAH: PERANG BHARATAYUDHA & KISAH KEPAHLAWANAN
+    // 0a. PANCASILA RESMI: 5 POS MEMBAHAS IMPLEMENTASI SILA 1 s/d SILA 5 SECARA NYATA
+    // Pos 1 = Sila 1, Pos 2 = Sila 2, Pos 3 = Sila 3, Pos 4 = Sila 4, Pos 5 = Sila 5
+    if (
+      rawChapter.includes("pancasila") ||
+      rawTitle.includes("pancasila") ||
+      rawChapter.includes("simbol") ||
+      rawTitle.includes("simbol") ||
+      rawChapter.includes("garuda") ||
+      rawTitle.includes("garuda") ||
+      rawChapter.includes("dasar") ||
+      rawTitle.includes("dasar") ||
+      (currentModule?.subject === "pkn" &&
+        !rawChapter.includes("norma") &&
+        !rawChapter.includes("gotong") &&
+        !rawChapter.includes("bhinneka") &&
+        !rawTitle.includes("norma") &&
+        !rawTitle.includes("gotong") &&
+        !rawTitle.includes("bhinneka"))
+    ) {
+      return [
+        {
+          id: "pancasila_pos1",
+          namaPos: "Pos 1: Sila Ke-1 (Ketuhanan YME)",
+          namaSuku: "Suku Minahasa (Rumah Walewangko)",
+          rumahAdat: "Padhepokan Bintang Emas",
+          tokohNama: "Duta Kerukunan Iman",
+          tokohAvatar: "⭐",
+          guruNama: "Pak Guru Zainuddin",
+          subMateri: "Toleransi Beragama & Berdoa Sebelum Belajar",
+          penjelasanGuru:
+            "Sila Pertama 'Ketuhanan Yang Maha Esa' dilambangkan Bintang Emas bersudut lima. Implementasi nyatanya di sekolah dan rumah adalah kita selalu berdoa dengan khidmat sebelum belajar dan makan, menghormati teman yang berbeda agama saat mereka beribadah, tidak memaksakan agama kepada orang lain, dan rukun hidup berdampingan antarsesama umat beriman.",
+          silaKe: 1,
+          simbolSila: "⭐",
+          zPos: -45,
+          xPos: 14,
+          warnaKhas: "#38bdf8",
+          pertanyaan:
+            "Berdasarkan penjelasan implementasi Sila ke-1 di atas, bagaimana sikap terpuji kita di kelas saat teman yang berbeda agama sedang berdoa menurut keyakinannya?",
+          opsi: [
+            {
+              id: "A",
+              teks: "Bersikap tenang, hening, dan menghormati doa teman tanpa mengganggu atau membuat gaduh.",
+              benar: true,
+              penjelasan: "Tepat sekali! Menghormati ibadah teman adalah wujud nyata pengamalan Sila Pertama.",
+            },
+            {
+              id: "B",
+              teks: "Berbicara dengan suara keras dan mengajak teman lain bercanda saat doa berlangsung.",
+              benar: false,
+              penjelasan: "Membuat kegaduhan saat ibadah tidak sopan dan melanggar adab toleransi.",
+            },
+            {
+              id: "C",
+              teks: "Menertawakan dan mengejek cara berdoa teman yang berbeda keyakinan.",
+              benar: false,
+              penjelasan: "Mengejek ibadah teman bertentangan keras dengan nilai Ketuhanan Yang Maha Esa.",
+            },
+          ],
+        },
+        {
+          id: "pancasila_pos2",
+          namaPos: "Pos 2: Sila Ke-2 (Kemanusiaan Beradab)",
+          namaSuku: "Suku Sunda (Rumah Panggung)",
+          rumahAdat: "Padhepokan Rantai Emas",
+          tokohNama: "Kang Asep (Pemuda Beradab)",
+          tokohAvatar: "🔗",
+          guruNama: "Pak Guru Arif",
+          subMateri: "Tolong-Menolong & Anti-Bullying",
+          penjelasanGuru:
+            "Sila Kedua 'Kemanusiaan yang Adil dan Beradab' dilambangkan Rantai Emas yang saling bertaut kuat. Implementasi nyatanya adalah menjunjung tinggi kasih sayang, menolong kawan yang terjatuh atau tertimpa musibah tanpa membedakan latar belakang, menjauhi segala perundungan (anti-bullying), serta bertutur kata sopan santun kepada guru dan orang tua.",
+          silaKe: 2,
+          simbolSila: "🔗",
+          zPos: -105,
+          xPos: -14,
+          warnaKhas: "#fb923c",
+          pertanyaan:
+            "Wujud nyata pengamalan Sila ke-2 di lingkungan sekolah ketika melihat seorang teman terjatuh saat pelajaran olahraga adalah:",
+          opsi: [
+            {
+              id: "A",
+              teks: "Segera menolongnya berdiri dan membantunya mengobati luka ke ruang UKS dengan tulus.",
+              benar: true,
+              penjelasan: "Luar biasa! Menolong sesama manusia dengan kasih sayang adalah intisari Sila Kedua.",
+            },
+            {
+              id: "B",
+              teks: "Menertawakannya beramai-ramai lalu meninggalkannya menangis di lapangan.",
+              benar: false,
+              penjelasan: "Menertawakan orang yang celaka adalah perbuatan tercela yang melanggar kemanusiaan.",
+            },
+            {
+              id: "C",
+              teks: "Berpura-pura tidak melihat dan langsung pergi jajan ke kantin.",
+              benar: false,
+              penjelasan: "Sikap acuh tak acuh menunjukkan kurangnya rasa empati antarteman.",
+            },
+          ],
+        },
+        {
+          id: "pancasila_pos3",
+          namaPos: "Pos 3: Sila Ke-3 (Persatuan Indonesia)",
+          namaSuku: "Suku Jawa (Rumah Joglo)",
+          rumahAdat: "Padhepokan Pohon Beringin",
+          tokohNama: "Kakek Raden (Tetua Adat)",
+          tokohAvatar: "🌳",
+          guruNama: "Pak Guru Subroto",
+          subMateri: "Rukun dalam Keragaman & Cinta Produk Bangsa",
+          penjelasanGuru:
+            "Sila Ketiga 'Persatuan Indonesia' dilambangkan Pohon Beringin yang rindang dan berakar kokoh. Implementasi nyatanya adalah menjaga persatuan dan kerukunan antarteman dari bermacam suku daerah, kompak bekerja sama saat piket kelas, bangga menggunakan bahasa persatuan Bahasa Indonesia, serta gemar memakai produk buatan anak bangsa seperti batik.",
+          silaKe: 3,
+          simbolSila: "🌳",
+          zPos: -165,
+          xPos: 14,
+          warnaKhas: "#4ade80",
+          pertanyaan:
+            "Pengamalan Sila ke-3 yang dapat kita laksanakan setiap hari di dalam ruang kelas sekolah dasar adalah:",
+          opsi: [
+            {
+              id: "A",
+              teks: "Rukun berteman dengan semua kawan dari berbagai suku serta kompak bekerja sama saat tugas kelompok.",
+              benar: true,
+              penjelasan: "Hebat! Semangat persatuan dan kekompakan membuat suasana belajar rukun dan damai.",
+            },
+            {
+              id: "B",
+              teks: "Hanya mau berteman dan berbicara dengan yang berasal dari satu daerah asal yang sama.",
+              benar: false,
+              penjelasan: "Memilih-milih kawan berdasarkan suku merusak tali persatuan bangsa.",
+            },
+            {
+              id: "C",
+              teks: "Mengejek dialek atau logat bicara teman yang baru pindah dari pulau lain.",
+              benar: false,
+              penjelasan: "Mengejek dialek teman melanggar prinsip Persatuan Indonesia.",
+            },
+          ],
+        },
+        {
+          id: "pancasila_pos4",
+          namaPos: "Pos 4: Sila Ke-4 (Musyawarah Mufakat)",
+          namaSuku: "Suku Minang (Rumah Gadang)",
+          rumahAdat: "Padhepokan Kepala Banteng",
+          tokohNama: "Uda Buyung (Datuk Muda)",
+          tokohAvatar: "🐂",
+          guruNama: "Pak Guru Bambang",
+          subMateri: "Musyawarah Kelas & Menghargai Pendapat Kawan",
+          penjelasanGuru:
+            "Sila Keempat 'Kerakyatan yang Dipimpin oleh Hikmat Kebijaksanaan dalam Permusyawaratan/Perwakilan' bersimbol Kepala Banteng. Implementasi nyatanya adalah selalu mengutamakan musyawarah untuk mencapai mufakat dalam setiap keputusan kelas (seperti pemilihan ketua kelas atau pembagian kelompok), mendengarkan pendapat orang lain dengan lapang dada, dan tidak memaksakan kehendak sendiri.",
+          silaKe: 4,
+          simbolSila: "🐂",
+          zPos: -225,
+          xPos: -14,
+          warnaKhas: "#f87171",
+          pertanyaan:
+            "Saat diadakan musyawarah pemilihan ketua kelas, pilihanmu ternyata berbeda dengan keputusan terbanyak. Sikap Sila ke-4 yang benar:",
+          opsi: [
+            {
+              id: "A",
+              teks: "Menghargai dan menerima hasil keputusan musyawarah dengan ikhlas serta mendukung ketua kelas terpilih.",
+              benar: true,
+              penjelasan: "Sangat bijaksana! Menerima hasil mufakat dengan jiwa besar adalah ciri Pelajar Pancasila.",
+            },
+            {
+              id: "B",
+              teks: "Marah-marah dan menolak mengikuti seluruh kegiatan di kelas.",
+              benar: false,
+              penjelasan: "Memaksakan kehendak pribadi bertentangan dengan semangat musyawarah mufakat.",
+            },
+            {
+              id: "C",
+              teks: "Mengajak teman lain untuk memboikot dan memusuhi ketua kelas terpilih.",
+              benar: false,
+              penjelasan: "Tindakan memecah belah melanggar tata tertib dan adab permusyawaratan.",
+            },
+          ],
+        },
+        {
+          id: "pancasila_pos5",
+          namaPos: "Pos 5: Sila Ke-5 (Keadilan Sosial)",
+          namaSuku: "Suku Papua (Rumah Honai)",
+          rumahAdat: "Padhepokan Padi & Kapas",
+          tokohNama: "Kaka Pace (Sahabat Alam)",
+          tokohAvatar: "🌾",
+          guruNama: "Pak Guru Wijaya",
+          subMateri: "Adil Membagi Tugas, Gemar Menabung & Disiplin Belajar",
+          penjelasanGuru:
+            "Sila Kelima 'Keadilan Sosial bagi Seluruh Rakyat Indonesia' dilambangkan Padi dan Kapas sebagai simbol kemakmuran pangan dan sandang. Implementasi nyatanya adalah bersikap adil kepada semua kawan tanpa pilih kasih, menghargai hasil karya tugas teman sekelas, hidup hemat dan gemar menabung, serta menunaikan kewajiban belajar sebelum menuntut hak di sekolah.",
+          silaKe: 5,
+          simbolSila: "🌾",
+          zPos: -285,
+          xPos: 14,
+          warnaKhas: "#facc15",
+          pertanyaan:
+            "Contoh perilaku hidup hemat dan adil yang mencerminkan pengamalan Sila ke-5 bagi seorang murid di sekolah adalah:",
+          opsi: [
+            {
+              id: "A",
+              teks: "Menyisihkan uang saku untuk ditabung di celengan dan menghargai hasil karya prakarya kawan sekelas.",
+              benar: true,
+              penjelasan: "Tepat sekali! Menghargai karya orang lain dan gemar hidup hemat mencerminkan Sila Kelima.",
+            },
+            {
+              id: "B",
+              teks: "Menghabiskan seluruh uang saku untuk jajan berlebihan dan meremehkan gambar teman.",
+              benar: false,
+              penjelasan: "Gaya hidup boros dan merendahkan karya teman bertentangan dengan keadilan sosial.",
+            },
+            {
+              id: "C",
+              teks: "Menuntut nilai ujian sempurna tanpa pernah mau belajar dan mengerjakan PR.",
+              benar: false,
+              penjelasan: "Kita harus menunaikan kewajiban belajar terlebih dahulu sebelum menuntut hak nilai.",
+            },
+          ],
+        },
+      ];
+    }
+
+    // 0b. MATERI BASA JAWA / SEJARAH: PERANG BHARATAYUDHA & KISAH KEPAHLAWANAN
     if (
       rawChapter.includes("pandhawa") ||
       rawTitle.includes("pandhawa") ||
@@ -2141,6 +2383,36 @@ export default function AdaptiveEduGameModal({
     triggerWaveGreeting();
   }, [triggerWaveGreeting]);
 
+  // Otomatis Lambaikan Tangan (Dada Sendiri) Saat Mendekati Teman Sekelas Online
+  const triggerAutoWaveStudent = useCallback((student: OnlineStudent) => {
+    isPlayerWavingRef.current = true;
+    greetedStudentIdRef.current = student.id;
+    playCoinPickupSound();
+
+    const greetings = [
+      `👋 "Halo ${studentName}! Semangat belajar bersama!"`,
+      `👋 "Hai ${studentName}! Keren banget petualanganmu!"`,
+      `👋 "Hai kawan! Semangat selesaikan 5 pos Pancasila!"`,
+    ];
+    const greetingText = greetings[Math.floor(Math.random() * greetings.length)];
+
+    setAdventureScore((s) => s + 5);
+    addPoints(5, `Menyapa teman sekelas: ${student.name}`, chapter);
+    setFriendGreetingBubble({
+      name: student.name,
+      text: greetingText,
+    });
+    setActiveNotification(`👋 Kamu otomatis melambaikan tangan menyapa ${student.name}! (+5 Poin Persahabatan!)`);
+
+    if (waveTimeoutRef.current) clearTimeout(waveTimeoutRef.current);
+    waveTimeoutRef.current = setTimeout(() => {
+      isPlayerWavingRef.current = false;
+      greetedStudentIdRef.current = null;
+      setFriendGreetingBubble(null);
+      setActiveNotification(null);
+    }, 2800);
+  }, [addPoints, chapter, studentName]);
+
   // Jawab Pertanyaan Suku
   const handleAnswerSuku = (suku: SukuAdat, optId: string) => {
     setSelectedAnswer(optId);
@@ -3276,6 +3548,46 @@ export default function AdaptiveEduGameModal({
         hp.beaconMesh.scale.y = 1 + Math.sin(Date.now() * 0.003 + hp.suku.silaKe) * 0.15;
       });
 
+      // 1. Auto-Trigger Pos Pembelajaran saat mendekati lingkaran (radius < 3.8 meter)
+      // Tidak perlu pencet tombol 'E', langsung terbuka otomatis berjalan!
+      if (!activeSukuDialogRef.current && !showLeaderboardRef.current && !allSukuCompletedRef.current) {
+        for (const hp of hotspotList) {
+          const distToHotspot = Math.hypot(
+            playerGroup.position.x - hp.x,
+            playerGroup.position.z - hp.z
+          );
+          if (distToHotspot < 3.8 && !visitedSukuIdsRef.current.includes(hp.suku.id)) {
+            setActiveSukuDialog(hp.suku);
+            setSukuDialogStage("penjelasan");
+            setSelectedAnswer(null);
+            setAnswerFeedback(null);
+            speakGuruVoice(
+              `Halo murid hebat! Selamat datang di ${hp.suku.namaPos}. Simak penjelasan implementasi berikut: ${hp.suku.penjelasanGuru}`
+            );
+            break;
+          }
+        }
+      }
+
+      // 2. Auto-Wave saat bertemu teman sekelas online (radius < 4.0 meter)
+      // Karakter otomatis melambaikan tangan sendiri (dada sendiri) tanpa tombol!
+      const nowAutoWave = Date.now();
+      for (const student of onlineStudents) {
+        if (student.mesh) {
+          const distToFriend = Math.hypot(
+            playerGroup.position.x - student.mesh.position.x,
+            playerGroup.position.z - student.mesh.position.z
+          );
+          if (distToFriend < 4.0) {
+            const lastTime = lastAutoWaveTimeRef.current[student.id] || 0;
+            if (nowAutoWave - lastTime > 8000) {
+              lastAutoWaveTimeRef.current[student.id] = nowAutoWave;
+              triggerAutoWaveStudent(student);
+            }
+          }
+        }
+      }
+
       // Kamera Third-Person
       const camTargetX = playerGroup.position.x;
       const camTargetY = playerGroup.position.y + 4.2;
@@ -3404,6 +3716,7 @@ export default function AdaptiveEduGameModal({
     sukuList,
     onlineStudents,
     handleGreetClassmate,
+    triggerAutoWaveStudent,
     speakGuruVoice,
     stopGuruVoice,
     guruBriefing,
@@ -3914,128 +4227,202 @@ export default function AdaptiveEduGameModal({
               {/* DIALOG POPUP POS MATERI & KUIS BERSAMA PENUNGGU PAK GURU */}
               {activeSukuDialog && (
                 <div className="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in">
-                  <div className="bg-slate-900/95 border-2 border-yellow-400 rounded-3xl max-w-md w-full p-4 sm:p-4.5 text-white space-y-2.5 shadow-2xl max-h-[92vh] overflow-y-auto">
+                  <div className="bg-slate-900/95 border-2 border-yellow-400 rounded-3xl max-w-md w-full p-4 sm:p-5 text-white space-y-3 shadow-2xl max-h-[92vh] overflow-y-auto">
                     {/* Header Pos & Guru Kompak */}
-                    <div className="flex items-center justify-between border-b border-slate-700/80 pb-2">
+                    <div className="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 flex items-center justify-center text-xl shadow-md shrink-0">
-                          {activeSukuDialog.tokohAvatar || "🏠"}
+                          {activeSukuDialog.tokohAvatar || "⭐"}
                         </span>
                         <div className="min-w-0">
                           <h4 className="font-black text-xs sm:text-sm text-yellow-300 truncate">
                             {activeSukuDialog.namaPos}
                           </h4>
                           <p className="text-[10px] sm:text-[11px] text-slate-300 truncate">
-                            Penunggu: <b className="text-white">{activeSukuDialog.guruNama || activeSukuDialog.tokohNama}</b>
+                            Penunggu Pos: <b className="text-white">{activeSukuDialog.guruNama || activeSukuDialog.tokohNama}</b>
                           </p>
                         </div>
                       </div>
-                      <span className="text-[10px] bg-yellow-400/20 text-yellow-300 font-bold px-2 py-0.5 rounded-full border border-yellow-400/30 shrink-0">
-                        Pos {activeSukuDialog.silaKe} {activeSukuDialog.simbolSila || "🌟"}
+                      <span className="text-[10px] bg-yellow-400/20 text-yellow-300 font-bold px-2.5 py-1 rounded-full border border-yellow-400/30 shrink-0">
+                        Pos {activeSukuDialog.silaKe} {activeSukuDialog.simbolSila || "⭐"}
                       </span>
                     </div>
 
-                    {/* Penjelasan Ringkas Guru */}
-                    <div className="bg-slate-800/90 border border-slate-700/70 p-3 rounded-2xl text-xs leading-relaxed text-slate-200">
-                      <div className="text-[10px] uppercase font-bold text-yellow-400 mb-1 flex items-center gap-1">
-                        <span>💡</span>
-                        <span>Materi Singkat: {activeSukuDialog.subMateri || activeSukuDialog.namaSuku}</span>
-                      </div>
-                      <p className="text-slate-100">{activeSukuDialog.penjelasanGuru}</p>
-                    </div>
-
-                    {/* Pertanyaan Kuis Pos */}
-                    <div className="space-y-2 pt-0.5">
-                      <div className="text-xs font-bold text-sky-300">
-                        ❓ Pertanyaan Kuis (+25 Poin):
-                      </div>
-                      <p className="text-xs sm:text-sm font-semibold text-white leading-snug">
-                        {activeSukuDialog.pertanyaan}
-                      </p>
-
-                      {/* Pilihan Jawaban */}
-                      <div className="space-y-1.5 pt-1">
-                        {activeSukuDialog.opsi.map((opsi) => {
-                          const isPicked = selectedAnswer === opsi.id;
-                          return (
-                            <button
-                              key={opsi.id}
-                              type="button"
-                              onClick={() => {
-                                if (answerFeedback) return;
-                                setSelectedAnswer(opsi.id);
-                                playClickSound();
-
-                                if (opsi.benar) {
-                                  playCorrectSound();
-                                  setAnswerFeedback({
-                                    isCorrect: true,
-                                    text: `Hebat! ${opsi.penjelasan}`,
-                                  });
-                                  setAdventureScore((s) => s + 25);
-                                  addPoints(25, `Menjawab kuis pos: ${activeSukuDialog.namaPos}`, chapter);
-                                  setVisitedSukuIds((prev) =>
-                                    prev.includes(activeSukuDialog.id) ? prev : [...prev, activeSukuDialog.id]
-                                  );
-                                } else {
-                                  playOofSound();
-                                  setAnswerFeedback({
-                                    isCorrect: false,
-                                    text: `Kurang tepat. ${opsi.penjelasan}`,
-                                  });
-                                }
-                              }}
-                              className={`w-full text-left p-2.5 rounded-2xl text-xs font-semibold transition border flex items-center justify-between cursor-pointer ${
-                                isPicked
-                                  ? opsi.benar
-                                    ? "bg-emerald-600/90 border-emerald-400 text-white"
-                                    : "bg-rose-600/90 border-rose-400 text-white"
-                                  : "bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-200"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="w-5 h-5 rounded-full bg-slate-900/60 flex items-center justify-center text-[10px] font-bold text-yellow-300">
-                                  {opsi.id}
-                                </span>
-                                <span>{opsi.teks}</span>
-                              </div>
-                              {isPicked && (
-                                <span>{opsi.benar ? "✓" : "✗"}</span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Feedback Hasil */}
-                      {answerFeedback && (
-                        <div
-                          className={`p-2.5 rounded-2xl text-xs font-bold animate-in fade-in ${
-                            answerFeedback.isCorrect
-                              ? "bg-emerald-950/80 border border-emerald-400 text-emerald-200"
-                              : "bg-rose-950/80 border border-rose-400 text-rose-200"
-                          }`}
-                        >
-                          {answerFeedback.text}
+                    {/* TAHAP 1: PENJELASAN IMPLEMENTASI NYATA */}
+                    {sukuDialogStage === "penjelasan" ? (
+                      <div className="space-y-3 animate-in fade-in">
+                        <div className="bg-slate-800/95 border border-amber-400/40 p-3.5 rounded-2xl text-xs leading-relaxed text-slate-100 space-y-2 shadow-inner">
+                          <div className="text-[10px] uppercase font-black text-yellow-400 flex items-center gap-1.5">
+                            <span>💡</span>
+                            <span>Penjelasan Implementasi Nyata:</span>
+                          </div>
+                          <p className="text-slate-100 font-medium text-xs sm:text-sm leading-relaxed">
+                            {activeSukuDialog.penjelasanGuru}
+                          </p>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Tombol Tutup / Selesai Kuis */}
-                    <div className="pt-2 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          playClickSound();
-                          setActiveSukuDialog(null);
-                          setSelectedAnswer(null);
-                          setAnswerFeedback(null);
-                        }}
-                        className="bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black py-2 px-5 rounded-2xl text-xs shadow-md transition cursor-pointer"
-                      >
-                        {answerFeedback?.isCorrect ? "Lanjut Petualangan 🚀" : "Tutup"}
-                      </button>
-                    </div>
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-sky-950/40 border border-sky-500/30 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span>🔊</span>
+                            <span className="text-[11px] text-sky-200">
+                              {isGuruSpeaking ? "Pak Guru sedang bersuara..." : "Dengarkan suara penjelasan Pak Guru"}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => speakGuruVoice(activeSukuDialog.penjelasanGuru)}
+                            className="text-[10px] bg-sky-600 hover:bg-sky-500 text-white font-bold px-2.5 py-1 rounded-lg transition cursor-pointer"
+                          >
+                            Putar Suara 🔊
+                          </button>
+                        </div>
+
+                        <div className="pt-2 flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playClickSound();
+                              setActiveSukuDialog(null);
+                              stopGuruVoice();
+                            }}
+                            className="text-slate-400 hover:text-white font-bold py-2 px-3 text-xs cursor-pointer"
+                          >
+                            Tutup Nanti
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playClickSound();
+                              setSukuDialogStage("kuis");
+                            }}
+                            className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-500 hover:to-amber-500 text-slate-950 font-black py-2.5 px-5 rounded-2xl text-xs sm:text-sm shadow-lg transition transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                          >
+                            <span>Lanjut ke Soal Kuis Pos</span>
+                            <span>👉</span>
+                            <span className="text-[10px] bg-black/15 px-1.5 py-0.5 rounded-full font-bold">+25 Poin</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* TAHAP 2: SOAL KUIS DARI MATERI IMPLEMENTASI */
+                      <div className="space-y-2.5 pt-0.5 animate-in fade-in">
+                        <div className="flex items-center justify-between text-xs font-bold text-sky-300">
+                          <span>❓ Pertanyaan Kuis Pos (+25 Poin):</span>
+                          <button
+                            type="button"
+                            onClick={() => setSukuDialogStage("penjelasan")}
+                            className="text-[10px] text-amber-300 hover:underline cursor-pointer"
+                          >
+                            ← Baca Penjelasan Lagi
+                          </button>
+                        </div>
+                        <p className="text-xs sm:text-sm font-semibold text-white leading-snug">
+                          {activeSukuDialog.pertanyaan}
+                        </p>
+
+                        {/* Pilihan Jawaban */}
+                        <div className="space-y-1.5 pt-1">
+                          {activeSukuDialog.opsi.map((opsi) => {
+                            const isPicked = selectedAnswer === opsi.id;
+                            return (
+                              <button
+                                key={opsi.id}
+                                type="button"
+                                onClick={() => {
+                                  if (answerFeedback) return;
+                                  setSelectedAnswer(opsi.id);
+                                  playClickSound();
+
+                                  if (opsi.benar) {
+                                    playCorrectSound();
+                                    setAnswerFeedback({
+                                      isCorrect: true,
+                                      text: `Hebat! ${opsi.penjelasan}`,
+                                    });
+                                    setAdventureScore((s) => s + 25);
+                                    addPoints(25, `Menjawab kuis pos: ${activeSukuDialog.namaPos}`, chapter);
+                                    const nextVisited = visitedSukuIds.includes(activeSukuDialog.id)
+                                      ? visitedSukuIds
+                                      : [...visitedSukuIds, activeSukuDialog.id];
+                                    setVisitedSukuIds(nextVisited);
+
+                                    // Cek apakah Pos 5 selesai atau seluruh 5 pos tuntas:
+                                    const isPos5OrAllDone =
+                                      activeSukuDialog.silaKe === 5 || nextVisited.length >= 5;
+                                    if (isPos5OrAllDone) {
+                                      setTimeout(() => {
+                                        setActiveSukuDialog(null);
+                                        setAllSukuCompleted(true);
+                                        setShowLeaderboard(true);
+                                        playBadgeFanfareSound();
+                                      }, 1100);
+                                    }
+                                  } else {
+                                    playOofSound();
+                                    setAnswerFeedback({
+                                      isCorrect: false,
+                                      text: `Kurang tepat. ${opsi.penjelasan}`,
+                                    });
+                                  }
+                                }}
+                                className={`w-full text-left p-2.5 rounded-2xl text-xs font-semibold transition border flex items-center justify-between cursor-pointer ${
+                                  isPicked
+                                    ? opsi.benar
+                                      ? "bg-emerald-600/90 border-emerald-400 text-white"
+                                      : "bg-rose-600/90 border-rose-400 text-white"
+                                    : "bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-200"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="w-5 h-5 rounded-full bg-slate-900/60 flex items-center justify-center text-[10px] font-bold text-yellow-300">
+                                    {opsi.id}
+                                  </span>
+                                  <span>{opsi.teks}</span>
+                                </div>
+                                {isPicked && (
+                                  <span>{opsi.benar ? "✓" : "✗"}</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Feedback Hasil */}
+                        {answerFeedback && (
+                          <div
+                            className={`p-2.5 rounded-2xl text-xs font-bold animate-in fade-in ${
+                              answerFeedback.isCorrect
+                                ? "bg-emerald-950/80 border border-emerald-400 text-emerald-200"
+                                : "bg-rose-950/80 border border-rose-400 text-rose-200"
+                            }`}
+                          >
+                            {answerFeedback.text}
+                            {activeSukuDialog.silaKe === 5 && answerFeedback.isCorrect && (
+                              <div className="text-[11px] text-yellow-300 mt-1 font-black">
+                                🏆 Pos 5 selesai! Menyiapkan papan peringkat prestasimu di kelas...
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Tombol Tutup / Selesai Kuis */}
+                        <div className="pt-2 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playClickSound();
+                              setActiveSukuDialog(null);
+                              setSelectedAnswer(null);
+                              setAnswerFeedback(null);
+                            }}
+                            className="bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black py-2 px-5 rounded-2xl text-xs shadow-md transition cursor-pointer"
+                          >
+                            {answerFeedback?.isCorrect ? "Lanjut Petualangan 🚀" : "Tutup"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -4124,29 +4511,77 @@ export default function AdaptiveEduGameModal({
                       </p>
                     </div>
 
-                    <div className="p-4 bg-yellow-400/10 border border-yellow-400/50 rounded-2xl space-y-1">
+                    <div className="p-4 bg-yellow-400/10 border border-yellow-400/50 rounded-2xl space-y-2">
                       <div className="text-xs text-yellow-300 uppercase tracking-widest font-black">
-                        Pencapaian Prestasi Pelajar:
+                        Pencapaian Prestasi di Dashboard Kelas:
                       </div>
-                      <div className="text-lg font-black text-white">
-                        🎖️ BINTANG PETUALANG KELAS
+                      <div className="text-xl font-black text-yellow-300">
+                        🏆 JUARA #1 DI KELAS 🥇
                       </div>
-                      <div className="text-xs text-emerald-400 font-bold pt-1">
+                      <div className="text-xs text-emerald-400 font-bold">
                         🪙 Total Skor: {adventureScore} Poin • ⭐ {coinsCollectedCount} Koin Terkumpul
+                      </div>
+
+                      {/* Mini Live Ranking */}
+                      <div className="pt-2 space-y-1.5 text-left">
+                        {[
+                          { rank: 1, name: studentName + " (Kamu)", score: adventureScore, me: true, avatar: "🎒" },
+                          { rank: 2, name: "Siti Rahmawati", score: peerScores.siti, avatar: "👧" },
+                          { rank: 3, name: "Budi Santoso", score: peerScores.budi, avatar: "👦" },
+                          { rank: 4, name: "Edo Silaban", score: peerScores.edo, avatar: "🧒" },
+                          { rank: 5, name: "Dayu Astuti", score: peerScores.dayu, avatar: "👧" },
+                        ]
+                          .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+                          .map((item, idx) => (
+                            <div
+                              key={item.name}
+                              className={`flex items-center justify-between px-3 py-1.5 rounded-xl border text-xs ${
+                                item.me
+                                  ? "bg-amber-500/25 border-yellow-400 text-yellow-200 font-bold"
+                                  : "bg-slate-800/80 border-slate-700 text-slate-300"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-slate-900 flex items-center justify-center font-black text-yellow-400 text-[10px]">
+                                  #{idx + 1}
+                                </span>
+                                <span>{item.avatar}</span>
+                                <span className="truncate max-w-[150px]">{item.name}</span>
+                              </div>
+                              <span className="font-black text-yellow-300 text-xs">
+                                🪙 {item.score} Poin
+                              </span>
+                            </div>
+                          ))}
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        playClickSound();
-                        setAllSukuCompleted(false);
-                        setVisitedSukuIds([]);
-                      }}
-                      className="w-full bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-slate-950 font-black py-3 rounded-2xl text-sm shadow-xl transition cursor-pointer"
-                    >
-                      🔄 Keliling Desa Sekali Lagi
-                    </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          playClickSound();
+                          onClose();
+                        }}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl text-xs sm:text-sm shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span>🏠</span>
+                        <span>Kembali ke Dashboard</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          playClickSound();
+                          setAllSukuCompleted(false);
+                          setVisitedSukuIds([]);
+                        }}
+                        className="bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-slate-950 font-black py-3 rounded-2xl text-xs sm:text-sm shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span>🔄</span>
+                        <span>Jelajahi Lagi</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
