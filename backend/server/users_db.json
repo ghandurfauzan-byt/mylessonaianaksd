@@ -21,16 +21,16 @@
     "id": "usr_ghandur",
     "name": "Ghandur Fauzan Ngauf Hisam",
     "email": "ghandur@gmail.com",
-    "passwordHash": "$2b$10$RdHZ0J8RxyONw84/vrRkGucfX.NhNjP9yLWO6FZsSowZO0F1lTTKm",
+    "passwordHash": "$2b$10$b7Lae1RcP7xSmXNU2X0OHeXpkmxMUyyRGnbA97LbnSJgbQYdE18q2",
     "role": "pelajar",
-    "nimNip": "SD-Kelas4-01",
+    "nimNip": "SD-Kelas1-01",
     "institution": "SD Negeri 1 Madiun",
-    "kelas": "Kelas 4",
+    "kelas": "Kelas 1",
     "noAbsen": "01",
-    "points": 2785,
+    "points": 2905,
     "materialScore": 0,
     "quizScore": 100,
-    "gamePoints": 2785,
+    "gamePoints": 2905,
     "weakness": {
       "chapterId": "pkn-sila3",
       "chapterName": "Pendidikan Pancasila (Makna Sila Ke-3)",
@@ -64,6 +64,12 @@
       "pkn-kls1-simbol": {
         "points": 1160,
         "gamePoints": 1160,
+        "quizScore": 0,
+        "status": "tuntas"
+      },
+      "pkn-1795353305533": {
+        "points": 90,
+        "gamePoints": 90,
         "quizScore": 0,
         "status": "tuntas"
       }

@@ -1302,7 +1302,12 @@ export default function PelajarDashboardPage() {
           className="lg:col-span-8 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border-4 border-sky-100 dark:border-slate-800 shadow-xl shadow-sky-200/40 dark:shadow-none relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-sky-50 dark:bg-sky-950/20 rounded-bl-full -z-10 opacity-50" />
-          <AiContentPanel chapterId={chapter} mode={mode} refreshNonce={refreshNonce} />
+          <AiContentPanel
+            chapterId={chapter}
+            mode={mode}
+            refreshNonce={refreshNonce}
+            studentGrade={currentStudent?.kelas || "Kelas 4"}
+          />
         </article>
       </div>
 
@@ -1613,6 +1618,7 @@ export default function PelajarDashboardPage() {
             chapter={chapter}
             chapterTitle={currentChapterInfo.title}
             studentName={currentStudentName}
+            studentGrade={currentStudent?.kelas || "Kelas 4"}
             forcedGameMode={activeGameInfo.type as any}
             activeModule={currentChapterInfo.moduleToPass}
           />

@@ -18,10 +18,12 @@ export default function AiContentPanel({
   chapterId,
   mode,
   refreshNonce,
+  studentGrade,
 }: {
   chapterId: string;
   mode: AiMode;
   refreshNonce: string;
+  studentGrade?: string;
 }) {
   const activeValidatedModule = useUIStore((s) => s.activeValidatedModule);
   const {
@@ -207,7 +209,7 @@ export default function AiContentPanel({
 
     // Identifikasi jenjang kelas siswa (Kelas 1-3: Fase A vs Kelas 4 ke atas: Fase B/C)
     const currentStudent = useUIStore((s) => (s as any).currentStudent);
-    const activeGrade = activeValidatedModule?.grade || currentStudent?.kelas || "Kelas 4";
+    const activeGrade = studentGrade || activeValidatedModule?.grade || currentStudent?.kelas || "Kelas 4";
     const isJuniorGrade = activeGrade.includes("1") || activeGrade.includes("2") || activeGrade.includes("3");
 
     return (
@@ -791,45 +793,79 @@ export default function AiContentPanel({
               </div>
             </div>
 
-            {/* 4 Macam Norma & Contohnya */}
+            {/* 4 Macam Norma & Contohnya Sesuai Jenjang Kelas */}
             <div className="bg-white/95 dark:bg-slate-800/95 p-3.5 sm:p-4 rounded-2xl border border-rose-200 dark:border-rose-800 space-y-2 text-xs">
               <h4 className="font-black text-rose-950 dark:text-rose-200 flex items-center gap-1.5">
                 <span>⚖️</span>
-                <span>4 Macam Norma Aturan Hidup (Sanksi &amp; Contoh Konkret):</span>
+                <span>
+                  {isJuniorGrade
+                    ? "Aturan Perilaku Baik Sehari-hari (Fase A - Kelas 1, 2, 3):"
+                    : "4 Macam Norma Aturan Hidup (Sanksi & Contoh Konkret):"}
+                </span>
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-[11px]">
-                <div className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-slate-700/60 border border-amber-200 dark:border-amber-700">
-                  <div className="font-black text-amber-900 dark:text-amber-300">1. Norma Agama</div>
-                  <div className="text-slate-600 dark:text-slate-400 mt-0.5">Sumber: Wahyu Tuhan YME</div>
-                  <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Sholat / ibadah tepat waktu, tidak boleh mencuri</div>
-                  <div className="text-[10px] text-red-600 font-extrabold mt-1">Sanksi: Dosa &amp; balasan Tuhan</div>
+              {isJuniorGrade ? (
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-amber-50/90 dark:bg-slate-700/60 border border-amber-300 dark:border-amber-700">
+                    <div className="font-black text-amber-900 dark:text-amber-300">1. Berdoa &amp; Beribadah</div>
+                    <div className="text-slate-600 dark:text-slate-400 mt-0.5">Norma Agama</div>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Berdoa sebelum makan dan belajar</div>
+                    <div className="text-[10px] text-emerald-600 font-extrabold mt-1">Nilai: Disayang Tuhan &amp; keluarga</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-sky-50/90 dark:bg-slate-700/60 border border-sky-300 dark:border-sky-700">
+                    <div className="font-black text-sky-900 dark:text-sky-300">2. Hati Jujur &amp; Baik</div>
+                    <div className="text-slate-600 dark:text-slate-400 mt-0.5">Norma Kesusilaan</div>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Tidak boleh bohong atau menyontek</div>
+                    <div className="text-[10px] text-emerald-600 font-extrabold mt-1">Nilai: Hati tenang dan bangga</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-purple-50/90 dark:bg-slate-700/60 border border-purple-300 dark:border-purple-700">
+                    <div className="font-black text-purple-900 dark:text-purple-300">3. Sopan Santun</div>
+                    <div className="text-slate-600 dark:text-slate-400 mt-0.5">Norma Kesopanan</div>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Salim tangan guru &amp; orang tua</div>
+                    <div className="text-[10px] text-emerald-600 font-extrabold mt-1">Nilai: Disukai semua teman &amp; guru</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-emerald-50/90 dark:bg-slate-700/60 border border-emerald-300 dark:border-emerald-700">
+                    <div className="font-black text-emerald-900 dark:text-emerald-300">4. Tertib &amp; Aman</div>
+                    <div className="text-slate-600 dark:text-slate-400 mt-0.5">Norma Tertib Hidup</div>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Pakai helm saat naik motor, buang sampah di tempatnya</div>
+                    <div className="text-[10px] text-emerald-600 font-extrabold mt-1">Nilai: Diri dan lingkungan aman</div>
+                  </div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-sky-50/80 dark:bg-slate-700/60 border border-sky-200 dark:border-sky-700">
-                  <div className="font-black text-sky-900 dark:text-sky-300">2. Norma Kesusilaan</div>
-                  <div className="text-slate-600 dark:text-slate-400 mt-0.5">Sumber: Hati nurani manusia</div>
-                  <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Jujur saat ulangan, tidak menyontek, tidak berbohong</div>
-                  <div className="text-[10px] text-red-600 font-extrabold mt-1">Sanksi: Rasa malu &amp; penyesalan</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-slate-700/60 border border-amber-200 dark:border-amber-700">
+                    <div className="font-black text-amber-900 dark:text-amber-300">1. Norma Agama</div>
+                    <div className="text-slate-600 dark:text-slate-400 mt-0.5">Sumber: Wahyu Tuhan YME</div>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Sholat / ibadah tepat waktu, tidak boleh mencuri</div>
+                    <div className="text-[10px] text-red-600 font-extrabold mt-1">Sanksi: Dosa &amp; balasan Tuhan</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-sky-50/80 dark:bg-slate-700/60 border border-sky-200 dark:border-sky-700">
+                    <div className="font-black text-sky-900 dark:text-sky-300">2. Norma Kesusilaan</div>
+                    <div className="text-slate-600 dark:text-slate-400 mt-0.5">Sumber: Hati nurani manusia</div>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Jujur saat ulangan, tidak menyontek, tidak berbohong</div>
+                    <div className="text-[10px] text-red-600 font-extrabold mt-1">Sanksi: Rasa malu &amp; penyesalan</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-purple-50/80 dark:bg-slate-700/60 border border-purple-200 dark:border-purple-700">
+                    <div className="font-black text-purple-900 dark:text-purple-300">3. Norma Kesopanan</div>
+                    <div className="text-slate-600 dark:text-slate-400 mt-0.5">Sumber: Tata krama adat warga</div>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Salim tangan guru/orang tua, mengetuk pintu saat bertamu</div>
+                    <div className="text-[10px] text-red-600 font-extrabold mt-1">Sanksi: Ditegur atau dicap tak sopan</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-emerald-50/80 dark:bg-slate-700/60 border border-emerald-200 dark:border-emerald-700">
+                    <div className="font-black text-emerald-900 dark:text-emerald-300">4. Norma Hukum</div>
+                    <div className="text-slate-600 dark:text-slate-400 mt-0.5">Sumber: Undang-undang negara</div>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Memakai helm motor, taat rambu lampu merah</div>
+                    <div className="text-[10px] text-red-600 font-extrabold mt-1">Sanksi: Tilang, denda, penjara</div>
+                  </div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-purple-50/80 dark:bg-slate-700/60 border border-purple-200 dark:border-purple-700">
-                  <div className="font-black text-purple-900 dark:text-purple-300">3. Norma Kesopanan</div>
-                  <div className="text-slate-600 dark:text-slate-400 mt-0.5">Sumber: Tata krama adat warga</div>
-                  <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Salim tangan guru/orang tua, mengetuk pintu saat bertamu</div>
-                  <div className="text-[10px] text-red-600 font-extrabold mt-1">Sanksi: Ditegur atau dicap tak sopan</div>
-                </div>
-                <div className="p-2.5 rounded-xl bg-emerald-50/80 dark:bg-slate-700/60 border border-emerald-200 dark:border-emerald-700">
-                  <div className="font-black text-emerald-900 dark:text-emerald-300">4. Norma Hukum</div>
-                  <div className="text-slate-600 dark:text-slate-400 mt-0.5">Sumber: Undang-undang negara</div>
-                  <div className="font-bold text-slate-800 dark:text-slate-200 mt-1">Contoh: Memakai helm motor, taat rambu lampu merah</div>
-                  <div className="text-[10px] text-red-600 font-extrabold mt-1">Sanksi: Tilang, denda, penjara</div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         );
       })()}
 
-      {/* Visual Interaktif: Linimasa Sejarah & Kronologi Peristiwa Bangsa / Kebudayaan */}
+      {/* Visual Interaktif: Linimasa Sejarah & Kronologi Peristiwa Bangsa (Khusus Kelas 4 ke Atas) */}
       {(() => {
+        if (isJuniorGrade) return null; // Linimasa sejarah berat disembunyikan untuk adik-adik kelas 1-3
         const hasHistory = content.body.some((p) => {
           const l = p.toLowerCase();
           return (

@@ -93,6 +93,7 @@ interface Props {
   studentName?: string;
   forcedGameMode?: GameType;
   activeModule?: ValidatedModuleSummary;
+  studentGrade?: string;
 }
 
 // Model Suku Adat & Pos Pembelajaran Desa
@@ -161,9 +162,14 @@ export default function AdaptiveEduGameModal({
   studentName = "Ghandur Fauzan (Siswa)",
   forcedGameMode,
   activeModule,
+  studentGrade,
 }: Props) {
   const addPoints = useUIStore((s) => s.addPoints);
   const activeValidatedModule = useUIStore((s) => s.activeValidatedModule);
+  const currentStudent = useUIStore((s) => (s as any).currentStudent);
+
+  const activeGrade = studentGrade || (activeModule as any)?.kelas || activeModule?.grade || currentStudent?.kelas || "Kelas 4";
+  const isJuniorGrade = activeGrade.includes("1") || activeGrade.includes("2") || activeGrade.includes("3");
 
   const cleanActiveId = (activeValidatedModule?.id || "").replace("mod-", "");
   const cleanChapter = (chapter || "").replace("mod-", "");
@@ -688,6 +694,206 @@ export default function AdaptiveEduGameModal({
         !rawTitle.includes("gotong") &&
         !rawTitle.includes("bhinneka"))
     ) {
+      if (isJuniorGrade) {
+        return [
+          {
+            id: "pancasila_pos1",
+            namaPos: "Pos 1: Sila Ke-1 (Bintang Emas ⭐)",
+            namaSuku: "Suku Minahasa (Desa Kerukunan)",
+            rumahAdat: "Padhepokan Bintang Emas",
+            tokohNama: "Duta Cilik Beriman",
+            tokohAvatar: "⭐",
+            guruNama: "Pak Guru Virtual",
+            subMateri: "Berdoa & Menyayangi Teman",
+            penjelasanGuru:
+              "Sila Pertama dilambangkan Bintang Emas. Pengamalan nyatanya: kita selalu rajin berdoa sebelum belajar dan sebelum makan, serta menghormati semua teman yang sedang beribadah.",
+            silaKe: 1,
+            simbolSila: "⭐",
+            zPos: -45,
+            xPos: 14,
+            warnaKhas: "#38bdf8",
+            pertanyaan:
+              "Berdasarkan penjelasan Pak Guru, apa yang harus kita lakukan sebelum makan dan belajar?",
+            opsi: [
+              {
+                id: "A",
+                teks: "Selalu rajin berdoa dengan tertib dan khidmat.",
+                benar: true,
+                penjelasan: "Pintar sekali! Berdoa adalah wujud pengamalan Sila ke-1.",
+              },
+              {
+                id: "B",
+                teks: "Langsung lari bermain keluar kelas sambil berteriak.",
+                benar: false,
+                penjelasan: "Kurang tepat, kita harus berdoa dulu ya.",
+              },
+              {
+                id: "C",
+                teks: "Bercanda dan menumpahkan makanan ke lantai.",
+                benar: false,
+                penjelasan: "Itu perbuatan tidak tertib dan tidak bersyukur.",
+              },
+            ],
+          },
+          {
+            id: "pancasila_pos2",
+            namaPos: "Pos 2: Sila Ke-2 (Rantai Emas 🔗)",
+            namaSuku: "Suku Sunda (Desa Ramah)",
+            rumahAdat: "Padhepokan Rantai Emas",
+            tokohNama: "Kang Asep (Sahabat Baik)",
+            tokohAvatar: "🔗",
+            guruNama: "Pak Guru Virtual",
+            subMateri: "Tolong-Menolong & Ramah",
+            penjelasanGuru:
+              "Sila Kedua dilambangkan Rantai Emas. Pengamalan nyatanya: kita saling menyayangi, suka menolong teman yang terjatuh atau butuh bantuan, dan tidak boleh mengejek kawan.",
+            silaKe: 2,
+            simbolSila: "🔗",
+            zPos: -105,
+            xPos: -14,
+            warnaKhas: "#fb923c",
+            pertanyaan:
+              "Jika kita melihat teman terjatuh di halaman sekolah, apa sikap terpuji kita?",
+            opsi: [
+              {
+                id: "A",
+                teks: "Segera menolongnya berdiri dan membantunya dengan ramah.",
+                benar: true,
+                penjelasan: "Hebat! Menolong kawan adalah pengamalan Sila ke-2.",
+              },
+              {
+                id: "B",
+                teks: "Menertawakannya beramai-ramai lalu pergi.",
+                benar: false,
+                penjelasan: "Menertawakan teman jatuh itu perbuatan tidak baik.",
+              },
+              {
+                id: "C",
+                teks: "Meninggalkannya menangis sendirian di halaman.",
+                benar: false,
+                penjelasan: "Kita harus peduli dan menolong sesama.",
+              },
+            ],
+          },
+          {
+            id: "pancasila_pos3",
+            namaPos: "Pos 3: Sila Ke-3 (Pohon Beringin 🌳)",
+            namaSuku: "Suku Jawa (Desa Guyub)",
+            rumahAdat: "Padhepokan Pohon Beringin",
+            tokohNama: "Sahabat Rukun Nusantara",
+            tokohAvatar: "🌳",
+            guruNama: "Pak Guru Virtual",
+            subMateri: "Hidup Rukun & Bermain Bersama",
+            penjelasanGuru:
+              "Sila Ketiga dilambangkan Pohon Beringin. Pengamalan nyatanya: kita selalu hidup rukun, bermain bersama semua teman di sekolah tanpa memilih-milih atau bertengkar.",
+            silaKe: 3,
+            simbolSila: "🌳",
+            zPos: -165,
+            xPos: 14,
+            warnaKhas: "#4ade80",
+            pertanyaan:
+              "Saat jam istirahat bermain bersama di sekolah, sikap baik kita adalah...",
+            opsi: [
+              {
+                id: "A",
+                teks: "Bermain rukun bersama semua teman tanpa bertengkar.",
+                benar: true,
+                penjelasan: "Tepat sekali! Rukun bersama teman mencerminkan Persatuan Indonesia.",
+              },
+              {
+                id: "B",
+                teks: "Hanya mau berteman dengan satu orang saja.",
+                benar: false,
+                penjelasan: "Kita harus mau berteman dengan semua kawan.",
+              },
+              {
+                id: "C",
+                teks: "Berebut mainan hingga kawan menangis tersedu-sedu.",
+                benar: false,
+                penjelasan: "Berebut mainan itu merusak kerukunan bermain.",
+              },
+            ],
+          },
+          {
+            id: "pancasila_pos4",
+            namaPos: "Pos 4: Sila Ke-4 (Kepala Banteng 🐂)",
+            namaSuku: "Suku Betawi (Desa Musyawarah)",
+            rumahAdat: "Padhepokan Musyawarah",
+            tokohNama: "Bang Jampang (Sahabat Tertib)",
+            tokohAvatar: "🐂",
+            guruNama: "Pak Guru Virtual",
+            subMateri: "Mendengarkan & Tertib Berbicara",
+            penjelasanGuru:
+              "Sila Keempat dilambangkan Kepala Banteng. Pengamalan nyatanya: kita mau mendengarkan saat guru atau teman sedang berbicara, serta tertib antre saat musyawarah kelas.",
+            silaKe: 4,
+            simbolSila: "🐂",
+            zPos: -225,
+            xPos: -14,
+            warnaKhas: "#f87171",
+            pertanyaan:
+              "Ketika ibu guru atau teman sedang berbicara di depan kelas, apa sikap terpuji kita?",
+            opsi: [
+              {
+                id: "A",
+                teks: "Mendengarkan dengan tenang, tertib, dan menyimak.",
+                benar: true,
+                penjelasan: "Benar! Mendengarkan orang lain adalah cerminan Sila ke-4.",
+              },
+              {
+                id: "B",
+                teks: "Berbicara keras sendiri dan mengganggu teman lain.",
+                benar: false,
+                penjelasan: "Itu tidak sopan saat orang lain sedang berbicara.",
+              },
+              {
+                id: "C",
+                teks: "Tidur pulas di atas meja belajar.",
+                benar: false,
+                penjelasan: "Kita harus semangat dan menyimak pelajaran guru.",
+              },
+            ],
+          },
+          {
+            id: "pancasila_pos5",
+            namaPos: "Pos 5: Sila Ke-5 (Padi dan Kapas 🌾)",
+            namaSuku: "Suku Bugis (Desa Keadilan)",
+            rumahAdat: "Padhepokan Keadilan Sosial",
+            tokohNama: "Sahabat Adil & Berbagi",
+            tokohAvatar: "🌾",
+            guruNama: "Pak Guru Virtual",
+            subMateri: "Bersikap Adil & Mau Berbagi",
+            penjelasanGuru:
+              "Sila Kelima dilambangkan Padi dan Kapas. Pengamalan nyatanya: kita bersikap adil, mau berbagi pensil atau bekal dengan teman yang membutuhkan, dan rajin menabung.",
+            silaKe: 5,
+            simbolSila: "🌾",
+            zPos: -285,
+            xPos: 14,
+            warnaKhas: "#facc15",
+            pertanyaan:
+              "Jika teman sebangkumu lupa membawa pensil saat belajar, apa yang sebaiknya kamu lakukan?",
+            opsi: [
+              {
+                id: "A",
+                teks: "Meminjamkan pensil cadangan dengan ikhlas dan tersenyum.",
+                benar: true,
+                penjelasan: "Luar biasa! Berbagi dengan ikhlas adalah pengamalan nyata Sila ke-5!",
+              },
+              {
+                id: "B",
+                teks: "Menyembunyikan semua pensilmu agar teman tidak bisa menulis.",
+                benar: false,
+                penjelasan: "Itu sifat pelit yang bertentangan dengan keadilan dan kasih sayang.",
+              },
+              {
+                id: "C",
+                teks: "Memarahi dan mengejeknya di depan kelas.",
+                benar: false,
+                penjelasan: "Kita harus ramah dan suka membantu kawan.",
+              },
+            ],
+          },
+        ];
+      }
+
       return [
         {
           id: "pancasila_pos1",
@@ -3760,7 +3966,11 @@ return rawStations.map((st) => {
             setShowGuruDialog(true);
             setHasTalkedToGuru(true);
             setGuruTab('apa_itu');
-            speakGuruVoice(guruBriefing.speech);
+            speakGuruVoice(
+              isJuniorGrade
+                ? "Halo anak hebat! Jelajahi Desa Pancasila, dekati setiap pos untuk belajar berbuat baik, dan kumpulkan koin emas di jalan ya!"
+                : guruBriefing.speech
+            );
           }
         }
       } else if (distToGuru > 4.5 && insideZoneRef.current === 'guru') {
@@ -3778,11 +3988,14 @@ return rawStations.map((st) => {
             insideZoneRef.current = hp.suku.id;
             if (!isDialogOpenRef.current && Date.now() > dialogCooldownUntilRef.current && gameStartedRef.current) {
               setActiveSukuDialog(hp.suku);
-              setSukuDialogStage('penjelasan');
+              setSukuDialogStage(isJuniorGrade ? 'kuis' : 'penjelasan');
               setSelectedAnswer(null);
               setAnswerFeedback(null);
               speakGuruVoice(
-                'Halo murid hebat! Selamat datang di ' + hp.suku.namaPos + '. Simak penjelasan implementasi berikut: ' + hp.suku.penjelasanGuru
+                (isJuniorGrade ? 'Halo anak pintar! Di ' : 'Halo murid hebat! Selamat datang di ') +
+                  hp.suku.namaPos +
+                  '. ' +
+                  hp.suku.penjelasanGuru
               );
             }
           }
@@ -4278,53 +4491,47 @@ return rawStations.map((st) => {
                 </div>
               )}
 
-              {/* DIALOG PAK GURU VIRTUAL DENGAN VOICE SUARA DINAMIS SESUAI TOPIK */}
+              {/* DIALOG PAK GURU VIRTUAL DI GAPURA - MOCKUP RINGKAS & TIDAK MEMBLOKIR LAYAR */}
               {showGuruDialog && (
-                <div className="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in">
-                  <div className="bg-slate-900/95 border-2 border-sky-400/90 rounded-2xl max-w-md w-full p-4 sm:p-4.5 text-white space-y-3 shadow-2xl">
-                    <div className="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-11 h-11 rounded-xl bg-sky-500/20 border border-sky-400 flex items-center justify-center text-2xl shadow-md shrink-0">
+                <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-sm sm:max-w-md w-[92vw] pointer-events-auto animate-in slide-in-from-bottom-5">
+                  <div className="bg-slate-900/95 border-2 border-sky-400 rounded-2xl p-3 sm:p-4 text-white shadow-2xl backdrop-blur-md space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-slate-700/80 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400 flex items-center justify-center text-xl shadow-md shrink-0">
                           👨‍🏫
                         </span>
                         <div>
-                          <h3 className="font-black text-sm sm:text-base text-sky-300">
-                            Pak Guru Virtual
+                          <h3 className="font-black text-xs sm:text-sm text-sky-300">
+                            Pak Guru Virtual di Gapura
                           </h3>
-                          <p className="text-[11px] text-slate-300">
-                            Pemandu Materi {guruBriefing.submateri}
+                          <p className="text-[10px] text-slate-300">
+                            {isJuniorGrade ? "Pemandu Pengamalan Sila" : `Pemandu Materi ${guruBriefing.submateri}`}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => {
                             if (isGuruSpeaking) {
                               stopGuruVoice();
                             } else {
-                              if (guruTab === "apa_itu") {
-                                speakGuruVoice(guruBriefing.speech);
-                              } else if (guruTab === "makna_sila") {
-                                speakGuruVoice(
-                                  `Intisari 5 Pos Materi ${guruBriefing.submateri}: ${posVoiceList}. Selesaikan kuis di setiap pos untuk mengamalkannya!`
-                                );
-                              } else {
-                                speakGuruVoice(
-                                  isJawaTopic
-                                    ? "Cara main: Kowe bisa mlaku ing Sekolah Cerdas nganggo WASD, njupuk koin emas, lan nekani 5 paviliun pasinaon kanggo sinau lan mangsuli kuis materi!"
-                                    : "Cara mainnya mudah: jalan dengan tombol WASD atau panah, ambil koin emas di jalan, cukup dekati 5 paviliun belajar untuk belajar kuis dan sapa teman sekelasmu!"
-                                );
-                              }
+                              speakGuruVoice(
+                                isJuniorGrade
+                                  ? "Halo anak hebat! Jelajahi Desa Pancasila, dekati setiap pos untuk belajar berbuat baik, dan kumpulkan koin emas di jalan ya!"
+                                  : guruBriefing.speech
+                              );
                             }
                           }}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
                             isGuruSpeaking
                               ? "bg-rose-600 text-white animate-pulse"
                               : "bg-sky-500 hover:bg-sky-600 text-white"
                           }`}
+                          title="Dengarkan Suara Guru"
                         >
-                          <span>{isGuruSpeaking ? "⏹️ Hentikan Suara" : "🔊 Putar Suara Guru"}</span>
+                          <span>{isGuruSpeaking ? "⏹️" : "🔊"}</span>
+                          <span>{isGuruSpeaking ? "Stop" : "Suara"}</span>
                         </button>
                         <button
                           type="button"
@@ -4333,7 +4540,7 @@ return rawStations.map((st) => {
                             stopGuruVoice();
                             setShowGuruDialog(false);
                           }}
-                          className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white flex items-center justify-center font-bold text-xs cursor-pointer transition border border-slate-700 shrink-0"
+                          className="w-7 h-7 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center font-bold text-xs cursor-pointer transition border border-slate-700 shrink-0"
                           aria-label="Tutup Dialog"
                         >
                           ✕
@@ -4341,120 +4548,108 @@ return rawStations.map((st) => {
                       </div>
                     </div>
 
-                    {/* Tab Pilihan Penjelasan Pak Guru */}
-                    <div className="flex items-center gap-2 p-1 bg-slate-800 rounded-2xl border border-slate-700">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGuruTab("apa_itu");
-                          speakGuruVoice(guruBriefing.speech);
-                        }}
-                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                          guruTab === "apa_itu"
-                            ? "bg-sky-500 text-white shadow-md"
-                            : "text-slate-300 hover:text-white"
-                        }`}
-                      >
-                        {isJawaTopic
-                          ? `📖 Piwulang ${guruBriefing.submateri.length > 14 ? guruBriefing.submateri.slice(0, 12) + "..." : guruBriefing.submateri}`
-                          : `📖 Apa Itu ${guruBriefing.submateri.length > 18 ? guruBriefing.submateri.slice(0, 16) + "..." : guruBriefing.submateri}?`}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGuruTab("makna_sila");
-                          speakGuruVoice(
-                            `Intisari 5 Pos Materi ${guruBriefing.submateri}: ${posVoiceList}.`
-                          );
-                        }}
-                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                          guruTab === "makna_sila"
-                            ? "bg-sky-500 text-white shadow-md"
-                            : "text-slate-300 hover:text-white"
-                        }`}
-                      >
-                        {isJawaTopic ? "⭐ 5 Intisari Pos" : "⭐ 5 Intisari Pos Materi"}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGuruTab("cara_main");
-                          speakGuruVoice(
-                            "Cara mainnya mudah: jalan dengan WASD atau panah, ambil koin emas di jalan, cukup dekati 5 pos di kiri dan kanan jalan untuk belajar kuis dan sapa teman sekelasmu!"
-                          );
-                        }}
-                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                          guruTab === "cara_main"
-                            ? "bg-sky-500 text-white shadow-md"
-                            : "text-slate-300 hover:text-white"
-                        }`}
-                      >
-                        🎮 Cara Main Game
-                      </button>
-                    </div>
-
-                    {/* Konten Penjelasan Sesuai Tab */}
-                    <div className="bg-slate-800/90 p-4 rounded-2xl border border-slate-700 text-xs sm:text-sm leading-relaxed text-slate-200 space-y-2">
-                      {guruTab === "apa_itu" && (
-                        <div className="space-y-2">
-                          <b className="text-yellow-300 block text-xs sm:text-sm">
-                            {isJawaTopic ? "Piwulang Luhur:" : "Intisari Pembelajaran:"} {guruBriefing.submateri}
-                          </b>
-                          <p className="text-slate-200 leading-relaxed font-medium">{guruBriefing.arahan}</p>
-                          <div className="pt-2 border-t border-slate-700/60 text-emerald-300 text-xs font-semibold">
-                            🎯 Misi Kamu: {guruBriefing.misi}
-                          </div>
+                    {/* Konten Penjelasan Guru: Ringkas untuk Kelas 1-3 vs Tab untuk Kelas 4+ */}
+                    {isJuniorGrade ? (
+                      <div className="bg-slate-800/90 p-3 rounded-xl border border-sky-400/40 text-xs text-slate-100 space-y-1.5">
+                        <p className="font-bold text-yellow-300 flex items-center gap-1.5">
+                          <span>🌟</span>
+                          <span>Pesan Pengamalan untuk Murid Hebat:</span>
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-slate-200">
+                          "Halo murid pintar! Ayo jalan ke depan melewati gapura, dekati 5 pos sila untuk belajar berbuat baik dan tolong-menolong, serta kumpulkan koin emas di sepanjang jalan!"
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-1 p-1 bg-slate-800 rounded-xl border border-slate-700 text-[11px]">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setGuruTab("apa_itu");
+                              speakGuruVoice(guruBriefing.speech);
+                            }}
+                            className={`flex-1 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                              guruTab === "apa_itu"
+                                ? "bg-sky-500 text-white shadow-xs"
+                                : "text-slate-300 hover:text-white"
+                            }`}
+                          >
+                            📖 Intisari
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setGuruTab("makna_sila");
+                              speakGuruVoice(`Intisari 5 Pos Materi ${guruBriefing.submateri}: ${posVoiceList}.`);
+                            }}
+                            className={`flex-1 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                              guruTab === "makna_sila"
+                                ? "bg-sky-500 text-white shadow-xs"
+                                : "text-slate-300 hover:text-white"
+                            }`}
+                          >
+                            ⭐ 5 Pos
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setGuruTab("cara_main");
+                              speakGuruVoice(
+                                "Cara mainnya mudah: jalan dengan WASD atau tombol panah, dekati pos materi, dan kumpulkan koin emas!"
+                              );
+                            }}
+                            className={`flex-1 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                              guruTab === "cara_main"
+                                ? "bg-sky-500 text-white shadow-xs"
+                                : "text-slate-300 hover:text-white"
+                            }`}
+                          >
+                            🎮 Panduan
+                          </button>
                         </div>
-                      )}
 
-                      {guruTab === "makna_sila" && (
-                        <div className="space-y-2 text-xs">
-                          {sukuList.slice(0, 5).map((pos, idx) => (
-                            <div key={pos.id} className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60">
-                              <div className="font-bold text-yellow-300 flex items-center gap-1.5">
-                                <span>{pos.simbolSila || "📍"}</span>
-                                <span>Pos {idx + 1}: {pos.subMateri || pos.namaPos}</span>
-                              </div>
-                              <p className="text-slate-300 mt-1 text-[11px] leading-relaxed">
-                                {pos.penjelasanGuru}
-                              </p>
+                        <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 text-xs text-slate-200 max-h-36 overflow-y-auto">
+                          {guruTab === "apa_itu" && (
+                            <div className="space-y-1">
+                              <b className="text-yellow-300 block text-xs">{guruBriefing.submateri}</b>
+                              <p className="text-[11px] leading-relaxed text-slate-200">{guruBriefing.arahan}</p>
                             </div>
-                          ))}
+                          )}
+                          {guruTab === "makna_sila" && (
+                            <div className="space-y-1.5 text-[11px]">
+                              {sukuList.slice(0, 5).map((pos, idx) => (
+                                <div key={pos.id} className="p-1.5 rounded-lg bg-slate-900/60 border border-slate-700/60">
+                                  <span className="font-bold text-yellow-300 mr-1">{pos.simbolSila || "📍"} Pos {idx + 1}:</span>
+                                  <span className="text-slate-300">{pos.subMateri || pos.namaPos}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {guruTab === "cara_main" && (
+                            <p className="text-[11px] text-slate-200 leading-relaxed">
+                              Gunakan tombol arah/WASD untuk bergerak. Dekati setiap lingkaran pos sila untuk langsung memulai kuis dan mengumpulkan skor!
+                            </p>
+                          )}
                         </div>
-                      )}
+                      </>
+                    )}
 
-                      {guruTab === "cara_main" && (
-                        <div className="space-y-2">
-                          <b className="text-emerald-300 block">Panduan Petualangan & Game:</b>
-                          <p>
-                            1. <b>Jalan</b> melewati Gerbang Sekolah Cerdas dengan tombol WASD atau Panah.<br />
-                            2. <b>Kumpulkan Koin Emas (+5 Poin)</b> yang bertebaran di sepanjang jalan sekolah.<br />
-                            3. <b>Kunjungi 5 Paviliun Belajar:</b> Cukup dekati Pak Guru atau bulatan titik misi untuk langsung membuka kuis materi (+25 Poin).<br />
-                            4. <b>Sapa Teman Sekelas Online</b> dengan menekan tombol <b>'Q'</b> atau <b>'Dada'</b>!<br />
-                            5. <b>Teka-Teki Kartu:</b> Pilih tab <b>Menjodohkan Kartu</b> di bagian atas untuk mencocokkan pasangan kata & aksara!
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-
-                    <div className="flex justify-between items-center pt-2">
-                      <span className="text-[11px] text-slate-400">
-                        {isGuruSpeaking ? "🔊 Sedang bersuara..." : "Tekan tombol audio untuk suara"}
+                    {/* Tombol Aksi Mulai */}
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-[10px] text-slate-400">
+                        {isGuruSpeaking ? "🔊 Suara aktif..." : "Klik suara untuk dengar"}
                       </span>
                       <button
                         type="button"
                         onClick={() => {
                           stopGuruVoice();
                           setShowGuruDialog(false);
-                          setActiveNotification("🚀 Petunjuk selesai! Silakan mulai menjelajahi area sekolah!");
+                          setActiveNotification("🚀 Semangat! Mulai jelajahi area dan dekati pos sila!");
                           setTimeout(() => setActiveNotification(null), 3000);
                         }}
-                        className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 px-6 rounded-2xl text-xs transition cursor-pointer"
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 px-4 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
                       >
-                        Siap, Pak Guru! Mulai Petualangan 🚀
+                        <span>Siap, Mulai Jalan! 🚶</span>
                       </button>
                     </div>
                   </div>
@@ -4523,8 +4718,120 @@ return rawStations.map((st) => {
                       </div>
                     </div>
 
-                    {/* TAHAP 1: PENJELASAN IMPLEMENTASI NYATA */}
-                    {sukuDialogStage === "penjelasan" ? (
+                    {/* MODE KELAS 1-3: TAMPILAN LANGSUNG PENGAMALAN & SOAL TANPA RIBET */}
+                    {isJuniorGrade ? (
+                      <div className="space-y-3 animate-in fade-in">
+                        {/* Penjelasan Singkat Pengamalan */}
+                        <div className="bg-slate-800/95 border border-amber-400/60 p-3 rounded-2xl text-xs leading-relaxed text-slate-100 space-y-1 shadow-inner">
+                          <div className="text-[10px] uppercase font-black text-yellow-400 flex items-center gap-1.5">
+                            <span>💡</span>
+                            <span>Pengamalan Baik di Sekolah &amp; Rumah:</span>
+                          </div>
+                          <p className="text-slate-100 font-bold text-xs sm:text-sm leading-relaxed">
+                            {activeSukuDialog.penjelasanGuru}
+                          </p>
+                        </div>
+
+                        {/* Pertanyaan Kuis Langsung & Mudah */}
+                        <div className="space-y-2 pt-0.5">
+                          <div className="bg-sky-950/60 border border-sky-400/40 p-2.5 rounded-xl text-xs font-black text-sky-200">
+                            ❓ {activeSukuDialog.pertanyaan}
+                          </div>
+
+                          {/* Pilihan Jawaban Langsung */}
+                          <div className="space-y-1.5">
+                            {activeSukuDialog.opsi.map((opsi) => {
+                              const isPicked = selectedAnswer === opsi.id;
+                              return (
+                                <button
+                                  key={opsi.id}
+                                  type="button"
+                                  onClick={() => {
+                                    if (answerFeedback) return;
+                                    setSelectedAnswer(opsi.id);
+                                    playClickSound();
+
+                                    if (opsi.benar) {
+                                      playCorrectSound();
+                                      setAnswerFeedback({
+                                        isCorrect: true,
+                                        text: `Hebat! ${opsi.penjelasan}`,
+                                      });
+                                      setAdventureScore((s) => s + 25);
+                                      addPoints(25, `Menjawab kuis pos: ${activeSukuDialog.namaPos}`, chapter);
+                                      const nextVisited = visitedSukuIds.includes(activeSukuDialog.id)
+                                        ? visitedSukuIds
+                                        : [...visitedSukuIds, activeSukuDialog.id];
+                                      setVisitedSukuIds(nextVisited);
+
+                                      const isPos5OrAllDone =
+                                        activeSukuDialog.silaKe === 5 || nextVisited.length >= 5;
+                                      if (isPos5OrAllDone) {
+                                        setTimeout(() => {
+                                          setActiveSukuDialog(null);
+                                          setAllSukuCompleted(true);
+                                          setShowLeaderboard(true);
+                                          playBadgeFanfareSound();
+                                        }, 1100);
+                                      }
+                                    } else {
+                                      playOofSound();
+                                      setAnswerFeedback({
+                                        isCorrect: false,
+                                        text: `Kurang tepat. ${opsi.penjelasan}`,
+                                      });
+                                    }
+                                  }}
+                                  className={`w-full text-left p-3 rounded-2xl text-xs font-bold transition border flex items-center justify-between cursor-pointer ${
+                                    isPicked
+                                      ? opsi.benar
+                                        ? "bg-emerald-600 border-emerald-400 text-white shadow-md scale-[1.01]"
+                                        : "bg-rose-600 border-rose-400 text-white shadow-md scale-[1.01]"
+                                      : "bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-100"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="w-6 h-6 rounded-full bg-slate-900 border border-slate-600 flex items-center justify-center text-xs font-black text-yellow-300 shrink-0">
+                                      {opsi.id}
+                                    </span>
+                                    <span>{opsi.teks}</span>
+                                  </div>
+                                  {isPicked && <span>{opsi.benar ? "✓" : "✗"}</span>}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Feedback Jawaban */}
+                          {answerFeedback && (
+                            <div
+                              className={`p-2.5 rounded-2xl text-xs font-bold animate-in fade-in ${
+                                answerFeedback.isCorrect
+                                  ? "bg-emerald-950/80 border border-emerald-400 text-emerald-200"
+                                  : "bg-rose-950/80 border border-rose-400 text-rose-200"
+                              }`}
+                            >
+                              {answerFeedback.text}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Tombol Tutup Sederhana */}
+                        <div className="pt-1 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playClickSound();
+                              setActiveSukuDialog(null);
+                              stopGuruVoice();
+                            }}
+                            className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-1.5 px-4 rounded-xl text-xs transition cursor-pointer"
+                          >
+                            Lanjut Jalan 🚶
+                          </button>
+                        </div>
+                      </div>
+                    ) : sukuDialogStage === "penjelasan" ? (
                       <div className="space-y-3 animate-in fade-in">
                         <div className="bg-slate-800/95 border border-amber-400/40 p-3.5 rounded-2xl text-xs leading-relaxed text-slate-100 space-y-2 shadow-inner">
                           <div className="text-[10px] uppercase font-black text-yellow-400 flex items-center gap-1.5">
