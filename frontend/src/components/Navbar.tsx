@@ -3,7 +3,7 @@ import { SESSION_QUERY_KEY } from "@/hooks/useSession";
 import { fetchProfile, logout } from "@/lib/api/sessionApi";
 import { useUIStore } from "@/lib/store/useUIStore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 function getInitials(name?: string, fallback = "GF"): string {
@@ -29,15 +29,31 @@ export default function Navbar({ role }: { role: "pelajar" | "pengajar" }) {
   const { data: profile } = useQuery({
     queryKey: ["profile", role],
     queryFn: fetchProfile,
-    staleTime: 1000 * 60,
+    staleTime: 2000,
   });
 
   const themeMode = useUIStore((s) => s.themeMode);
   const toggleTheme = useUIStore((s) => s.toggleTheme);
   const openProfileModal = useUIStore((s) => s.openProfileModal);
 
+  const [storageProfileName, setStorageProfileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleStorage = () => {
+      try {
+        const stored = localStorage.getItem("user_profile");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.name) setStorageProfileName(parsed.name);
+        }
+      } catch {}
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   const userInitials = useMemo(() => {
-    let name = profile?.name;
+    let name = storageProfileName || profile?.name;
     if (!name && typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem("user_profile");
@@ -48,7 +64,7 @@ export default function Navbar({ role }: { role: "pelajar" | "pengajar" }) {
       } catch {}
     }
     return getInitials(name, isTeacher ? "DL" : "GF");
-  }, [profile?.name, isTeacher]);
+  }, [storageProfileName, profile?.name, isTeacher]);
 
   async function handleLogout() {
     await logout();

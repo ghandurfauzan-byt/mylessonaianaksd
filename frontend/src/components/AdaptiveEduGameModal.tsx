@@ -168,7 +168,7 @@ export default function AdaptiveEduGameModal({
   const activeValidatedModule = useUIStore((s) => s.activeValidatedModule);
   const currentStudent = useUIStore((s) => (s as any).currentStudent);
 
-  const activeGrade = studentGrade || (activeModule as any)?.kelas || activeModule?.grade || currentStudent?.kelas || "Kelas 4";
+  const activeGrade = studentGrade || (activeModule as any)?.kelas || activeModule?.grade || currentStudent?.kelas || "Kelas 1";
   const isJuniorGrade = activeGrade.includes("1") || activeGrade.includes("2") || activeGrade.includes("3");
 
   const cleanActiveId = (activeValidatedModule?.id || "").replace("mod-", "");

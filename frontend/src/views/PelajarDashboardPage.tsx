@@ -4,6 +4,7 @@ import AiContentPanel from "@/components/AiContentPanel";
 import ChapterModeSelector from "@/components/ChapterModeSelector";
 import ModalPortal from "@/components/ModalPortal";
 import PointsBadge from "@/components/PointsBadge";
+import { SESSION_QUERY_KEY } from "@/hooks/useSession";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import {
   playBadgeFanfareSound,
@@ -49,10 +50,17 @@ export default function PelajarDashboardPage() {
   const resetCurrentChapterMissions = useUIStore((s) => s.resetCurrentChapterMissions);
 
   const paramChapter = searchParams.get("chapter");
-  const defaultChapter = activeValidatedModule?.id || "pkn-sila3";
+  const defaultChapter = activeValidatedModule?.id || "mod-pkn-kls1-simbol";
   const chapter = paramChapter ?? defaultChapter;
   const mode = (searchParams.get("mode") ?? "cerita") as AiMode;
   const refreshNonce = searchParams.get("r") ?? "0";
+
+  const [activeGradeState, setActiveGradeState] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("student_active_kelas") || "Kelas 1";
+    }
+    return "Kelas 1";
+  });
 
   // Identifikasi otomatis pelajaran aktif (PKn vs Bahasa Jawa)
   const isJawaCurrent =
@@ -190,11 +198,17 @@ export default function PelajarDashboardPage() {
     };
   } | null>(null);
 
+  const currentGrade = activeGradeState || currentStudent?.kelas || "Kelas 1";
+
   useEffect(() => {
     let lastActiveId = activeValidatedModule?.id;
     // Sinkronkan modul aktif yang baru saja divalidasi oleh Guru via API secara real-time
     const syncActiveModule = () => {
-      const studentKelas = currentStudent?.kelas || "Kelas 4";
+      let savedKelas: string | null = null;
+      try {
+        savedKelas = sessionStorage.getItem("student_active_kelas");
+      } catch {}
+      const studentKelas = savedKelas || currentStudent?.kelas || "Kelas 1";
       fetch(`/api/v1/curriculum/active?kelas=${encodeURIComponent(studentKelas)}`)
         .then((r) => r.json())
         .then((res) => {
@@ -326,6 +340,23 @@ export default function PelajarDashboardPage() {
           setCurrentStudentName(res.name);
           const studentScore = res.gamePoints ?? res.points ?? 0;
           setTotalPoints(studentScore);
+
+          let savedKelas: string | null = null;
+          try {
+            savedKelas = sessionStorage.getItem("student_active_kelas");
+          } catch {}
+          const targetKelas = savedKelas || res.kelas || "Kelas 1";
+          setActiveGradeState(targetKelas);
+          fetch(`/api/v1/curriculum/active?kelas=${encodeURIComponent(targetKelas)}`)
+            .then((r) => r.json())
+            .then((modRes) => {
+              if (modRes.success && modRes.data) {
+                setActiveValidatedModule(modRes.data);
+                queryClient.invalidateQueries({ queryKey: ["ai-content"] });
+                queryClient.invalidateQueries({ queryKey: ["quiz"] });
+              }
+            })
+            .catch(() => {});
         }
       })
       .catch(() => {});
@@ -364,6 +395,31 @@ export default function PelajarDashboardPage() {
     loadStudents(chapter);
   }, [currentStudent?.id, chapter]);
 
+  const handleSwitchGrade = async (newGrade: string) => {
+    playClickSound();
+    setActiveGradeState(newGrade);
+    if (currentStudent) {
+      setCurrentStudent({ ...currentStudent, kelas: newGrade });
+    }
+    try {
+      sessionStorage.setItem("student_active_kelas", newGrade);
+      sessionStorage.removeItem("student_last_server_module_id");
+    } catch {}
+
+    try {
+      const res = await fetch(`/api/v1/curriculum/active?kelas=${encodeURIComponent(newGrade)}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        setActiveValidatedModule(json.data);
+        queryClient.invalidateQueries({ queryKey: ["ai-content"] });
+        queryClient.invalidateQueries({ queryKey: ["quiz"] });
+        navigate(`/dashboard/pelajar?chapter=${encodeURIComponent(json.data.id)}&mode=${mode}`, {
+          replace: true,
+        });
+      }
+    } catch {}
+  };
+
   const handleSwitchStudent = async (studentId: string) => {
     playClickSound();
     try {
@@ -373,8 +429,43 @@ export default function PelajarDashboardPage() {
         body: JSON.stringify({ userId: studentId }),
       });
       if (res.ok) {
+        const switchData = await res.json().catch(() => null);
+        const switched = switchData?.user || registeredStudents.find((s) => s.id === studentId);
+        if (switched) {
+          setCurrentStudent(switched);
+          setCurrentStudentName(switched.name);
+          if (switched.kelas) {
+            setActiveGradeState(switched.kelas);
+          }
+          try {
+            localStorage.setItem("user_profile", JSON.stringify(switched));
+          } catch {}
+        }
         loadProfile(chapter);
         loadStudents(chapter);
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
+        window.dispatchEvent(new Event("storage"));
+
+        const targetKelas = switched?.kelas || "Kelas 1";
+        try {
+          sessionStorage.setItem("student_active_kelas", targetKelas);
+          sessionStorage.removeItem("student_last_server_module_id");
+        } catch {}
+
+        fetch(`/api/v1/curriculum/active?kelas=${encodeURIComponent(targetKelas)}`)
+          .then((r) => r.json())
+          .then((json) => {
+            if (json.success && json.data) {
+              setActiveValidatedModule(json.data);
+              queryClient.invalidateQueries({ queryKey: ["ai-content"] });
+              queryClient.invalidateQueries({ queryKey: ["quiz"] });
+              navigate(`/dashboard/pelajar?chapter=${encodeURIComponent(json.data.id)}&mode=${mode}`, {
+                replace: true,
+              });
+            }
+          })
+          .catch(() => {});
       }
     } catch (err) {
       console.error("Gagal mengganti akun:", err);
@@ -739,6 +830,24 @@ export default function PelajarDashboardPage() {
                   </select>
                 </div>
               )}
+
+              {/* Selector Jenjang Kelas Siswa (Otomatis & Sinkron) */}
+              <div className="inline-flex items-center gap-2 text-xs font-black text-amber-950 dark:text-amber-100 bg-amber-200/95 dark:bg-amber-950/90 px-3.5 py-1.5 rounded-full shadow-md border-2 border-amber-400 dark:border-amber-600">
+                <span>🏫 Kelas:</span>
+                <select
+                  aria-label="Pilih Jenjang Kelas"
+                  value={currentGrade}
+                  onChange={(e) => handleSwitchGrade(e.target.value)}
+                  className="bg-transparent font-black text-xs text-amber-950 dark:text-amber-200 cursor-pointer focus:outline-none"
+                >
+                  <option value="Kelas 1" className="text-slate-900 bg-white">Kelas 1 (Fase A)</option>
+                  <option value="Kelas 2" className="text-slate-900 bg-white">Kelas 2 (Fase A)</option>
+                  <option value="Kelas 3" className="text-slate-900 bg-white">Kelas 3 (Fase A)</option>
+                  <option value="Kelas 4" className="text-slate-900 bg-white">Kelas 4 (Fase B)</option>
+                  <option value="Kelas 5" className="text-slate-900 bg-white">Kelas 5 (Fase C)</option>
+                  <option value="Kelas 6" className="text-slate-900 bg-white">Kelas 6 (Fase C)</option>
+                </select>
+              </div>
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-md">
@@ -1306,7 +1415,7 @@ export default function PelajarDashboardPage() {
             chapterId={chapter}
             mode={mode}
             refreshNonce={refreshNonce}
-            studentGrade={currentStudent?.kelas || "Kelas 4"}
+            studentGrade={currentGrade}
           />
         </article>
       </div>
@@ -1618,7 +1727,7 @@ export default function PelajarDashboardPage() {
             chapter={chapter}
             chapterTitle={currentChapterInfo.title}
             studentName={currentStudentName}
-            studentGrade={currentStudent?.kelas || "Kelas 4"}
+            studentGrade={currentGrade}
             forcedGameMode={activeGameInfo.type as any}
             activeModule={currentChapterInfo.moduleToPass}
           />

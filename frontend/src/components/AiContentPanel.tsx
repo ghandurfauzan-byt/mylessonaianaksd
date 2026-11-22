@@ -209,7 +209,7 @@ export default function AiContentPanel({
 
     // Identifikasi jenjang kelas siswa (Kelas 1-3: Fase A vs Kelas 4 ke atas: Fase B/C)
     const currentStudent = useUIStore((s) => (s as any).currentStudent);
-    const activeGrade = studentGrade || activeValidatedModule?.grade || currentStudent?.kelas || "Kelas 4";
+    const activeGrade = studentGrade || (activeValidatedModule as any)?.kelas || activeValidatedModule?.grade || currentStudent?.kelas || "Kelas 1";
     const isJuniorGrade = activeGrade.includes("1") || activeGrade.includes("2") || activeGrade.includes("3");
 
     return (

@@ -560,18 +560,15 @@ const INITIAL_MODULES_DB: CurriculumModuleRecord[] = [
     "pageCount": 22,
     "learningGoal": "Peserta didik mengenal 5 simbol pada lambang Garuda Pancasila (Bintang, Rantai Emas, Pohon Beringin, Kepala Banteng, Padi & Kapas) serta makna dasarnya.",
     "isValidated": true,
-    "isActiveToday": false,
+    "isActiveToday": true,
     "validatedAt": "Hari ini, 07:15 WIB",
     "gameType": "adventure",
     "ragSummary": [
-      "Pengertian Pancasila sebagai Dasar Negara: Pancasila adalah dasar negara dan pedoman tingkah laku bagi seluruh rakyat Indonesia. Kata Pancasila berasal dari bahasa Sanskerta: Panca artinya lima, dan Sila artinya dasar atau asas budi pekerti.",
-      "Mengenal Lambang Burung Garuda Pancasila: Burung Garuda adalah lambang negara Indonesia yang berbulu kuning keemasan, melambangkan keagungan dan kejayaan bangsa. Di dadanya tergantung perisai yang memuat lima simbol sila, serta kakinya mencengkeram pita bertuliskan semboyan suci Bhinneka Tunggal Ika.",
-      "Simbol Sila Ke-1 (Bintang Emas): Sila pertama berbunyi Ketuhanan Yang Maha Esa dilambangkan dengan Bintang bersudut lima berlatar hitam, maknanya adalah cahaya kerohanian dari Tuhan Yang Maha Esa kepada seluruh manusia.",
-      "Simbol Sila Ke-2 (Rantai Emas): Sila kedua berbunyi Kemanusiaan yang adil dan beradab dilambangkan dengan rantai gelang persegi dan lingkaran yang saling bertaut kokoh, mencerminkan persatuan gotong royong antara laki-laki dan perempuan.",
-      "Simbol Sila Ke-3 (Pohon Beringin): Sila ketiga berbunyi Persatuan Indonesia dilambangkan dengan Pohon Beringin yang rindang dan berakar kuat menghunjam ke bumi, melambangkan tempat berteduh yang aman bagi seluruh suku bangsa.",
-      "Simbol Sila Ke-4 (Kepala Banteng): Sila keempat berbunyi Kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan dilambangkan dengan Kepala Banteng sebagai hewan sosial yang gemar berkumpul untuk musyawarah.",
-      "Simbol Sila Ke-5 (Padi dan Kapas): Sila kelima berbunyi Keadilan sosial bagi seluruh rakyat Indonesia dilambangkan dengan padi (makanan pokok) dan kapas (sandang/pakaian) sebagai syarat kemakmuran dan keadilan rakyat.",
-      "Aksi Nyata Pelajar Pancasila di Sekolah: Berdoa bersama sebelum dan sesudah belajar, rukun bermain dengan teman tanpa mengejek, meminjamkan alat tulis kepada kawan yang membutuhkan, serta tertib mematuhi nasihat guru."
+      "Simbol Sila 1 (Bintang Emas): Berdoa sebelum makan dan belajar, menyayangi teman saat beribadah.",
+      "Simbol Sila 2 (Rantai Emas): Saling menolong teman yang terjatuh, bersikap ramah, tidak mengejek kawan.",
+      "Simbol Sila 3 (Pohon Beringin): Hidup rukun bermain bersama di sekolah tanpa bertengkar.",
+      "Simbol Sila 4 (Kepala Banteng): Mendengarkan bu guru dan teman saat berbicara, tertib saat antre.",
+      "Simbol Sila 5 (Padi dan Kapas): Mau berbagi pensil atau bekal, adil kepada semua kawan, dan suka menabung."
     ],
     "generatedQuizPreview": [
       "Level 1: Simbol Sila ke-1 Bintang Emas (+10 Poin)",
@@ -1008,16 +1005,110 @@ const INITIAL_MODULES_DB: CurriculumModuleRecord[] = [
 }
 ];
 
+export function normalizeGrade(g?: string): string {
+  if (!g) return "Kelas 4";
+  const str = String(g).toLowerCase();
+  if (str.includes("1")) return "Kelas 1";
+  if (str.includes("2")) return "Kelas 2";
+  if (str.includes("3")) return "Kelas 3";
+  if (str.includes("4")) return "Kelas 4";
+  if (str.includes("5")) return "Kelas 5";
+  if (str.includes("6")) return "Kelas 6";
+  return g;
+}
+
 let curriculumModulesDb: CurriculumModuleRecord[] = [...INITIAL_MODULES_DB];
 
-let activeCurriculumState: ActiveCurriculumState | null = {
-  id: "mod-pkn-sila3",
-  title: "Makna Lambang Sila Ke-3: Persatuan Indonesia di Sekolah & Rumah",
-  chapterCode: "Bab 1",
-  subject: "pkn",
-  grade: "Kelas 4",
-  ragSummary: INITIAL_MODULES_DB[0]?.ragSummary,
+const activeCurriculumStateByGrade: Record<string, ActiveCurriculumState> = {
+  "Kelas 1": {
+    id: "mod-pkn-kls1-simbol",
+    title: "Aku Cinta Pancasila: Mengenal 5 Simbol Garuda Pancasila",
+    chapterCode: "Bab 1",
+    subject: "pkn",
+    grade: "Kelas 1",
+    ragSummary: [
+      "Simbol Sila 1 (Bintang Emas): Berdoa sebelum makan dan belajar, menyayangi teman saat beribadah.",
+      "Simbol Sila 2 (Rantai Emas): Saling menolong teman yang terjatuh, bersikap ramah, tidak mengejek kawan.",
+      "Simbol Sila 3 (Pohon Beringin): Hidup rukun bermain bersama di sekolah tanpa bertengkar.",
+      "Simbol Sila 4 (Kepala Banteng): Mendengarkan bu guru dan teman saat berbicara, tertib saat antre.",
+      "Simbol Sila 5 (Padi dan Kapas): Mau berbagi pensil atau bekal, adil kepada semua kawan, dan suka menabung."
+    ],
+    gameType: "adventure",
+  },
+  "Kelas 2": {
+    id: "mod-pkn-kls2-aturan",
+    title: "Menaati Aturan di Rumah dan di Sekolah",
+    chapterCode: "Bab 2",
+    subject: "pkn",
+    grade: "Kelas 2",
+    ragSummary: [
+      "Aturan di Rumah: Bangun pagi tepat waktu, merapikan tempat tidur sendiri, berpamitan kepada ayah ibu sebelum berangkat sekolah.",
+      "Aturan di Sekolah: Memakai seragam lengkap dan rapi, mendengarkan penjelasan guru dengan tertib, tidak membuang sampah sembarangan.",
+      "Manfaat Menaati Aturan: Hidup menjadi teratur, rumah dan kelas menjadi bersih, disayangi orang tua dan bapak ibu guru.",
+      "Pengamalan Sila Pancasila: Disiplin dan tertib adalah wujud rasa syukur kepada Tuhan dan kasih sayang kepada sesama."
+    ],
+    gameType: "adventure",
+  },
+  "Kelas 3": {
+    id: "mod-pkn-kls3-gotongroyong",
+    title: "Indahnya Gotong Royong dan Persahabatan di Sekolah",
+    chapterCode: "Bab 3",
+    subject: "pkn",
+    grade: "Kelas 3",
+    ragSummary: [
+      "Arti Gotong Royong: Bekerja bersama-sama untuk mencapai tujuan yang baik dan meringankan pekerjaan yang berat.",
+      "Gotong Royong di Sekolah: Melaksanakan piket membersihkan kelas bersama regu piket, merapikan buku di pojok baca.",
+      "Gotong Royong di Lingkungan: Ikut kerja bakti membersihkan selokan bersama tetangga, membantu menanam pohon di taman.",
+      "Sikap Murid Pancasila: Saling tolong-menolong tanpa membeda-bedakan suku daerah dan agama kawan."
+    ],
+    gameType: "adventure",
+  },
+  "Kelas 4": {
+    id: "mod-pkn-sila3",
+    title: "Makna Lambang Sila Ke-3: Persatuan Indonesia di Sekolah & Rumah",
+    chapterCode: "Bab 1",
+    subject: "pkn",
+    grade: "Kelas 4",
+    ragSummary: INITIAL_MODULES_DB.find((m) => m.id === "mod-pkn-sila3")?.ragSummary || [
+      "Pengertian & Hakikat Sila Ke-3: Sila ketiga Pancasila berbunyi Persatuan Indonesia dengan lambang Pohon Beringin.",
+      "Makna Filosofis Pohon Beringin: Pohon beringin memiliki akar tunggang dalam yang menancap kokoh ke bumi, melambangkan negara Indonesia sebagai tempat berteduh seluruh rakyat.",
+      "Sejarah Perumusan Pancasila & Sidang BPUPKI 1945: Pada sidang BPUPKI 1 Juni 1945 di Gedung Chuo Sangi In, Ir. Soekarno berpidato membakar semangat mengusulkan dasar falsafah Pancasila.",
+      "Sejarah Panitia Sembilan & Pengesahan UUD 1945: Panitia Sembilan menyusun Piagam Jakarta, lalu pada 18 Agustus 1945 PPKI menetapkan Pancasila sebagai Dasar Negara.",
+      "Sejarah Lambang Garuda Pancasila: Dirancang oleh Sultan Hamid II dari Pontianak dan disempurnakan Presiden Soekarno.",
+      "Aksi Nyata Pelajar Pancasila di Sekolah: Melaksanakan piket kompak tanpa pilih kawan, berteman rukun, dan saling menolong."
+    ],
+    gameType: "adventure",
+  },
+  "Kelas 5": {
+    id: "mod-pkn-norma",
+    title: "Norma dan Nilai Konstitusi dalam Kehidupan Berbangsa",
+    chapterCode: "Bab 2",
+    subject: "pkn",
+    grade: "Kelas 5",
+    ragSummary: [
+      "Pengertian Norma: Norma adalah kaidah atau pedoman bertingkah laku yang disepakati bersama dalam suatu kelompok masyarakat.",
+      "4 Jenis Norma: Norma Agama (Wahyu Ilahi), Norma Kesusilaan (Hati Nurani), Norma Kesopanan (Tata Krama Adat), dan Norma Hukum (Undang-Undang Negara).",
+      "Sanksi Pelanggaran Norma: Pelanggaran norma kesopanan mendapat celaan sosial, sedangkan norma hukum mendapat sanksi tegas berupa denda atau pidana.",
+      "Kepatuhan Hukum: Murid yang beradab mematuhi aturan tertib lalu lintas, menjauhi perundungan, dan menjaga fasilitas umum."
+    ],
+    gameType: "adventure",
+  },
+  "Kelas 6": {
+    id: "mod-pkn-bhinneka",
+    title: "Merajut Keberagaman Budaya Nusantara Menuju Indonesia Emas",
+    chapterCode: "Bab 3",
+    subject: "pkn",
+    grade: "Kelas 6",
+    ragSummary: [
+      "Bhinneka Tunggal Ika: Semboyan pemersatu bangsa yang diambil dari Kakawin Sutasoma karya Mpu Tantular pada era Majapahit.",
+      "Keberagaman Suku dan Budaya: Indonesia memiliki lebih dari 300 kelompok etnik dengan bahasa daerah, rumah adat, tarian, dan pakaian adat yang luhur.",
+      "Upaya Menjaga Keutuhan NKRI: Mengembangkan sikap toleransi, menghargai perbedaan tradisi, bangga menggunakan Bahasa Indonesia, dan mengutamakan kepentingan nasional di atas kepentingan golongan."
+    ],
+    gameType: "adventure",
+  },
 };
+
+let activeCurriculumState: ActiveCurriculumState | null = activeCurriculumStateByGrade["Kelas 4"];
 
 export async function getCurriculumModules(): Promise<CurriculumModuleRecord[]> {
   await delay(100);
@@ -1114,6 +1205,7 @@ export async function deleteCurriculumModule(id: string): Promise<boolean> {
 }
 
 export function setActiveCurriculumState(mod: ActiveCurriculumState) {
+  const normGrade = normalizeGrade(mod.grade);
   const sanitizedSummary = mod.ragSummary?.map((item) =>
     item
       .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, "")
@@ -1127,14 +1219,19 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
       .trim()
   );
 
-  activeCurriculumState = {
+  const updatedState: ActiveCurriculumState = {
     ...mod,
+    grade: normGrade,
     ragSummary: sanitizedSummary,
   };
 
-  // Sinkronkan status isActiveToday di database list modul (dan simpan modul baru hasil tarik API SIBI jika belum ada)
+  activeCurriculumState = updatedState;
+  activeCurriculumStateByGrade[normGrade] = updatedState;
+
+  // Sinkronkan status isActiveToday di database list modul
   let foundInDb = false;
   curriculumModulesDb = curriculumModulesDb.map((item) => {
+    const itemNormGrade = normalizeGrade(item.grade);
     const sameModule =
       item.id === mod.id ||
       item.id.replace("mod-", "") === mod.id.replace("mod-", "");
@@ -1142,7 +1239,7 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
       foundInDb = true;
       return {
         ...item,
-        grade: mod.grade || item.grade,
+        grade: normGrade,
         gameType: mod.gameType || item.gameType,
         isValidated: true,
         isActiveToday: true,
@@ -1151,10 +1248,14 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
         quizQuestions: mod.quizQuestions || item.quizQuestions,
       };
     }
-    return {
-      ...item,
-      isActiveToday: false,
-    };
+    // Jika modul lain berada di kelas yang sama, nonaktifkan status aktifnya untuk kelas itu
+    if (itemNormGrade === normGrade) {
+      return {
+        ...item,
+        isActiveToday: false,
+      };
+    }
+    return item;
   });
 
   if (!foundInDb) {
@@ -1165,7 +1266,7 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
       subjectLabel:
         mod.subjectLabel ||
         (subj === "bjawa" ? "Basa Jawa (Muatan Lokal)" : "Pendidikan Pancasila & PKn"),
-      grade: mod.grade || "Kelas 4",
+      grade: normGrade,
       title: mod.title,
       chapterCode: mod.chapterCode || "Bab Baru",
       source: mod.source || "API SIBI Kemdikbudristek RI (Buku Teks Kurikulum Merdeka)",
@@ -1203,7 +1304,48 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
   }
 }
 
-export function getActiveCurriculumState(_targetKelas?: string): ActiveCurriculumState | null {
+export function getActiveCurriculumState(targetKelas?: string): ActiveCurriculumState | null {
+  if (targetKelas) {
+    const normGrade = normalizeGrade(targetKelas);
+    if (activeCurriculumStateByGrade[normGrade]) {
+      return activeCurriculumStateByGrade[normGrade];
+    }
+    const fromDb = curriculumModulesDb.find(
+      (m) => m.isActiveToday && normalizeGrade(m.grade) === normGrade
+    );
+    if (fromDb) {
+      return {
+        id: fromDb.id,
+        title: fromDb.title,
+        chapterCode: fromDb.chapterCode,
+        subject: fromDb.subject,
+        subjectLabel: fromDb.subjectLabel,
+        source: fromDb.source,
+        grade: fromDb.grade,
+        ragSummary: fromDb.ragSummary,
+        quizQuestions: fromDb.quizQuestions,
+        gameType: fromDb.gameType,
+      };
+    }
+    const anyFromGrade = curriculumModulesDb.find(
+      (m) => normalizeGrade(m.grade) === normGrade
+    );
+    if (anyFromGrade) {
+      return {
+        id: anyFromGrade.id,
+        title: anyFromGrade.title,
+        chapterCode: anyFromGrade.chapterCode,
+        subject: anyFromGrade.subject,
+        subjectLabel: anyFromGrade.subjectLabel,
+        source: anyFromGrade.source,
+        grade: anyFromGrade.grade,
+        ragSummary: anyFromGrade.ragSummary,
+        quizQuestions: anyFromGrade.quizQuestions,
+        gameType: anyFromGrade.gameType,
+      };
+    }
+  }
+
   if (activeCurriculumState) {
     return activeCurriculumState;
   }
@@ -1231,7 +1373,41 @@ export async function getAiContent(chapterId: string, mode: AiMode) {
   const cleanId = chapterId.replace("mod-", "");
   const modPrefixedId = chapterId.startsWith("mod-") ? chapterId : `mod-${chapterId}`;
 
-  // 1. Jika pengguna meminta modul aktif tervalidasi atau id-nya cocok dengan modul aktif saat ini
+  // 1. Cek apakah cocok dengan salah satu modul kurikulum aktif per jenjang kelas
+  const activeForGrade = Object.values(activeCurriculumStateByGrade).find(
+    (mod) =>
+      mod &&
+      (chapterId === "active" ||
+        chapterId === mod.id ||
+        cleanId === mod.id.replace("mod-", "") ||
+        modPrefixedId === mod.id)
+  );
+
+  if (activeForGrade) {
+    if (mode === "kuis_tantangan") {
+      return {
+        title: `Kuis Tantangan Seru: ${activeForGrade.title}`,
+        body: [
+          `Ayo uji pemahamanmu tentang materi ${activeForGrade.title} bersama Robot Pintar!`,
+          "Klik tombol 'Mainkan Kuis Seru' di menu kiri untuk menambah poin prestasimu!",
+        ],
+      };
+    }
+
+    return {
+      title: `Ringkasan Modul & Pengamalan: ${activeForGrade.chapterCode} - ${activeForGrade.title}`,
+      body:
+        activeForGrade.ragSummary && activeForGrade.ragSummary.length > 0
+          ? activeForGrade.ragSummary
+          : [
+              `Pengertian Pokok: Pembelajaran ${activeForGrade.chapterCode} mengenai "${activeForGrade.title}" disarikan ke dalam konsep budi pekerti ramah anak SD.`,
+              "Aksi Nyata di Sekolah: Mengajak siswa bekerja sama dan mematuhi aturan tata tertib kelas dengan disiplin.",
+              "Pengamalan di Rumah: Membiasakan sikap santun, menghormati orang tua dan anggota keluarga.",
+            ],
+    };
+  }
+
+  // 1b. Jika pengguna meminta modul aktif tervalidasi atau id-nya cocok dengan modul aktif saat ini
   if (
     activeCurriculumState &&
     (chapterId === "active" ||
@@ -1307,6 +1483,145 @@ export async function getAiContent(chapterId: string, mode: AiMode) {
 // BANK SOAL KUIS ADAPTIF TEMATIK PER-BAB (PKN & BAHASA JAWA LEVEL 1, 2, 3)
 // ============================================================================
 export const chapterQuizBank: Record<string, Record<number, Question[]>> = {
+  "pkn-kls1-simbol": {
+    1: [
+      {
+        id: "q_kls1_1_1",
+        question: "Apakah lambang atau simbol Sila Pertama Pancasila?",
+        options: ["Bintang Emas", "Pohon Beringin", "Kepala Banteng", "Rantai Emas"],
+        correctOption: 0,
+        hint: "Bintang bersinar terang di langit, melambangkan Ketuhanan Yang Maha Esa!",
+      },
+      {
+        id: "q_kls1_1_2",
+        question: "Contoh perilaku baik sesuai Sila Pertama saat di sekolah adalah...",
+        options: ["Berdoa sebelum belajar dan makan", "Berebut mainan dengan teman", "Mengobrol saat guru menerangkan", "Membuang sampah sembarangan"],
+        correctOption: 0,
+        hint: "Kita selalu mengucap syukur dan berdoa kepada Tuhan sebelum beraktivitas.",
+      },
+      {
+        id: "q_kls1_1_3",
+        question: "Apakah simbol Sila Kedua Pancasila yang gelang-gelangnya saling tersambung kuat?",
+        options: ["Rantai Emas", "Bintang Emas", "Padi dan Kapas", "Pohon Beringin"],
+        correctOption: 0,
+        hint: "Rantai emas melambangkan persahabatan dan tolong-menolong sesama kawan.",
+      },
+      {
+        id: "q_kls1_1_4",
+        question: "Jika melihat teman terjatuh saat bermain di halaman sekolah, sikap kita adalah...",
+        options: ["Segera menolongnya berdiri", "Menertawakannya ramai-ramai", "Pura-pura tidak melihat", "Meninggalkannya sendirian"],
+        correctOption: 0,
+        hint: "Sila kedua mengajarkan kita untuk saling menyayangi dan sigap menolong.",
+      },
+      {
+        id: "q_kls1_1_5",
+        question: "Simbol Sila Ketiga Pancasila 'Persatuan Indonesia' adalah...",
+        options: ["Pohon Beringin", "Bintang", "Kepala Banteng", "Padi dan Kapas"],
+        correctOption: 0,
+        hint: "Pohon besar dan rindang tempat semua anak Indonesia berteduh rukun!",
+      },
+    ],
+    2: [
+      {
+        id: "q_kls1_2_1",
+        question: "Pohon beringin yang rindang dan berakar kuat melambangkan...",
+        options: [
+          "Hidup rukun dan bersatu tanpa bertengkar",
+          "Pohon yang paling tinggi di hutan",
+          "Tempat bersembunyi saat hujan",
+          "Tanaman hias di dalam pot",
+        ],
+        correctOption: 0,
+        hint: "Seluruh anak Indonesia hidup damai bersatu di bawah naungan Indonesia.",
+      },
+      {
+        id: "q_kls1_2_2",
+        question: "Simbol Sila Keempat adalah Kepala Banteng. Contoh pengamalannya di kelas adalah...",
+        options: [
+          "Tertib mendengarkan saat bu guru atau teman berbicara",
+          "Berteriak-teriak memotong ucapan teman",
+          "Memaksakan kehendak sendiri",
+          "Tidur saat teman berpendapat",
+        ],
+        correctOption: 0,
+        hint: "Kepala banteng mengajarkan musyawarah dan tertib mendengarkan pendapat.",
+      },
+      {
+        id: "q_kls1_2_3",
+        question: "Simbol Sila Kelima adalah Padi dan Kapas. Simbol ini melambangkan...",
+        options: [
+          "Kebutuhan pangan (makan) dan sandang (pakaian) untuk kemakmuran bersama",
+          "Bunga hiasan dinding kelas",
+          "Tumbuhan obat-obatan",
+          "Mainan anak-anak",
+        ],
+        correctOption: 0,
+        hint: "Padi menjadi beras untuk makan, kapas menjadi kain untuk pakaian seragam.",
+      },
+      {
+        id: "q_kls1_2_4",
+        question: "Contoh sikap adil dan terpuji sesuai Sila Kelima adalah...",
+        options: [
+          "Mau berbagi pensil atau bekal dan suka menabung",
+          "Menghabiskan uang jajan secara boros",
+          "Menyembunyikan barang milik teman",
+          "Iri melihat teman yang berprestasi",
+        ],
+        correctOption: 0,
+        hint: "Anak hebat suka berbagi kebaikan, tidak boros, dan gemar menabung.",
+      },
+      {
+        id: "q_kls1_2_5",
+        question: "Saat bermain bersama kawan baru di sekolah, sikap yang baik adalah...",
+        options: [
+          "Bermain bersama dengan gembira tanpa membeda-bedakan",
+          "Hanya mau berteman dengan teman satu desa saja",
+          "Mengejek logat bicara teman",
+          "Menolak meminjamkan mainan",
+        ],
+        correctOption: 0,
+        hint: "Semua kawan di sekolah adalah teman bermain kita bersama.",
+      },
+    ],
+    3: [
+      {
+        id: "q_kls1_3_1",
+        question: "Budi melihat teman sebangkunya sedang berdoa sebelum makan siang. Sikap Budi adalah...",
+        options: [
+          "Menghormati dan menunggu dengan tenang tanpa mengganggu",
+          "Mengajaknya bercanda dan mengobrol",
+          "Menertawakan caranya berdoa",
+          "Menyuruhnya makan cepat-cepat",
+        ],
+        correctOption: 0,
+        hint: "Toleransi dan menghormati teman beribadah adalah pengamalan Sila Pertama.",
+      },
+      {
+        id: "q_kls1_3_2",
+        question: "Bu Guru membagikan kertas gambar secara adil dan rata kepada semua murid. Sikap Bu Guru mencerminkan Sila...",
+        options: [
+          "Kelima (Keadilan sosial / Padi dan Kapas)",
+          "Kedua (Kemanusiaan / Rantai)",
+          "Ketiga (Persatuan / Pohon Beringin)",
+          "Pertama (Ketuhanan / Bintang)",
+        ],
+        correctOption: 0,
+        hint: "Membagi hak secara adil dan merata adalah pengamalan Sila Kelima.",
+      },
+      {
+        id: "q_kls1_3_3",
+        question: "Mengapa kita harus tertib berbaris dan antre saat mencuci tangan di sekolah?",
+        options: [
+          "Karena menghargai hak giliran kawan sesuai tata tertib",
+          "Supaya bisa mendorong teman di depan",
+          "Karena takut dihukum penjaga sekolah",
+          "Supaya kran air cepat habis",
+        ],
+        correctOption: 0,
+        hint: "Disiplin dan tertib antre adalah wujud anak berbudi pekerti luhur.",
+      },
+    ],
+  },
   "pkn-sila3": {
     1: [
       {
