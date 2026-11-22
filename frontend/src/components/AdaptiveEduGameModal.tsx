@@ -4491,25 +4491,25 @@ return rawStations.map((st) => {
                 </div>
               )}
 
-              {/* DIALOG PAK GURU VIRTUAL DI GAPURA - MOCKUP RINGKAS & TIDAK MEMBLOKIR LAYAR */}
+              {/* DIALOG PAK GURU VIRTUAL DI GAPURA - MOCKUP NYAMAN, PROPORSIONAL & TIDAK TERLALU KECIL */}
               {showGuruDialog && (
-                <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-sm sm:max-w-md w-[92vw] pointer-events-auto animate-in slide-in-from-bottom-5">
-                  <div className="bg-slate-900/95 border-2 border-sky-400 rounded-2xl p-3 sm:p-4 text-white shadow-2xl backdrop-blur-md space-y-2.5">
-                    <div className="flex items-center justify-between border-b border-slate-700/80 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400 flex items-center justify-center text-xl shadow-md shrink-0">
+                <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-xl sm:max-w-2xl w-[94vw] pointer-events-auto animate-in slide-in-from-bottom-5">
+                  <div className="bg-slate-900/95 border-2 border-sky-400 rounded-3xl p-4 sm:p-5 text-white shadow-2xl backdrop-blur-md space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
+                      <div className="flex items-center gap-3">
+                        <span className="w-11 h-11 rounded-2xl bg-sky-500/20 border border-sky-400 flex items-center justify-center text-2xl shadow-md shrink-0">
                           👨‍🏫
                         </span>
                         <div>
-                          <h3 className="font-black text-xs sm:text-sm text-sky-300">
+                          <h3 className="font-black text-sm sm:text-base text-sky-300">
                             Pak Guru Virtual di Gapura
                           </h3>
-                          <p className="text-[10px] text-slate-300">
-                            {isJuniorGrade ? "Pemandu Pengamalan Sila" : `Pemandu Materi ${guruBriefing.submateri}`}
+                          <p className="text-xs text-slate-300">
+                            {isJuniorGrade ? "Pemandu Belajar & Pengamalan Nilai Kebaikan" : `Pemandu Materi ${guruBriefing.submateri}`}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => {
@@ -4518,12 +4518,12 @@ return rawStations.map((st) => {
                             } else {
                               speakGuruVoice(
                                 isJuniorGrade
-                                  ? "Halo anak hebat! Jelajahi Desa Pancasila, dekati setiap pos untuk belajar berbuat baik, dan kumpulkan koin emas di jalan ya!"
+                                  ? "Halo anak hebat! Jelajahi Desa Pancasila, dekati setiap pos untuk belajar berbuat baik dan tolong-menolong, serta kumpulkan koin emas di jalan ya!"
                                   : guruBriefing.speech
                               );
                             }
                           }}
-                          className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
                             isGuruSpeaking
                               ? "bg-rose-600 text-white animate-pulse"
                               : "bg-sky-500 hover:bg-sky-600 text-white"
@@ -4531,7 +4531,7 @@ return rawStations.map((st) => {
                           title="Dengarkan Suara Guru"
                         >
                           <span>{isGuruSpeaking ? "⏹️" : "🔊"}</span>
-                          <span>{isGuruSpeaking ? "Stop" : "Suara"}</span>
+                          <span>{isGuruSpeaking ? "Stop Suara" : "Putar Suara"}</span>
                         </button>
                         <button
                           type="button"
@@ -4540,7 +4540,7 @@ return rawStations.map((st) => {
                             stopGuruVoice();
                             setShowGuruDialog(false);
                           }}
-                          className="w-7 h-7 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center font-bold text-xs cursor-pointer transition border border-slate-700 shrink-0"
+                          className="w-8 h-8 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition border border-slate-700 shrink-0"
                           aria-label="Tutup Dialog"
                         >
                           ✕
@@ -4550,31 +4550,31 @@ return rawStations.map((st) => {
 
                     {/* Konten Penjelasan Guru: Ringkas untuk Kelas 1-3 vs Tab untuk Kelas 4+ */}
                     {isJuniorGrade ? (
-                      <div className="bg-slate-800/90 p-3 rounded-xl border border-sky-400/40 text-xs text-slate-100 space-y-1.5">
-                        <p className="font-bold text-yellow-300 flex items-center gap-1.5">
-                          <span>🌟</span>
+                      <div className="bg-slate-800/90 p-3.5 sm:p-4 rounded-2xl border border-sky-400/40 text-xs sm:text-sm text-slate-100 space-y-2">
+                        <p className="font-bold text-yellow-300 flex items-center gap-2">
+                          <span className="text-base">🌟</span>
                           <span>Pesan Pengamalan untuk Murid Hebat:</span>
                         </p>
-                        <p className="text-[11px] leading-relaxed text-slate-200">
+                        <p className="text-xs sm:text-sm leading-relaxed text-slate-200">
                           "Halo murid pintar! Ayo jalan ke depan melewati gapura, dekati 5 pos sila untuk belajar berbuat baik dan tolong-menolong, serta kumpulkan koin emas di sepanjang jalan!"
                         </p>
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center gap-1 p-1 bg-slate-800 rounded-xl border border-slate-700 text-[11px]">
+                        <div className="flex items-center gap-1.5 p-1 bg-slate-800 rounded-xl border border-slate-700 text-xs font-bold">
                           <button
                             type="button"
                             onClick={() => {
                               setGuruTab("apa_itu");
                               speakGuruVoice(guruBriefing.speech);
                             }}
-                            className={`flex-1 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                            className={`flex-1 py-2 rounded-lg font-bold transition cursor-pointer ${
                               guruTab === "apa_itu"
                                 ? "bg-sky-500 text-white shadow-xs"
                                 : "text-slate-300 hover:text-white"
                             }`}
                           >
-                            📖 Intisari
+                            📖 Intisari Materi
                           </button>
                           <button
                             type="button"
@@ -4582,13 +4582,13 @@ return rawStations.map((st) => {
                               setGuruTab("makna_sila");
                               speakGuruVoice(`Intisari 5 Pos Materi ${guruBriefing.submateri}: ${posVoiceList}.`);
                             }}
-                            className={`flex-1 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                            className={`flex-1 py-2 rounded-lg font-bold transition cursor-pointer ${
                               guruTab === "makna_sila"
                                 ? "bg-sky-500 text-white shadow-xs"
                                 : "text-slate-300 hover:text-white"
                             }`}
                           >
-                            ⭐ 5 Pos
+                            ⭐ 5 Pos Sila
                           </button>
                           <button
                             type="button"
@@ -4598,36 +4598,36 @@ return rawStations.map((st) => {
                                 "Cara mainnya mudah: jalan dengan WASD atau tombol panah, dekati pos materi, dan kumpulkan koin emas!"
                               );
                             }}
-                            className={`flex-1 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                            className={`flex-1 py-2 rounded-lg font-bold transition cursor-pointer ${
                               guruTab === "cara_main"
                                 ? "bg-sky-500 text-white shadow-xs"
                                 : "text-slate-300 hover:text-white"
                             }`}
                           >
-                            🎮 Panduan
+                            🎮 Cara Main
                           </button>
                         </div>
 
-                        <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 text-xs text-slate-200 max-h-36 overflow-y-auto">
+                        <div className="bg-slate-800/90 p-3.5 sm:p-4 rounded-2xl border border-slate-700 text-xs sm:text-sm text-slate-200 max-h-48 overflow-y-auto">
                           {guruTab === "apa_itu" && (
-                            <div className="space-y-1">
-                              <b className="text-yellow-300 block text-xs">{guruBriefing.submateri}</b>
-                              <p className="text-[11px] leading-relaxed text-slate-200">{guruBriefing.arahan}</p>
+                            <div className="space-y-1.5">
+                              <b className="text-yellow-300 block text-xs sm:text-sm">{guruBriefing.submateri}</b>
+                              <p className="text-xs sm:text-sm leading-relaxed text-slate-200">{guruBriefing.arahan}</p>
                             </div>
                           )}
                           {guruTab === "makna_sila" && (
-                            <div className="space-y-1.5 text-[11px]">
+                            <div className="space-y-2 text-xs">
                               {sukuList.slice(0, 5).map((pos, idx) => (
-                                <div key={pos.id} className="p-1.5 rounded-lg bg-slate-900/60 border border-slate-700/60">
-                                  <span className="font-bold text-yellow-300 mr-1">{pos.simbolSila || "📍"} Pos {idx + 1}:</span>
-                                  <span className="text-slate-300">{pos.subMateri || pos.namaPos}</span>
+                                <div key={pos.id} className="p-2 rounded-xl bg-slate-900/60 border border-slate-700/60 flex items-start gap-2">
+                                  <span className="font-bold text-yellow-300 shrink-0">{pos.simbolSila || "📍"} Pos {idx + 1}:</span>
+                                  <span className="text-slate-300 leading-snug">{pos.subMateri || pos.namaPos}</span>
                                 </div>
                               ))}
                             </div>
                           )}
                           {guruTab === "cara_main" && (
-                            <p className="text-[11px] text-slate-200 leading-relaxed">
-                              Gunakan tombol arah/WASD untuk bergerak. Dekati setiap lingkaran pos sila untuk langsung memulai kuis dan mengumpulkan skor!
+                            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                              Gunakan tombol arah panah / WASD untuk bergerak. Dekati setiap lingkaran pos sila untuk langsung memulai kuis dan mengumpulkan skor!
                             </p>
                           )}
                         </div>
@@ -4635,9 +4635,9 @@ return rawStations.map((st) => {
                     )}
 
                     {/* Tombol Aksi Mulai */}
-                    <div className="flex justify-between items-center pt-1">
-                      <span className="text-[10px] text-slate-400">
-                        {isGuruSpeaking ? "🔊 Suara aktif..." : "Klik suara untuk dengar"}
+                    <div className="flex justify-between items-center pt-1.5">
+                      <span className="text-xs text-slate-400">
+                        {isGuruSpeaking ? "🔊 Suara aktif menerangkan..." : "Klik suara untuk mendengar"}
                       </span>
                       <button
                         type="button"
@@ -4647,7 +4647,7 @@ return rawStations.map((st) => {
                           setActiveNotification("🚀 Semangat! Mulai jelajahi area dan dekati pos sila!");
                           setTimeout(() => setActiveNotification(null), 3000);
                         }}
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 px-4 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white font-black py-2 px-5 rounded-xl text-xs sm:text-sm transition cursor-pointer flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95"
                       >
                         <span>Siap, Mulai Jalan! 🚶</span>
                       </button>

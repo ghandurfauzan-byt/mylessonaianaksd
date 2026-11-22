@@ -103,12 +103,12 @@ export default function ResetPointsModal({
                 className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold focus:ring-2 focus:ring-rose-400 outline-none cursor-pointer"
               >
                 <option value="all">🌟 Semua Kelas (Kelas 1 s/d Kelas 6)</option>
-                <option value="Kelas 1">Kelas 1 (Fase A)</option>
-                <option value="Kelas 2">Kelas 2 (Fase A)</option>
-                <option value="Kelas 3">Kelas 3 (Fase B)</option>
-                <option value="Kelas 4">Kelas 4 (Fase B - Utama)</option>
-                <option value="Kelas 5">Kelas 5 (Fase C)</option>
-                <option value="Kelas 6">Kelas 6 (Fase C)</option>
+                <option value="Kelas 1">Kelas 1</option>
+                <option value="Kelas 2">Kelas 2</option>
+                <option value="Kelas 3">Kelas 3</option>
+                <option value="Kelas 4">Kelas 4</option>
+                <option value="Kelas 5">Kelas 5</option>
+                <option value="Kelas 6">Kelas 6</option>
               </select>
             </div>
 

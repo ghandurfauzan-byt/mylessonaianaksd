@@ -53,14 +53,11 @@ const INITIAL_MODULES: CurriculumModule[] = [
     "validatedAt": "Hari ini, 07:15 WIB",
     "gameType": "adventure",
     "ragSummary": [
-      "Pengertian Pancasila sebagai Dasar Negara: Pancasila adalah dasar negara dan pedoman tingkah laku bagi seluruh rakyat Indonesia. Kata Pancasila berasal dari bahasa Sanskerta: Panca artinya lima, dan Sila artinya dasar atau asas budi pekerti.",
-      "Mengenal Lambang Burung Garuda Pancasila: Burung Garuda adalah lambang negara Indonesia yang berbulu kuning keemasan, melambangkan keagungan dan kejayaan bangsa. Di dadanya tergantung perisai yang memuat lima simbol sila, serta kakinya mencengkeram pita bertuliskan semboyan suci Bhinneka Tunggal Ika.",
-      "Simbol Sila Ke-1 (Bintang Emas): Sila pertama berbunyi Ketuhanan Yang Maha Esa dilambangkan dengan Bintang bersudut lima berlatar hitam, maknanya adalah cahaya kerohanian dari Tuhan Yang Maha Esa kepada seluruh manusia.",
-      "Simbol Sila Ke-2 (Rantai Emas): Sila kedua berbunyi Kemanusiaan yang adil dan beradab dilambangkan dengan rantai gelang persegi dan lingkaran yang saling bertaut kokoh, mencerminkan persatuan gotong royong antara laki-laki dan perempuan.",
-      "Simbol Sila Ke-3 (Pohon Beringin): Sila ketiga berbunyi Persatuan Indonesia dilambangkan dengan Pohon Beringin yang rindang dan berakar kuat menghunjam ke bumi, melambangkan tempat berteduh yang aman bagi seluruh suku bangsa.",
-      "Simbol Sila Ke-4 (Kepala Banteng): Sila keempat berbunyi Kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan dilambangkan dengan Kepala Banteng sebagai hewan sosial yang gemar berkumpul untuk musyawarah.",
-      "Simbol Sila Ke-5 (Padi dan Kapas): Sila kelima berbunyi Keadilan sosial bagi seluruh rakyat Indonesia dilambangkan dengan padi (makanan pokok) dan kapas (sandang/pakaian) sebagai syarat kemakmuran dan keadilan rakyat.",
-      "Aksi Nyata Pelajar Pancasila di Sekolah: Berdoa bersama sebelum dan sesudah belajar, rukun bermain dengan teman tanpa mengejek, meminjamkan alat tulis kepada kawan yang membutuhkan, serta tertib mematuhi nasihat guru."
+      "Simbol Sila 1 (Bintang Emas): Berdoa sebelum makan dan belajar, menyayangi teman saat beribadah.",
+      "Simbol Sila 2 (Rantai Emas): Saling menolong teman yang terjatuh, bersikap ramah, tidak mengejek kawan.",
+      "Simbol Sila 3 (Pohon Beringin): Hidup rukun bermain bersama di sekolah tanpa bertengkar.",
+      "Simbol Sila 4 (Kepala Banteng): Mendengarkan bu guru dan teman saat berbicara, tertib saat antre.",
+      "Simbol Sila 5 (Padi dan Kapas): Mau berbagi pensil atau bekal, adil kepada semua kawan, dan suka menabung."
     ],
     "generatedQuizPreview": [
       "Level 1: Simbol Sila ke-1 Bintang Emas (+10 Poin)",

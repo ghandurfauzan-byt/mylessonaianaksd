@@ -236,12 +236,12 @@ export default function AiContentPanel({
               {isJuniorGrade ? (
                 <span className="text-[11px] font-black bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 text-white px-3 py-1 rounded-full shadow-sm animate-pulse flex items-center gap-1.5">
                   <span>🌈</span>
-                  <span>{activeGrade} (Fase A) • Materi Ringkas &amp; Jelas</span>
+                  <span>{activeGrade} • Materi Ringkas &amp; Jelas</span>
                 </span>
               ) : (
                 <span className="text-[11px] font-black bg-slate-800 text-sky-200 border border-sky-400/40 px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5">
                   <span>📘</span>
-                  <span>{activeGrade} (Fase B/C) • Materi Mendalam &amp; Terstruktur</span>
+                  <span>{activeGrade} • Materi Mendalam &amp; Terstruktur</span>
                 </span>
               )}
             </div>
@@ -799,7 +799,7 @@ export default function AiContentPanel({
                 <span>⚖️</span>
                 <span>
                   {isJuniorGrade
-                    ? "Aturan Perilaku Baik Sehari-hari (Fase A - Kelas 1, 2, 3):"
+                    ? "Aturan Perilaku Baik Sehari-hari (Kelas 1, 2, 3):"
                     : "4 Macam Norma Aturan Hidup (Sanksi & Contoh Konkret):"}
                 </span>
               </h4>

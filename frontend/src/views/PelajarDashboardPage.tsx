@@ -232,8 +232,8 @@ export default function PelajarDashboardPage() {
             queryClient.invalidateQueries({ queryKey: ["ai-content"] });
             queryClient.invalidateQueries({ queryKey: ["quiz"] });
 
-            // Jika URL masih terkunci ke parameter ?chapter= materi lama, otomatis arahkan ke materi baru
-            if (paramChapter && paramChapter !== serverMod.id) {
+            // Otomatis arahkan ke materi baru dari Kemendikbud
+            if (paramChapter !== serverMod.id) {
               navigate(`/dashboard/pelajar?chapter=${encodeURIComponent(serverMod.id)}&mode=${mode}`, {
                 replace: true,
               });
@@ -840,12 +840,12 @@ export default function PelajarDashboardPage() {
                   onChange={(e) => handleSwitchGrade(e.target.value)}
                   className="bg-transparent font-black text-xs text-amber-950 dark:text-amber-200 cursor-pointer focus:outline-none"
                 >
-                  <option value="Kelas 1" className="text-slate-900 bg-white">Kelas 1 (Fase A)</option>
-                  <option value="Kelas 2" className="text-slate-900 bg-white">Kelas 2 (Fase A)</option>
-                  <option value="Kelas 3" className="text-slate-900 bg-white">Kelas 3 (Fase A)</option>
-                  <option value="Kelas 4" className="text-slate-900 bg-white">Kelas 4 (Fase B)</option>
-                  <option value="Kelas 5" className="text-slate-900 bg-white">Kelas 5 (Fase C)</option>
-                  <option value="Kelas 6" className="text-slate-900 bg-white">Kelas 6 (Fase C)</option>
+                  <option value="Kelas 1" className="text-slate-900 bg-white">Kelas 1</option>
+                  <option value="Kelas 2" className="text-slate-900 bg-white">Kelas 2</option>
+                  <option value="Kelas 3" className="text-slate-900 bg-white">Kelas 3</option>
+                  <option value="Kelas 4" className="text-slate-900 bg-white">Kelas 4</option>
+                  <option value="Kelas 5" className="text-slate-900 bg-white">Kelas 5</option>
+                  <option value="Kelas 6" className="text-slate-900 bg-white">Kelas 6</option>
                 </select>
               </div>
             </div>

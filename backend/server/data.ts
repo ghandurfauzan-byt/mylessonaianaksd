@@ -1302,6 +1302,13 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
     aiContentLibrary[cleanId] = contentObj;
     aiContentLibrary[`mod-${cleanId}`] = contentObj;
   }
+
+  if (mod.quizQuestions) {
+    const cleanId = mod.id.replace("mod-", "");
+    chapterQuizBank[cleanId] = mod.quizQuestions;
+    chapterQuizBank[mod.id] = mod.quizQuestions;
+    chapterQuizBank[`mod-${cleanId}`] = mod.quizQuestions;
+  }
 }
 
 export function getActiveCurriculumState(targetKelas?: string): ActiveCurriculumState | null {
