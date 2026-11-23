@@ -3799,6 +3799,7 @@ export async function getRegisteredStudents(chapterId?: string, kelas?: string) 
         gamePoints: chGamePoints,
         status: chStatus,
         weakness: u.weakness,
+        chapterScores: u.chapterScores,
       };
     })
     .sort((a, b) => (b.points ?? 0) - (a.points ?? 0));

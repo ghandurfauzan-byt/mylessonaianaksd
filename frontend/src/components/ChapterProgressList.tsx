@@ -465,6 +465,8 @@ export default function ChapterProgressList({
   const { data: rawChapters, isLoading, isError, error, refetch } = useChapterProgressQuery();
   const activeValidatedModule = useUIStore((s) => s.activeValidatedModule);
   const [selectedSubject, setSelectedSubject] = useState<"pkn" | "bjawa">("pkn");
+  const [selectedKelas, setSelectedKelas] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"chart" | "list">("chart");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -935,7 +937,67 @@ export default function ChapterProgressList({
         </button>
       </div>
 
-      {/* 2. RINGKASAN GOLONGAN AKTIF */}
+      {/* 2. TOOLBAR KONTROL GRAFIK: PILIHAN KELAS, MATA PELAJARAN & TOGGLE TAMPILAN */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-100/80 dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-700">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <span>🏫</span>
+            <span>Target Kelas:</span>
+          </label>
+          <select
+            value={selectedKelas}
+            onChange={(e) => {
+              playClickSound();
+              setSelectedKelas(e.target.value);
+            }}
+            className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer shadow-xs"
+          >
+            <option value="all">🌟 Semua Kelas (Kelas 1 s/d 6)</option>
+            <option value="Kelas 1">🎒 Kelas 1</option>
+            <option value="Kelas 2">🎒 Kelas 2</option>
+            <option value="Kelas 3">🎒 Kelas 3</option>
+            <option value="Kelas 4">🎒 Kelas 4</option>
+            <option value="Kelas 5">🎒 Kelas 5</option>
+            <option value="Kelas 6">🎒 Kelas 6</option>
+          </select>
+        </div>
+
+        {/* Toggle Mode Tampilan: Grafik Batang vs Mode Daftar */}
+        <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setViewMode("chart");
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+              viewMode === "chart"
+                ? "bg-sky-600 text-white shadow-xs"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            <span>📊</span>
+            <span>Grafik Batang</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setViewMode("list");
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+              viewMode === "list"
+                ? "bg-sky-600 text-white shadow-xs"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            <span>📋</span>
+            <span>Daftar Detail</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3. RINGKASAN GOLONGAN AKTIF */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-2 text-[11px] font-extrabold text-slate-600 dark:text-slate-400">
         <div className="flex items-center gap-2">
           <span>
@@ -943,6 +1005,11 @@ export default function ChapterProgressList({
             <strong className="text-slate-900 dark:text-white">{activeChapters.length}</strong> Bab{" "}
             {isStudent ? "Tuntas Dipelajari ⭐" : "Tuntas Kelas"}
           </span>
+          {selectedKelas !== "all" && (
+            <span className="px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 font-black text-[10px] border border-sky-300">
+              {selectedKelas}
+            </span>
+          )}
           {deletedChapterIds.length > 0 && (
             <button
               type="button"
@@ -959,7 +1026,7 @@ export default function ChapterProgressList({
         </span>
       </div>
 
-      {/* 3. DAFTAR BAB-BAB PELAJARAN YANG BISA DIKLIK */}
+      {/* 4. TAMPILAN KONTEN: GRAFIK BATANG ATAU DAFTAR */}
       {activeChapters.length === 0 ? (
         <div className="text-center py-8 px-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 space-y-3">
           <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
@@ -975,13 +1042,196 @@ export default function ChapterProgressList({
             </button>
           )}
         </div>
+      ) : viewMode === "chart" ? (
+        /* ================= TAMPILAN GRAFIK BATANG INTERAKTIF ================= */
+        <div className="bg-white dark:bg-slate-800/90 rounded-3xl p-5 sm:p-6 border-2 border-sky-100 dark:border-slate-700 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3 border-slate-100 dark:border-slate-700">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📊</span>
+                <h4 className="text-sm font-black text-slate-800 dark:text-white">
+                  Grafik Batang Pemahaman: {selectedSubject === "pkn" ? "Pendidikan Pancasila & PKn" : "Bahasa Jawa"} {selectedKelas !== "all" ? `(${selectedKelas})` : "(Seluruh Siswa)"}
+                </h4>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Klik pada batang materi untuk melihat rincian evaluasi diagnostik &amp; daftar siswa yang butuh bantuan.
+              </p>
+            </div>
+
+            {/* Indikator Status Warna KKTP */}
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+                ≥75% Tuntas KKTP ⭐
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
+                60-74% Perlu Latihan ⏳
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+                &lt;60% Butuh Bimbingan ⚠️
+              </span>
+            </div>
+          </div>
+
+          {/* Canvas Grafik Batang */}
+          <div className="relative pt-6 pb-2">
+            {/* Garis Acuan KKTP 75% */}
+            <div
+              className="absolute left-10 right-0 border-b-2 border-dashed border-emerald-500 z-10 pointer-events-none flex items-center justify-end pr-2"
+              style={{ bottom: "calc(75% * 2.3 + 92px)" }}
+            >
+              <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md shadow-xs border border-emerald-300 -translate-y-1/2">
+                🎯 Garis Batas Tuntas KKTP (75%)
+              </span>
+            </div>
+
+            {/* Garis Kisi 50% & 25% */}
+            <div
+              className="absolute left-10 right-0 border-b border-dashed border-slate-200 dark:border-slate-700 z-0 pointer-events-none"
+              style={{ bottom: "calc(50% * 2.3 + 92px)" }}
+            />
+            <div
+              className="absolute left-10 right-0 border-b border-dashed border-slate-200 dark:border-slate-700 z-0 pointer-events-none"
+              style={{ bottom: "calc(25% * 2.3 + 92px)" }}
+            />
+
+            {/* Kontainer Sumbu Y + Batang */}
+            <div className="flex gap-2 sm:gap-4 items-end min-h-[340px]">
+              {/* Sumbu Y (0 - 100%) */}
+              <div className="flex flex-col justify-between h-[230px] pb-2 text-[10px] font-black text-slate-400 select-none w-8 shrink-0 text-right pr-1">
+                <span>100%</span>
+                <span className="text-emerald-600 font-extrabold">75%</span>
+                <span>50%</span>
+                <span>25%</span>
+                <span>0%</span>
+              </div>
+
+              {/* Batang-batang Kolom Materi (Scrollable Horizontal jika banyak bab) */}
+              <div className="flex-1 flex items-end gap-3 sm:gap-6 overflow-x-auto pb-2 pt-6">
+                {activeChapters.map((chapter) => {
+                  const cleanName = chapter.name.replace(/^PKn:\s*/i, "").replace(/^B\.\s*Jawa:\s*/i, "");
+                  const isTuntas = chapter.percent >= 75;
+                  const isWarning = chapter.percent >= 60 && chapter.percent < 75;
+
+                  const barGradient = isTuntas
+                    ? "bg-gradient-to-t from-emerald-600 via-teal-500 to-emerald-400 border-t-2 border-emerald-300 shadow-md shadow-emerald-500/20"
+                    : isWarning
+                      ? "bg-gradient-to-t from-amber-600 via-amber-500 to-yellow-400 border-t-2 border-amber-300 shadow-md shadow-amber-500/20"
+                      : "bg-gradient-to-t from-rose-600 via-rose-500 to-orange-400 border-t-2 border-rose-300 shadow-md shadow-rose-500/20";
+
+                  return (
+                    <div
+                      key={chapter.id}
+                      className="flex-1 min-w-[100px] sm:min-w-[130px] max-w-[170px] flex flex-col items-center group cursor-pointer"
+                      onClick={() => {
+                        if (isStudent) {
+                          handleChapterClick(chapter.name);
+                        } else {
+                          playClickSound();
+                          const cid = getChapterCanonicalId(chapter.name);
+                          setDiagnosticChapterId(cid);
+                          setSelectedDiagnosticChapter(chapter);
+                        }
+                      }}
+                      title={
+                        isStudent
+                          ? `Buka materi "${cleanName}" di whiteboard`
+                          : `Klik untuk melihat analisis siswa lemah pada materi "${cleanName}"`
+                      }
+                    >
+                      {/* Nilai persentase di atas batang */}
+                      <div className="mb-2 transition-transform duration-200 group-hover:-translate-y-1">
+                        <span
+                          className={`inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full shadow-xs border ${
+                            isTuntas
+                              ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                              : isWarning
+                                ? "bg-amber-100 text-amber-900 border-amber-300"
+                                : "bg-rose-100 text-rose-900 border-rose-300"
+                          }`}
+                        >
+                          {chapter.percent}% {isTuntas ? "⭐" : "⚠️"}
+                        </span>
+                      </div>
+
+                      {/* Batang Visual Vertikal */}
+                      <div className="w-full h-[230px] flex items-end justify-center bg-slate-100/80 dark:bg-slate-700/50 rounded-2xl p-2 border border-slate-200 dark:border-slate-700 group-hover:border-sky-400 transition-colors shadow-inner">
+                        <div
+                          className={`w-full rounded-xl transition-all duration-700 group-hover:brightness-110 ${barGradient}`}
+                          style={{ height: `${Math.max(14, (chapter.percent / 100) * 100)}%` }}
+                        />
+                      </div>
+
+                      {/* Label Nama Materi & Kontrol di Bawah Batang */}
+                      <div className="w-full mt-2.5 space-y-1.5 text-center">
+                        <div
+                          className="text-[11px] font-black text-slate-800 dark:text-slate-200 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors"
+                          title={cleanName}
+                        >
+                          {cleanName}
+                        </div>
+                        <div className="text-[10px] font-extrabold text-slate-500">
+                          {isTuntas ? "✅ Tuntas Kelas" : "⏳ Perlu Bimbingan"}
+                        </div>
+
+                        {!isStudent && (
+                          <div className="flex items-center justify-center gap-1 pt-1">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                playClickSound();
+                                const cid = getChapterCanonicalId(chapter.name);
+                                setDiagnosticChapterId(cid);
+                                setSelectedDiagnosticChapter(chapter);
+                              }}
+                              className="text-[9px] font-black px-2 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border border-sky-300 hover:bg-sky-600 hover:text-white transition cursor-pointer shadow-2xs"
+                              title="Buka rincian analisis evaluasi siswa lemah"
+                            >
+                              🔍 Analisis
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteChapter(chapter, e)}
+                              className="text-[9px] font-black px-1.5 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 border border-rose-200 hover:bg-rose-600 hover:text-white transition cursor-pointer shadow-2xs"
+                              title={`Hapus materi "${cleanName}"`}
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Kotak Rekapitulasi Metrik Cepat */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 dark:border-slate-700 text-xs">
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-slate-500 font-bold">Total Materi Aktif:</span>
+              <span className="font-black text-slate-900 dark:text-white">{activeChapters.length} Bab</span>
+            </div>
+            <div className="p-3 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+              <span className="text-emerald-800 dark:text-emerald-300 font-bold">Bab Tuntas KKTP (≥75%):</span>
+              <span className="font-black text-emerald-900 dark:text-emerald-200">{completedCount} Bab</span>
+            </div>
+            <div className="p-3 rounded-2xl bg-sky-50/70 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex items-center justify-between">
+              <span className="text-sky-800 dark:text-sky-300 font-bold">Rata-Rata Pemahaman:</span>
+              <span className="font-black text-sky-900 dark:text-sky-200">{currentAvg}%</span>
+            </div>
+          </div>
+        </div>
       ) : (
+        /* ================= TAMPILAN DAFTAR DETAIL ================= */
         <div className="space-y-2.5">
           {activeChapters.map((chapter) => {
             const tone = TONE_STYLES[chapter.tone] ?? DEFAULT_TONE;
             const isTuntas = chapter.percent >= 70;
-
-            // Bersihkan nama agar rapi
             const cleanName = chapter.name.replace(/^PKn:\s*/i, "").replace(/^B\.\s*Jawa:\s*/i, "");
 
             return (
@@ -1014,7 +1264,6 @@ export default function ChapterProgressList({
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    {/* TOMBOL HAPUS MATERI PER BAB */}
                     <button
                       type="button"
                       onClick={(e) => handleDeleteChapter(chapter, e)}
@@ -1025,7 +1274,6 @@ export default function ChapterProgressList({
                       <span>Hapus</span>
                     </button>
 
-                    {/* UNTUK GURU: Hapus tulisan "Pelajari Lagi", gantikan dengan tombol/indikator cek siswa lemah */}
                     {!isStudent ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-black text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 border border-sky-300 dark:border-sky-700 px-2.5 py-1 rounded-xl shadow-2xs group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-600 transition-all">
                         <span>🔍 Cek Siswa Lemah</span>
@@ -1050,36 +1298,36 @@ export default function ChapterProgressList({
                   </div>
                 </div>
 
-              {/* Bar Pemahaman */}
-              <div className="w-full bg-slate-100 dark:bg-slate-700/80 rounded-full h-2.5 overflow-hidden p-[1px] border border-slate-200/80 dark:border-slate-600">
-                <div
-                  className={`${tone.bar} h-full rounded-full transition-all duration-700`}
-                  style={{ width: `${chapter.percent}%` }}
-                />
-              </div>
+                {/* Bar Pemahaman */}
+                <div className="w-full bg-slate-100 dark:bg-slate-700/80 rounded-full h-2.5 overflow-hidden p-[1px] border border-slate-200/80 dark:border-slate-600">
+                  <div
+                    className={`${tone.bar} h-full rounded-full transition-all duration-700`}
+                    style={{ width: `${chapter.percent}%` }}
+                  />
+                </div>
 
-              <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 font-semibold pt-0.5">
-                <span className="opacity-80">
-                  {isStudent
-                    ? chapter.percent >= 85
-                      ? "🌟 Pemahamanmu Sangat Baik!"
-                      : chapter.percent >= 70
-                        ? "👍 Pemahamanmu Baik, Pertahankan!"
-                        : "💪 Ayo Latihan Lagi Bab Ini!"
-                    : chapter.percent >= 85
-                      ? "🌟 Rata-rata Pemahaman Sangat Baik (Klik untuk Analisis)"
-                      : chapter.percent >= 70
-                        ? "👍 Rata-rata Pemahaman Baik (Klik untuk Analisis)"
-                        : "💪 Butuh Pendampingan Siswa (Klik untuk Analisis)"}
-                </span>
-                <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500">
-                  {isStudent ? "Capaian Individu Siswa" : "Rata-rata Seluruh Siswa"}
-                </span>
+                <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 font-semibold pt-0.5">
+                  <span className="opacity-80">
+                    {isStudent
+                      ? chapter.percent >= 85
+                        ? "🌟 Pemahamanmu Sangat Baik!"
+                        : chapter.percent >= 70
+                          ? "👍 Pemahamanmu Baik, Pertahankan!"
+                          : "💪 Ayo Latihan Lagi Bab Ini!"
+                      : chapter.percent >= 85
+                        ? "🌟 Rata-rata Pemahaman Sangat Baik (Klik untuk Analisis)"
+                        : chapter.percent >= 70
+                          ? "👍 Rata-rata Pemahaman Baik (Klik untuk Analisis)"
+                          : "💪 Butuh Pendampingan Siswa (Klik untuk Analisis)"}
+                  </span>
+                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500">
+                    {isStudent ? "Capaian Individu Siswa" : "Rata-rata Seluruh Siswa"}
+                  </span>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       )}
 
       {/* 4. MODAL DIAGNOSTIK ANALISIS SISWA LEMAH & REMEDIAL PER-MATERI (KHUSUS GURU) */}

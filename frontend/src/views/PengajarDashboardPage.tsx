@@ -2,7 +2,6 @@ import ChapterProgressList from "@/components/ChapterProgressList";
 import ClassSummaryCards from "@/components/ClassSummaryCards";
 import CurriculumValidationManager from "@/components/CurriculumValidationManager";
 import StudentAccountsManager from "@/components/StudentAccountsManager";
-import ExportReportButton from "@/components/ExportReportButton";
 import InviteTeacherModal from "@/components/InviteTeacherModal";
 import ResetPointsModal from "@/components/ResetPointsModal";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -106,7 +105,6 @@ export default function PengajarDashboardPage() {
               <span>🔄</span>
               <span>Reset Poin &amp; Ranking</span>
             </button>
-            <ExportReportButton />
           </div>
         </div>
       </section>
