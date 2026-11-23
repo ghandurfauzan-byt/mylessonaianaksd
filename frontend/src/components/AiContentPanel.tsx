@@ -10,7 +10,7 @@ import {
   startSpeaking,
   stopSpeaking,
 } from "@/lib/soundEffects";
-import { useUIStore } from "@/lib/store/useUIStore";
+import { useUIStore, type ValidatedModuleSummary } from "@/lib/store/useUIStore";
 import type { AiMode } from "@shared/catalog";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -19,19 +19,26 @@ export default function AiContentPanel({
   mode,
   refreshNonce,
   studentGrade,
+  customActiveModule,
 }: {
   chapterId: string;
   mode: AiMode;
   refreshNonce: string;
   studentGrade?: string;
+  customActiveModule?: ValidatedModuleSummary | null;
 }) {
-  const activeValidatedModule = useUIStore((s) => s.activeValidatedModule);
+  const storeActiveModule = useUIStore((s) => s.activeValidatedModule);
+  const activeValidatedModule = customActiveModule !== undefined ? customActiveModule : storeActiveModule;
+  const currentStudent = useUIStore((s) => (s as any).currentStudent);
+  const activeGrade = studentGrade || (activeValidatedModule as any)?.kelas || activeValidatedModule?.grade || currentStudent?.kelas || "Kelas 1";
+  const isJuniorGrade = activeGrade.includes("1") || activeGrade.includes("2") || activeGrade.includes("3");
+
   const {
     data: contentFromApi,
     isLoading,
     isError,
     error,
-  } = useAiContentQuery(chapterId, mode, refreshNonce);
+  } = useAiContentQuery(chapterId, mode, refreshNonce, studentGrade);
 
   // Jika materi modul aktif guru tersedia dan cocok, tampilkan langsung
   const cleanChapterId = (chapterId || "").replace("mod-", "");
@@ -207,13 +214,8 @@ export default function AiContentPanel({
     );
   }
 
-    // Identifikasi jenjang kelas siswa (Kelas 1-3: Fase A vs Kelas 4 ke atas: Fase B/C)
-    const currentStudent = useUIStore((s) => (s as any).currentStudent);
-    const activeGrade = studentGrade || (activeValidatedModule as any)?.kelas || activeValidatedModule?.grade || currentStudent?.kelas || "Kelas 1";
-    const isJuniorGrade = activeGrade.includes("1") || activeGrade.includes("2") || activeGrade.includes("3");
-
-    return (
-      <div className="flex flex-col space-y-4">
+  return (
+    <div className="flex flex-col space-y-4">
         {/* Top Header & Grade Badge */}
         <div className="space-y-2.5 border-b-2 border-sky-100 dark:border-slate-800 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-3">

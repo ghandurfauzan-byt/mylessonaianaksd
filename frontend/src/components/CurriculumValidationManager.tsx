@@ -663,7 +663,19 @@ export default function CurriculumValidationManager() {
     return true;
   });
 
-  const activeModule = modules.find((m) => m.isActiveToday);
+  const activeModule = (() => {
+    if (filterGrade !== "all") {
+      const classSpecific = modules.find(
+        (m) => m.isActiveToday && (m.grade || "").toLowerCase().includes(filterGrade.toLowerCase())
+      );
+      if (classSpecific) return classSpecific;
+      const allClassMod = modules.find(
+        (m) => m.isActiveToday && (m.grade || "").toLowerCase().includes("semua")
+      );
+      if (allClassMod) return allClassMod;
+    }
+    return modules.find((m) => m.isActiveToday);
+  })();
 
   // Membuka modal request API
   function handleOpenRequestModal() {
@@ -800,9 +812,12 @@ export default function CurriculumValidationManager() {
         generatedModule.ragSummary
       );
 
+    const isApplyToAll = filterGrade === "all" || selectedGrade === "Semua Kelas";
+    const targetGrade = isApplyToAll ? "Semua Kelas" : (filterGrade !== "all" ? filterGrade : (generatedModule.grade || selectedGrade));
+
     const validatedMod: CurriculumModule = {
       ...generatedModule,
-      grade: generatedModule.grade || selectedGrade,
+      grade: targetGrade,
       isValidated: true,
       isActiveToday: true,
       validatedAt: "Baru saja divalidasi",
@@ -810,21 +825,37 @@ export default function CurriculumValidationManager() {
     };
 
     // Tambahkan modul baru di paling atas dan jadikan aktif hari ini
-    setModules((prev) => [validatedMod, ...prev.map((m) => ({ ...m, isActiveToday: false }))]);
+    setModules((prev) => [
+      validatedMod,
+      ...prev.map((m) => {
+        if (isApplyToAll) {
+          return { ...m, isActiveToday: false };
+        }
+        const mGrade = (m.grade || "").toLowerCase();
+        const vGrade = targetGrade.toLowerCase();
+        if (mGrade.includes(vGrade) || vGrade.includes(mGrade)) {
+          return { ...m, isActiveToday: false };
+        }
+        return m;
+      }),
+    ]);
 
-    // Sinkronkan ke Ruang Siswa agar langsung muncul tanpa pilihan dropdown
-    setActiveValidatedModule({
-      id: validatedMod.id,
-      chapterCode: validatedMod.chapterCode,
-      title: validatedMod.title,
-      subject: validatedMod.subject,
-      subjectLabel: validatedMod.subjectLabel,
-      source: validatedMod.source,
-      validatedAt: "Baru saja divalidasi oleh Guru",
-      ragSummary: validatedMod.ragSummary,
-      quizQuestions: (validatedMod as any).quizQuestions,
-      gameType,
-    });
+    // Sinkronkan ke store siswa HANYA jika berlaku untuk semua kelas
+    if (isApplyToAll) {
+      setActiveValidatedModule({
+        id: validatedMod.id,
+        chapterCode: validatedMod.chapterCode,
+        title: validatedMod.title,
+        subject: validatedMod.subject,
+        subjectLabel: validatedMod.subjectLabel,
+        source: validatedMod.source,
+        grade: targetGrade,
+        validatedAt: "Baru saja divalidasi oleh Guru",
+        ragSummary: validatedMod.ragSummary,
+        quizQuestions: (validatedMod as any).quizQuestions,
+        gameType,
+      });
+    }
 
     setShowRequestModal(false);
 
@@ -837,7 +868,7 @@ export default function CurriculumValidationManager() {
           chapterId: validatedMod.id,
           chapterTitle: validatedMod.title,
           subject: validatedMod.subject,
-          grade: validatedMod.grade,
+          grade: targetGrade,
           learningGoal: validatedMod.learningGoal,
           ragSummary: validatedMod.ragSummary,
           quizQuestions: (validatedMod as any).quizQuestions,
@@ -847,7 +878,7 @@ export default function CurriculumValidationManager() {
     } catch {}
 
     try {
-      await validateCurriculumModule(validatedMod);
+      await validateCurriculumModule(validatedMod, { applyToAll: isApplyToAll });
       try {
         sessionStorage.removeItem("student_last_server_module_id");
       } catch {}
@@ -863,6 +894,10 @@ export default function CurriculumValidationManager() {
     playClickSound();
     playCorrectSound();
 
+    const isApplyToAll = filterGrade === "all";
+    const targetGrade = isApplyToAll ? "Semua Kelas" : filterGrade;
+    const targetNormGrade = targetGrade.toLowerCase();
+
     const gameType =
       targetModule.gameType ||
       resolveGameTypeForModule(
@@ -877,32 +912,46 @@ export default function CurriculumValidationManager() {
         if (mod.id === targetModule.id) {
           return {
             ...mod,
+            grade: targetGrade,
             isValidated: true,
             isActiveToday: true,
             validatedAt: "Baru saja divalidasi",
             gameType,
           };
         }
-        return {
-          ...mod,
-          isActiveToday: false,
-        };
+        if (isApplyToAll) {
+          return {
+            ...mod,
+            isActiveToday: false,
+          };
+        }
+        const modGrade = (mod.grade || "").toLowerCase();
+        if (modGrade.includes(targetNormGrade) || targetNormGrade.includes(modGrade)) {
+          return {
+            ...mod,
+            isActiveToday: false,
+          };
+        }
+        return mod;
       })
     );
 
-    // Sinkronkan ke Ruang Siswa agar langsung muncul tanpa pilihan dropdown
-    setActiveValidatedModule({
-      id: targetModule.id,
-      chapterCode: targetModule.chapterCode,
-      title: targetModule.title,
-      subject: targetModule.subject,
-      subjectLabel: targetModule.subjectLabel,
-      source: targetModule.source,
-      validatedAt: "Baru saja divalidasi oleh Guru",
-      ragSummary: targetModule.ragSummary,
-      quizQuestions: (targetModule as any).quizQuestions,
-      gameType,
-    });
+    // Sinkronkan ke store siswa HANYA jika berlaku untuk semua kelas
+    if (isApplyToAll) {
+      setActiveValidatedModule({
+        id: targetModule.id,
+        chapterCode: targetModule.chapterCode,
+        title: targetModule.title,
+        subject: targetModule.subject,
+        subjectLabel: targetModule.subjectLabel,
+        source: targetModule.source,
+        grade: "Semua Kelas",
+        validatedAt: "Baru saja divalidasi oleh Guru",
+        ragSummary: targetModule.ragSummary,
+        quizQuestions: (targetModule as any).quizQuestions,
+        gameType,
+      });
+    }
 
     // Otomatis Panggil Generator Game Manus AI untuk Modul yang Divalidasi
     try {
@@ -913,7 +962,7 @@ export default function CurriculumValidationManager() {
           chapterId: targetModule.id,
           chapterTitle: targetModule.title,
           subject: targetModule.subject,
-          grade: targetModule.grade,
+          grade: targetGrade,
           learningGoal: targetModule.learningGoal,
           ragSummary: targetModule.ragSummary,
           quizQuestions: (targetModule as any).quizQuestions,
@@ -923,7 +972,13 @@ export default function CurriculumValidationManager() {
     } catch {}
 
     try {
-      await validateCurriculumModule(targetModule);
+      await validateCurriculumModule(
+        {
+          ...targetModule,
+          grade: targetGrade,
+        },
+        { applyToAll: isApplyToAll }
+      );
       try {
         sessionStorage.removeItem("student_last_server_module_id");
       } catch {}
@@ -1032,13 +1087,13 @@ export default function CurriculumValidationManager() {
             </div>
             <div>
               <span className="text-[10px] uppercase tracking-wider font-black px-2.5 py-0.5 rounded-full bg-white text-emerald-900 shadow-xs">
-                🌟 Materi yang Sedang Dipelajari Siswa Hari Ini
+                🌟 Materi yang Sedang Dipelajari Siswa Hari Ini {filterGrade === "all" ? "(Semua Kelas)" : `(${filterGrade})`}
               </span>
               <h4 className="text-base sm:text-lg font-black tracking-tight mt-1">
                 {activeModule.chapterCode}: {activeModule.title}
               </h4>
               <p className="text-xs text-emerald-100 font-medium">
-                {activeModule.subjectLabel} • {activeModule.grade} • Terbuka di Ruang Siswa 👧
+                {activeModule.subjectLabel} • {activeModule.grade === "Semua Kelas" || filterGrade === "all" ? "Semua Kelas (Kelas 1 s/d 6)" : activeModule.grade} • Terbuka di Ruang Siswa 👧
               </p>
             </div>
           </div>
@@ -1206,7 +1261,9 @@ export default function CurriculumValidationManager() {
                     {item.isActiveToday
                       ? "Sedang Aktif Dipelajari"
                       : item.isValidated
-                        ? "Ganti Jadi Bab Hari Ini"
+                        ? filterGrade === "all"
+                          ? "Terapkan ke Semua Kelas 🌟"
+                          : `Jadikan Bab ${filterGrade} Hari Ini`
                         : "Validasi & Terbitkan ke Siswa 🚀"}
                   </span>
                 </button>

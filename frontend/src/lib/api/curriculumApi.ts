@@ -53,12 +53,16 @@ export async function requestCurriculumModule(
 }
 
 export async function validateCurriculumModule(
-  moduleData: CurriculumModule
+  moduleData: CurriculumModule,
+  options?: { applyToAll?: boolean }
 ): Promise<{ success: boolean; message: string }> {
   const res = await fetch("/api/v1/curriculum/validate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(moduleData),
+    body: JSON.stringify({
+      ...moduleData,
+      applyToAll: options?.applyToAll,
+    }),
   });
 
   if (!res.ok) {

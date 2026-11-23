@@ -45,8 +45,15 @@ export async function fetchStudentsNeedingHelp(): Promise<StudentHelp[]> {
   return StudentsNeedingHelpResponseSchema.parse(rawData);
 }
 
-export async function fetchAiContent(chapterId: string, mode: AiMode): Promise<AiContent> {
+export async function fetchAiContent(chapterId: string, mode: AiMode, kelas?: string): Promise<AiContent> {
+  let studentKelas = kelas;
+  if (!studentKelas && typeof window !== "undefined") {
+    studentKelas = sessionStorage.getItem("student_active_kelas") || undefined;
+  }
   const params = new URLSearchParams({ chapter: chapterId, mode });
+  if (studentKelas) {
+    params.set("kelas", studentKelas);
+  }
   const response = await fetch(`/api/ai-content?${params.toString()}`);
   const rawData = await response.json().catch(() => null);
   if (!response.ok) {

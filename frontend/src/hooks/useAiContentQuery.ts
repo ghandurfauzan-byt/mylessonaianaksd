@@ -8,15 +8,19 @@ import { fetchAiContent } from "@/lib/api/classApi";
 import type { AiMode } from "@shared/catalog";
 import { useQuery } from "@tanstack/react-query";
 
-export function useAiContentQuery(chapterId: string, mode: AiMode, refreshNonce: string) {
+export function useAiContentQuery(chapterId: string, mode: AiMode, refreshNonce: string, kelas?: string) {
+  let studentKelas = kelas;
+  if (!studentKelas && typeof window !== "undefined") {
+    studentKelas = sessionStorage.getItem("student_active_kelas") || undefined;
+  }
   const isForcedRefresh = Boolean(refreshNonce && refreshNonce !== "0");
   const queryKey = isForcedRefresh
-    ? ["ai-content", chapterId, mode, refreshNonce]
-    : ["ai-content", chapterId, mode];
+    ? ["ai-content", chapterId, mode, refreshNonce, studentKelas]
+    : ["ai-content", chapterId, mode, studentKelas];
 
   return useQuery({
     queryKey,
-    queryFn: () => fetchAiContent(chapterId, mode),
+    queryFn: () => fetchAiContent(chapterId, mode, studentKelas),
     staleTime: 1000 * 60 * 10,
     gcTime: 1000 * 60 * 30,
     retry: 0,

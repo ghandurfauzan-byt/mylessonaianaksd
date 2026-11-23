@@ -6,6 +6,7 @@ import ModalPortal from "@/components/ModalPortal";
 import PointsBadge from "@/components/PointsBadge";
 import { SESSION_QUERY_KEY } from "@/hooks/useSession";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { updateProfile } from "@/lib/api/sessionApi";
 import {
   playBadgeFanfareSound,
   playClickSound,
@@ -48,19 +49,61 @@ export default function PelajarDashboardPage() {
   const dailyMissions = useUIStore((s) => s.dailyMissions);
   const switchChapterMissions = useUIStore((s) => s.switchChapterMissions);
   const resetCurrentChapterMissions = useUIStore((s) => s.resetCurrentChapterMissions);
-
-  const paramChapter = searchParams.get("chapter");
-  const defaultChapter = activeValidatedModule?.id || "mod-pkn-kls1-simbol";
-  const chapter = paramChapter ?? defaultChapter;
-  const mode = (searchParams.get("mode") ?? "cerita") as AiMode;
-  const refreshNonce = searchParams.get("r") ?? "0";
+  const setActiveValidatedModule = useUIStore((s) => s.setActiveValidatedModule);
 
   const [activeGradeState, setActiveGradeState] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      return sessionStorage.getItem("student_active_kelas") || "Kelas 1";
+      return sessionStorage.getItem("student_active_kelas") || "Kelas 4";
     }
-    return "Kelas 1";
+    return "Kelas 4";
   });
+
+  const [currentStudentName, setCurrentStudentName] = useState("Ghandur Fauzan Ngauf Hisam");
+  const [currentStudent, setCurrentStudent] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    kelas?: string;
+    noAbsen?: string;
+    institution?: string;
+    nimNip?: string;
+    avatar?: string;
+    points?: number;
+    gamePoints?: number;
+    quizScore?: number;
+    materialScore?: number;
+    weakness?: {
+      chapterId?: string;
+      chapterName?: string;
+      chapter?: string;
+      subject?: string;
+      topic?: string;
+      score: number;
+      outOf?: number;
+      needsHelp?: boolean;
+      status: "remedial" | "pengayaan" | "tuntas";
+      message: string;
+    };
+  } | null>(null);
+
+  const currentGrade = activeGradeState || currentStudent?.kelas || "Kelas 4";
+
+  // Filter modul aktif agar hanya digunakan bila sesuai jenjang kelas siswa saat ini atau berlaku untuk semua kelas
+  const studentActiveModule = useMemo(() => {
+    if (!activeValidatedModule) return null;
+    const modGrade = (activeValidatedModule.grade || "").toLowerCase();
+    const curr = (currentGrade || "Kelas 4").toLowerCase();
+    if (modGrade.includes("semua") || modGrade.includes(curr) || curr.includes(modGrade)) {
+      return activeValidatedModule;
+    }
+    return null;
+  }, [activeValidatedModule, currentGrade]);
+
+  const paramChapter = searchParams.get("chapter");
+  const defaultChapter = studentActiveModule?.id || "mod-pkn-sila3";
+  const chapter = paramChapter ?? defaultChapter;
+  const mode = (searchParams.get("mode") ?? "cerita") as AiMode;
+  const refreshNonce = searchParams.get("r") ?? "0";
 
   // Identifikasi otomatis pelajaran aktif (PKn vs Bahasa Jawa)
   const isJawaCurrent =
@@ -69,7 +112,7 @@ export default function PelajarDashboardPage() {
     chapter.toLowerCase().includes("punokawan") ||
     chapter.toLowerCase().includes("tembang") ||
     chapter.toLowerCase().includes("wayang") ||
-    activeValidatedModule?.subject === "bjawa";
+    studentActiveModule?.subject === "bjawa";
 
   // State Golongan Lencana Aktif (Otomatis sesuai pelajaran yang sedang dibuka)
   const [badgeSubject, setBadgeSubject] = useState<"pkn" | "bjawa">(
@@ -79,18 +122,18 @@ export default function PelajarDashboardPage() {
   // 1. Dapatkan informasi topik yang sedang diambil / dipilih siswa (Materi Yang Diambil)
   const currentChapterInfo = useMemo(() => {
     const fromCatalog = availableChapters.find((c) => c.value === chapter);
-    const cleanActiveId = (activeValidatedModule?.id || "").replace("mod-", "");
+    const cleanActiveId = (studentActiveModule?.id || "").replace("mod-", "");
     const cleanChapter = chapter.replace("mod-", "");
     const isMatchingActive =
-      Boolean(activeValidatedModule) &&
-      (cleanChapter === cleanActiveId || chapter === activeValidatedModule?.id);
+      Boolean(studentActiveModule) &&
+      (cleanChapter === cleanActiveId || chapter === studentActiveModule?.id);
 
     const title = isMatchingActive
-      ? activeValidatedModule!.title
+      ? studentActiveModule!.title
       : fromCatalog?.label || chapter;
 
     const subject = isMatchingActive
-      ? activeValidatedModule!.subject
+      ? studentActiveModule!.subject
       : chapter.toLowerCase().includes("bjawa") ||
         chapter.toLowerCase().includes("unggah") ||
         chapter.toLowerCase().includes("krama") ||
@@ -104,16 +147,16 @@ export default function PelajarDashboardPage() {
       : "pkn";
 
     const gameType =
-      isMatchingActive && activeValidatedModule?.gameType
-        ? activeValidatedModule.gameType
+      isMatchingActive && studentActiveModule?.gameType
+        ? studentActiveModule.gameType
         : resolveGameTypeForModule(
             title,
             subject,
             chapter,
-            isMatchingActive ? activeValidatedModule?.ragSummary : undefined
+            isMatchingActive ? studentActiveModule?.ragSummary : undefined
           );
 
-    const moduleToPass = isMatchingActive ? activeValidatedModule : undefined;
+    const moduleToPass = isMatchingActive && studentActiveModule ? studentActiveModule : undefined;
 
     return {
       title,
@@ -121,7 +164,7 @@ export default function PelajarDashboardPage() {
       gameType,
       moduleToPass,
     };
-  }, [chapter, activeValidatedModule]);
+  }, [chapter, studentActiveModule]);
 
   // Dynamic Game Mode & Title based on active curriculum / chapter yang diambil siswa
   const activeGameInfo = useMemo(() => {
@@ -174,32 +217,6 @@ export default function PelajarDashboardPage() {
     };
   }, [currentChapterInfo]);
 
-  const setActiveValidatedModule = useUIStore((s) => s.setActiveValidatedModule);
-
-  const [currentStudentName, setCurrentStudentName] = useState("Ghandur Fauzan Ngauf Hisam");
-  const [currentStudent, setCurrentStudent] = useState<{
-    id: string;
-    name: string;
-    email: string;
-    kelas?: string;
-    noAbsen?: string;
-    points?: number;
-    materialScore?: number;
-    quizScore?: number;
-    gamePoints?: number;
-    weakness?: {
-      chapterId: string;
-      chapterName: string;
-      subject: string;
-      score: number;
-      outOf: number;
-      status: "remedial" | "tuntas";
-      message: string;
-    };
-  } | null>(null);
-
-  const currentGrade = activeGradeState || currentStudent?.kelas || "Kelas 1";
-
   useEffect(() => {
     let lastActiveId = activeValidatedModule?.id;
     // Sinkronkan modul aktif yang baru saja divalidasi oleh Guru via API secara real-time
@@ -208,7 +225,7 @@ export default function PelajarDashboardPage() {
       try {
         savedKelas = sessionStorage.getItem("student_active_kelas");
       } catch {}
-      const studentKelas = savedKelas || currentStudent?.kelas || "Kelas 1";
+      const studentKelas = currentStudent?.kelas || savedKelas || activeGradeState || "Kelas 4";
       fetch(`/api/v1/curriculum/active?kelas=${encodeURIComponent(studentKelas)}`)
         .then((r) => r.json())
         .then((res) => {
@@ -345,8 +362,11 @@ export default function PelajarDashboardPage() {
           try {
             savedKelas = sessionStorage.getItem("student_active_kelas");
           } catch {}
-          const targetKelas = savedKelas || res.kelas || "Kelas 1";
+          const targetKelas = res.kelas || savedKelas || "Kelas 4";
           setActiveGradeState(targetKelas);
+          try {
+            sessionStorage.setItem("student_active_kelas", targetKelas);
+          } catch {}
           fetch(`/api/v1/curriculum/active?kelas=${encodeURIComponent(targetKelas)}`)
             .then((r) => r.json())
             .then((modRes) => {
@@ -398,13 +418,45 @@ export default function PelajarDashboardPage() {
   const handleSwitchGrade = async (newGrade: string) => {
     playClickSound();
     setActiveGradeState(newGrade);
-    if (currentStudent) {
-      setCurrentStudent({ ...currentStudent, kelas: newGrade });
+
+    const updatedStudent = currentStudent
+      ? {
+          ...currentStudent,
+          kelas: newGrade,
+          nimNip: `SD-${newGrade.replace(/\s+/g, "")}-${currentStudent.noAbsen || "01"}`,
+        }
+      : null;
+
+    if (updatedStudent) {
+      setCurrentStudent(updatedStudent);
+      try {
+        localStorage.setItem("user_profile", JSON.stringify(updatedStudent));
+      } catch {}
     }
+
     try {
       sessionStorage.setItem("student_active_kelas", newGrade);
       sessionStorage.removeItem("student_last_server_module_id");
     } catch {}
+
+    // Simpan kelas baru ke server database profil siswa agar permanen
+    if (currentStudent?.name && currentStudent?.email) {
+      try {
+        await updateProfile({
+          name: currentStudent.name,
+          email: currentStudent.email,
+          kelas: newGrade,
+          noAbsen: currentStudent.noAbsen || "01",
+          nimNip: `SD-${newGrade.replace(/\s+/g, "")}-${currentStudent.noAbsen || "01"}`,
+          institution: currentStudent.institution || "SD Negeri 1 Madiun",
+        });
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        await queryClient.invalidateQueries({ queryKey: ["students"] });
+        window.dispatchEvent(new Event("storage"));
+      } catch (err) {
+        console.error("Gagal sinkronisasi profil kelas ke server:", err);
+      }
+    }
 
     try {
       const res = await fetch(`/api/v1/curriculum/active?kelas=${encodeURIComponent(newGrade)}`);
@@ -1026,7 +1078,11 @@ export default function PelajarDashboardPage() {
             </p>
           </div>
 
-          <ChapterModeSelector chapter={chapter} mode={mode} />
+          <ChapterModeSelector
+            chapter={chapter}
+            mode={mode}
+            customActiveModule={studentActiveModule}
+          />
 
           {/* Tombol Game Edukasi Interaktif (Game 3D Seru) */}
           <div>
@@ -1416,6 +1472,7 @@ export default function PelajarDashboardPage() {
             mode={mode}
             refreshNonce={refreshNonce}
             studentGrade={currentGrade}
+            customActiveModule={studentActiveModule}
           />
         </article>
       </div>

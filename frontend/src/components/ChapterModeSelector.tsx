@@ -2,20 +2,23 @@
 // Navigasi Bab & Mode Generasi AI (FR-07, FR-08, FR-09, FR-10)
 
 import { playClickSound } from "@/lib/soundEffects";
-import { useUIStore } from "@/lib/store/useUIStore";
+import { useUIStore, type ValidatedModuleSummary } from "@/lib/store/useUIStore";
 import { type AiMode, aiModes } from "@shared/catalog";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function ChapterModeSelector({
   chapter,
   mode,
+  customActiveModule,
 }: {
   chapter: string;
   mode: AiMode;
+  customActiveModule?: ValidatedModuleSummary | null;
 }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const activeModule = useUIStore((s) => s.activeValidatedModule);
+  const storeActiveModule = useUIStore((s) => s.activeValidatedModule);
+  const activeModule = customActiveModule !== undefined ? customActiveModule : storeActiveModule;
 
   function updateQuery(next: { chapter?: string; mode?: string }) {
     const params = new URLSearchParams(searchParams);
@@ -31,13 +34,14 @@ export default function ChapterModeSelector({
     }, 80);
   }
 
-  const isBjawa = activeModule.subject === "bjawa";
+  const isBjawa = activeModule?.subject === "bjawa";
 
   return (
     <div className="space-y-4">
       {/* 1. MODUL TERVALIDASI GURU (KARTU ELEGAN & RAMAH ANAK) */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
+      {activeModule && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <span>Modul Pembelajaran Aktif</span>
           </span>
@@ -123,6 +127,7 @@ export default function ChapterModeSelector({
           </div>
         </div>
       </div>
+      )}
 
       {/* 2. PILIH FORMAT PENJELASAN (DESAIN KARTU SERU & INTERAKTIF) */}
       <fieldset>

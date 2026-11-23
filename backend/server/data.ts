@@ -1108,7 +1108,7 @@ const activeCurriculumStateByGrade: Record<string, ActiveCurriculumState> = {
   },
 };
 
-let activeCurriculumState: ActiveCurriculumState | null = activeCurriculumStateByGrade["Kelas 4"];
+let activeCurriculumState: ActiveCurriculumState | null = activeCurriculumStateByGrade["Kelas 4"] || null;
 
 export async function getCurriculumModules(): Promise<CurriculumModuleRecord[]> {
   await delay(100);
@@ -1204,7 +1204,66 @@ export async function deleteCurriculumModule(id: string): Promise<boolean> {
   return true;
 }
 
-export function setActiveCurriculumState(mod: ActiveCurriculumState) {
+export function adaptCurriculumForGrade(
+  baseState: ActiveCurriculumState,
+  targetGrade: string
+): ActiveCurriculumState {
+  const norm = normalizeGrade(targetGrade);
+  const isLowerGrade = norm === "Kelas 1" || norm === "Kelas 2" || norm === "Kelas 3";
+
+  if (!isLowerGrade) {
+    // Kelas 4, 5, 6: Sajikan materi lengkap, mendalam, dan komprehensif
+    return {
+      ...baseState,
+      grade: norm,
+    };
+  }
+
+  // Kelas 1, 2, 3: Adaptasi khusus kelas rendah (ringkas, bahasa ramah anak, 3-4 poin pokok)
+  const fullSummary = baseState.ragSummary || [];
+
+  // Saring poin yang terlalu teknis/sejarah mendalam untuk anak kelas 1-3
+  let simplifiedSummary = fullSummary.filter((point) => {
+    const lower = point.toLowerCase();
+    if (
+      lower.startsWith("sejarah") ||
+      lower.includes("sidang bpupki") ||
+      lower.includes("panitia sembilan") ||
+      lower.includes("kakawin") ||
+      lower.includes("konstitusi") ||
+      lower.includes("analisis pentingnya") ||
+      lower.includes("hakikat materi")
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  // Jika setelah disaring terlalu sedikit, ambil 3 poin terdepan dari materi asli
+  if (simplifiedSummary.length < 2 && fullSummary.length > 0) {
+    simplifiedSummary = fullSummary.slice(0, 3);
+  } else if (simplifiedSummary.length > 4) {
+    // Batasi maksimal 3-4 poin untuk anak kelas 1-3
+    simplifiedSummary = simplifiedSummary.slice(0, 4);
+  }
+
+  // Sederhanakan kalimat jika ada poin yang terlalu panjang (ambil 1-2 kalimat awal)
+  const adaptedSummary = simplifiedSummary.map((point) => {
+    const sentences = point.split(/(?<=[.?!])\s+/);
+    if (sentences.length > 2) {
+      return sentences.slice(0, 2).join(" ");
+    }
+    return point;
+  });
+
+  return {
+    ...baseState,
+    grade: norm,
+    ragSummary: adaptedSummary.length > 0 ? adaptedSummary : fullSummary.slice(0, 3),
+  };
+}
+
+export function setActiveCurriculumState(mod: ActiveCurriculumState, applyToAll = false) {
   const normGrade = normalizeGrade(mod.grade);
   const sanitizedSummary = mod.ragSummary?.map((item) =>
     item
@@ -1221,12 +1280,20 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
 
   const updatedState: ActiveCurriculumState = {
     ...mod,
-    grade: normGrade,
+    grade: applyToAll ? "Semua Kelas" : normGrade,
     ragSummary: sanitizedSummary,
   };
 
-  activeCurriculumState = updatedState;
-  activeCurriculumStateByGrade[normGrade] = updatedState;
+  const ALL_GRADES = ["Kelas 1", "Kelas 2", "Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"];
+
+  if (applyToAll) {
+    activeCurriculumState = updatedState;
+    ALL_GRADES.forEach((g) => {
+      activeCurriculumStateByGrade[g] = adaptCurriculumForGrade(updatedState, g);
+    });
+  } else {
+    activeCurriculumStateByGrade[normGrade] = updatedState;
+  }
 
   // Sinkronkan status isActiveToday di database list modul
   let foundInDb = false;
@@ -1239,7 +1306,7 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
       foundInDb = true;
       return {
         ...item,
-        grade: normGrade,
+        grade: applyToAll ? "Semua Kelas" : normGrade,
         gameType: mod.gameType || item.gameType,
         isValidated: true,
         isActiveToday: true,
@@ -1248,7 +1315,14 @@ export function setActiveCurriculumState(mod: ActiveCurriculumState) {
         quizQuestions: mod.quizQuestions || item.quizQuestions,
       };
     }
-    // Jika modul lain berada di kelas yang sama, nonaktifkan status aktifnya untuk kelas itu
+    // Jika applyToAll, nonaktifkan seluruh modul lain
+    if (applyToAll) {
+      return {
+        ...item,
+        isActiveToday: false,
+      };
+    }
+    // Jika per-kelas, hanya nonaktifkan modul lain di kelas yang sama
     if (itemNormGrade === normGrade) {
       return {
         ...item,
@@ -1374,21 +1448,61 @@ export function getActiveCurriculumState(targetKelas?: string): ActiveCurriculum
   return null;
 }
 
-export async function getAiContent(chapterId: string, mode: AiMode) {
+export async function getAiContent(chapterId: string, mode: AiMode, targetGrade?: string) {
   await delay(200);
 
   const cleanId = chapterId.replace("mod-", "");
   const modPrefixedId = chapterId.startsWith("mod-") ? chapterId : `mod-${chapterId}`;
 
-  // 1. Cek apakah cocok dengan salah satu modul kurikulum aktif per jenjang kelas
-  const activeForGrade = Object.values(activeCurriculumStateByGrade).find(
+  // 1. Jika meminta modul aktif global/terakhir atau cocok dengan modul aktif saat ini
+  const rawMod =
+    chapterId === "active"
+      ? (targetGrade
+          ? getActiveCurriculumState(targetGrade)
+          : (activeCurriculumStateByGrade["Kelas 4"] || activeCurriculumState))
+      : activeCurriculumState &&
+        (chapterId === activeCurriculumState.id ||
+          cleanId === activeCurriculumState.id.replace("mod-", "") ||
+          modPrefixedId === activeCurriculumState.id)
+      ? activeCurriculumState
+      : null;
+
+  const activeTargetMod = rawMod && targetGrade ? adaptCurriculumForGrade(rawMod, targetGrade) : rawMod;
+
+  if (activeTargetMod) {
+    if (mode === "kuis_tantangan") {
+      return {
+        title: `Kuis Tantangan Seru: ${activeTargetMod.title}`,
+        body: [
+          `Ayo uji pemahamanmu tentang materi ${activeTargetMod.title} bersama Robot Pintar!`,
+          "Klik tombol 'Mainkan Kuis Seru' di menu kiri untuk menambah poin prestasimu!",
+        ],
+      };
+    }
+
+    return {
+      title: `Ringkasan Modul & Pengamalan: ${activeTargetMod.chapterCode} - ${activeTargetMod.title}`,
+      body:
+        activeTargetMod.ragSummary && activeTargetMod.ragSummary.length > 0
+          ? activeTargetMod.ragSummary
+          : [
+              `Pengertian Pokok: Pembelajaran ${activeTargetMod.chapterCode} mengenai "${activeTargetMod.title}" disarikan ke dalam konsep budi pekerti ramah anak SD.`,
+              "Aksi Nyata di Sekolah: Mengajak siswa bekerja sama dan mematuhi aturan tata tertib kelas dengan disiplin.",
+              "Pengamalan di Rumah: Membiasakan sikap santun, menghormati orang tua dan anggota keluarga.",
+            ],
+    };
+  }
+
+  // 1b. Cek apakah cocok dengan salah satu modul kurikulum aktif per jenjang kelas
+  const rawGradeMod = Object.values(activeCurriculumStateByGrade).find(
     (mod) =>
       mod &&
-      (chapterId === "active" ||
-        chapterId === mod.id ||
+      (chapterId === mod.id ||
         cleanId === mod.id.replace("mod-", "") ||
         modPrefixedId === mod.id)
   );
+
+  const activeForGrade = rawGradeMod && targetGrade ? adaptCurriculumForGrade(rawGradeMod, targetGrade) : rawGradeMod;
 
   if (activeForGrade) {
     if (mode === "kuis_tantangan") {
@@ -1414,36 +1528,6 @@ export async function getAiContent(chapterId: string, mode: AiMode) {
     };
   }
 
-  // 1b. Jika pengguna meminta modul aktif tervalidasi atau id-nya cocok dengan modul aktif saat ini
-  if (
-    activeCurriculumState &&
-    (chapterId === "active" ||
-      chapterId === activeCurriculumState.id ||
-      cleanId === activeCurriculumState.id.replace("mod-", ""))
-  ) {
-    if (mode === "kuis_tantangan") {
-      return {
-        title: `Kuis Tantangan Seru: ${activeCurriculumState.title}`,
-        body: [
-          `Ayo uji pemahamanmu tentang materi ${activeCurriculumState.title} bersama Robot Pintar!`,
-          "Klik tombol 'Mainkan Kuis Seru' di menu kiri untuk menambah poin prestasimu!",
-        ],
-      };
-    }
-
-    return {
-      title: `Ringkasan Modul & Pengamalan: ${activeCurriculumState.chapterCode} - ${activeCurriculumState.title}`,
-      body:
-        activeCurriculumState.ragSummary && activeCurriculumState.ragSummary.length > 0
-          ? activeCurriculumState.ragSummary
-          : [
-              `Pengertian Pokok: Pembelajaran ${activeCurriculumState.chapterCode} mengenai "${activeCurriculumState.title}" disarikan ke dalam konsep budi pekerti ramah anak SD.`,
-              "Aksi Nyata di Sekolah: Mengajak siswa bekerja sama dan mematuhi aturan tata tertib kelas dengan disiplin.",
-              "Pengamalan di Rumah: Membiasakan sikap santun, menghormati orang tua dan anggota keluarga.",
-            ],
-    };
-  }
-
   // 2. Cek pustaka konten statis
   const content =
     aiContentLibrary[chapterId]?.[mode] ||
@@ -1459,19 +1543,33 @@ export async function getAiContent(chapterId: string, mode: AiMode) {
     (m) => m.id === chapterId || m.id === cleanId || m.id === modPrefixedId
   );
   if (savedMod) {
+    const adaptedSaved = targetGrade
+      ? adaptCurriculumForGrade(
+          {
+            id: savedMod.id,
+            title: savedMod.title,
+            chapterCode: savedMod.chapterCode,
+            subject: savedMod.subject,
+            grade: savedMod.grade,
+            ragSummary: savedMod.ragSummary,
+          },
+          targetGrade
+        )
+      : savedMod;
+
     if (mode === "kuis_tantangan") {
       return {
-        title: `Kuis Tantangan Seru: ${savedMod.title}`,
+        title: `Kuis Tantangan Seru: ${adaptedSaved.title}`,
         body: [
-          `Ayo uji pemahamanmu tentang materi ${savedMod.title} bersama Robot Pintar!`,
+          `Ayo uji pemahamanmu tentang materi ${adaptedSaved.title} bersama Robot Pintar!`,
           "Klik tombol 'Mainkan Kuis Seru' di menu kiri untuk menambah poin prestasimu!",
         ],
       };
     }
-    if (savedMod.ragSummary && savedMod.ragSummary.length > 0) {
+    if (adaptedSaved.ragSummary && adaptedSaved.ragSummary.length > 0) {
       return {
-        title: `Ringkasan Modul & Pengamalan: ${savedMod.chapterCode} - ${savedMod.title}`,
-        body: savedMod.ragSummary,
+        title: `Ringkasan Modul & Pengamalan: ${adaptedSaved.chapterCode} - ${adaptedSaved.title}`,
+        body: adaptedSaved.ragSummary,
       };
     }
   }

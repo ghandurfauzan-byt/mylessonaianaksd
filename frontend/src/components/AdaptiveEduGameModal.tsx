@@ -2652,7 +2652,7 @@ return rawStations.map((st) => {
     addPoints(5, `Menyapa teman sekelas: ${student.name}`, chapter);
     setFriendGreetingBubble({
       name: student.name,
-      text: greetingText,
+      text: greetingText || `👋 "Halo ${studentName}! Semangat belajar bersama!"`,
     });
     setActiveNotification(`👋 Kamu otomatis melambaikan tangan menyapa ${student.name}! (+5 Poin Persahabatan!)`);
 

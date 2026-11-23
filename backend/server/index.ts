@@ -565,8 +565,9 @@ router.get("/export", async (req: Request, res: Response) => {
 router.get("/ai-content", async (req: Request, res: Response) => {
   const chapterId = String(req.query.chapter ?? "1");
   const mode = String(req.query.mode ?? "ringkasan") as AiMode;
+  const grade = req.query.kelas as string | undefined;
   try {
-    const content = await getAiContent(chapterId, mode);
+    const content = await getAiContent(chapterId, mode, grade);
     res.json(content);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gagal memuat konten AI.";
@@ -2404,6 +2405,13 @@ v1Router.post("/curriculum/validate", async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, message: "Data modul tidak valid." });
   }
 
+  const applyToAll = Boolean(
+    req.body.applyToAll ||
+    req.body.grade === "Semua Kelas" ||
+    req.body.targetGrade === "all" ||
+    req.body.targetGrade === "Semua Kelas"
+  );
+
   // Daftarkan ke state modul aktif di server (termasuk modul baru dari API SIBI)
   setActiveCurriculumState({
     id: moduleData.id,
@@ -2412,17 +2420,20 @@ v1Router.post("/curriculum/validate", async (req: Request, res: Response) => {
     subject: moduleData.subject || "pkn",
     subjectLabel: moduleData.subjectLabel,
     source: moduleData.source,
-    grade: moduleData.grade || "Kelas 4",
+    grade: applyToAll ? "Semua Kelas" : (moduleData.grade || "Kelas 4"),
     ragSummary: moduleData.ragSummary,
     quizQuestions: moduleData.quizQuestions,
     gameType: moduleData.gameType,
-  });
+  }, applyToAll);
 
   return res.json({
     success: true,
-    message: "Modul resmi divalidasi oleh Guru dan telah aktif di Ruang Belajar Siswa.",
+    message: applyToAll
+      ? "Modul resmi divalidasi oleh Guru dan telah aktif untuk SEMUA KELAS (Kelas 1 - 6)."
+      : `Modul resmi divalidasi oleh Guru dan telah aktif di Ruang Belajar Siswa ${moduleData.grade || "Kelas 4"}.`,
     data: {
       ...moduleData,
+      grade: applyToAll ? "Semua Kelas" : (moduleData.grade || "Kelas 4"),
       isValidated: true,
       isActiveToday: true,
       validatedAt: "Baru saja divalidasi",

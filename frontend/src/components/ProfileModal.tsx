@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 export default function ProfileModal() {
   const isOpen = useUIStore((s) => s.isProfileModalOpen);
   const closeModal = useUIStore((s) => s.closeProfileModal);
+  const setActiveValidatedModule = useUIStore((s) => s.setActiveValidatedModule);
   const queryClient = useQueryClient();
 
   const { data: profile, isLoading } = useQuery<UserProfile>({
@@ -46,7 +47,25 @@ export default function ProfileModal() {
     mutationFn: updateProfile,
     onSuccess: (updated) => {
       queryClient.setQueryData(["profile"], updated);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      if (updated.kelas && isPelajar) {
+        try {
+          sessionStorage.setItem("student_active_kelas", updated.kelas);
+          sessionStorage.removeItem("student_last_server_module_id");
+          localStorage.setItem("user_profile", JSON.stringify(updated));
+        } catch {}
+        fetch(`/api/v1/curriculum/active?kelas=${encodeURIComponent(updated.kelas)}`)
+          .then((r) => r.json())
+          .then((json) => {
+            if (json.success && json.data) {
+              setActiveValidatedModule(json.data);
+              queryClient.invalidateQueries({ queryKey: ["ai-content"] });
+              queryClient.invalidateQueries({ queryKey: ["quiz"] });
+            }
+          })
+          .catch(() => {});
+      }
       setSuccessMsg("Data profil berhasil diperbarui!");
       setPassword("");
       setTimeout(() => setSuccessMsg(null), 3500);
